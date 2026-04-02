@@ -90,7 +90,7 @@ export async function sendMessage(
     content: string | FormData
 ): Promise<Message> {
     const isFormData = content instanceof FormData;
-    const headers = isFormData ? {} : { "Content-Type": "application/json" };
+    const headers: Record<string, string> = isFormData ? {} : { "Content-Type": "application/json" };
     const body = isFormData ? content : JSON.stringify({ content });
 
     const res = await fetch(`${API_URL}/api/messages/${leadId}`, {
