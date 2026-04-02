@@ -1,0 +1,24 @@
+services:
+  backend:
+    build:
+      context: ./risein-crm/backend
+    environment:
+      - DATABASE_URL=file:./dev.db
+      - PORT=3001
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./risein-crm/backend/dev.db:/app/dev.db
+      - ./risein-crm/backend/uploads:/app/uploads
+    restart: always
+
+  frontend:
+    build:
+      context: ./risein-crm/frontend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: always

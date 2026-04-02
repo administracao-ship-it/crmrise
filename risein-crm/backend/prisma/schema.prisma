@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  leads     Lead[]
+  messages  Message[]
+}
+
+model Stage {
+  id        String   @id @default(uuid())
+  name      String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  leads     Lead[]
+}
+
+model Lead {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String   @unique
+  value     Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  title     String?
+  phase     String?
+  city      String?
+  closedAt  DateTime?
+  isAgentActive Boolean @default(false)
+
+  stageId   String
+  stage     Stage    @relation(fields: [stageId], references: [id])
+  userId    String?  
+  user      User?    @relation(fields: [userId], references: [id])
+  messages  Message[]
+  tags      Tag[]
+
+  // Indexes for query performance
+  @@index([stageId])
+  @@index([userId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  whatsappId String? @unique
+  content   String?
+  type      String   @default("text") // text, audio, image, video, document
+  mediaUrl  String?
+  mimeType  String?
+  status    String   @default("SENT") // SENT, DELIVERED, READ
+  isFromMe  Boolean  @default(false)
+  timestamp DateTime @default(now())
+  
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id])
+  userId    String?  
+  user      User?    @relation(fields: [userId], references: [id])
+
+  // Indexes for query performance
+  @@index([leadId])
+  @@index([timestamp])
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  color     String?  @default("#3B82F6")
+  leads     Lead[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AutomationRule {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  triggerType String?  // e.g. "STAGE_CHANGE", "NEW_LEAD", "TAG_ADDED"
+  triggerId   String?  // e.g. the specific stageId or tagId
+  nodes       String   @default("[]") // JSON string for React Flow nodes
+  edges       String   @default("[]") // JSON string for React Flow edges
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GlobalConfig {
+  id            String   @id @default("singleton")
+  funnelName    String   @default("FÚNIL IMPERIAL ITALINEA")
+  openAiApiKey  String?
+  systemPrompt  String?  @default("")
+  updatedAt     DateTime @updatedAt
+}
+
+model ImprovementPoint {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  imageUrl    String?
+  status      String   @default("Pendente")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

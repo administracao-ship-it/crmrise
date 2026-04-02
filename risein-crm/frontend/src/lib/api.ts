@@ -1,0 +1,205 @@
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+export interface Stage {
+    id: string;
+    name: string;
+    order: number;
+    leads: Lead[];
+}
+
+export interface Lead {
+    id: string;
+    name: string;
+    phone: string;
+    value: number;
+    title?: string;
+    phase?: string;
+    city?: string;
+    closedAt?: string;
+    isAgentActive?: boolean;
+    stageId: string;
+    userId?: string;
+    createdAt: string;
+    stage?: Stage;
+    messages?: Message[];
+}
+
+export interface Message {
+    id: string;
+    content?: string;
+    type: string;
+    mediaUrl?: string;
+    mimeType?: string;
+    status: string;
+    whatsappId?: string;
+    isFromMe: boolean;
+    timestamp: string;
+    leadId: string;
+}
+
+export async function fetchStages(): Promise<Stage[]> {
+    const res = await fetch(`${API_URL}/api/stages`);
+    if (!res.ok) throw new Error("Failed to fetch stages");
+    return res.json();
+}
+
+export async function createLead(data: {
+    name: string;
+    phone: string;
+    value?: number;
+    stageId: string;
+    title?: string;
+    phase?: string;
+    city?: string;
+}): Promise<Lead> {
+    const res = await fetch(`${API_URL}/api/leads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to create lead");
+    return res.json();
+}
+
+export async function updateLead(
+    id: string,
+    data: Partial<Lead>
+): Promise<Lead> {
+    const res = await fetch(`${API_URL}/api/leads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update lead");
+    return res.json();
+}
+
+export async function deleteLead(id: string): Promise<void> {
+    const res = await fetch(`${API_URL}/api/leads/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Failed to delete lead");
+}
+
+export async function fetchMessages(leadId: string): Promise<Message[]> {
+    const res = await fetch(`${API_URL}/api/messages/${leadId}`);
+    if (!res.ok) throw new Error("Failed to fetch messages");
+    return res.json();
+}
+
+export async function sendMessage(
+    leadId: string,
+    content: string | FormData
+): Promise<Message> {
+    const isFormData = content instanceof FormData;
+    const headers = isFormData ? {} : { "Content-Type": "application/json" };
+    const body = isFormData ? content : JSON.stringify({ content });
+
+    const res = await fetch(`${API_URL}/api/messages/${leadId}`, {
+        method: "POST",
+        headers: headers,
+        body: body,
+    });
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || "Failed to send message");
+    }
+    return res.json();
+}
+
+export async function getWhatsAppStatus(): Promise<{
+    status: string;
+    qr: string | null;
+}> {
+    const res = await fetch(`${API_URL}/api/messages/whatsapp/status`);
+    if (!res.ok) throw new Error("Failed to get WhatsApp status");
+    return res.json();
+}
+export async function connectWhatsApp(): Promise<{ message: string }> {
+    const res = await fetch(`${API_URL}/api/messages/whatsapp/connect`, {
+        method: "POST",
+    });
+    if (!res.ok) throw new Error("Failed to connect WhatsApp");
+    return res.json();
+}
+
+export async function disconnectWhatsApp(): Promise<{ message: string }> {
+    const res = await fetch(`${API_URL}/api/messages/whatsapp/disconnect`, {
+        method: "POST",
+    });
+    if (!res.ok) throw new Error("Failed to disconnect WhatsApp");
+    return res.json();
+}
+
+export async function updateStage(
+    id: string,
+    data: { name?: string; order?: number }
+): Promise<Stage> {
+    const res = await fetch(`${API_URL}/api/stages/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update stage");
+    return res.json();
+}
+
+export async function fetchConfig(): Promise<{ funnelName: string; openAiApiKey?: string; systemPrompt?: string }> {
+    const res = await fetch(`${API_URL}/api/config`);
+    if (!res.ok) throw new Error("Failed to fetch config");
+    return res.json();
+}
+
+export async function updateConfig(data: { funnelName?: string; openAiApiKey?: string; systemPrompt?: string }): Promise<{ funnelName: string; openAiApiKey?: string; systemPrompt?: string }> {
+    const res = await fetch(`${API_URL}/api/config`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update config");
+    return res.json();
+}
+
+// --- Improvement Points ---
+export interface ImprovementPoint {
+    id: string;
+    title: string;
+    description?: string;
+    imageUrl?: string;
+    status: "Pendente" | "Ajustando" | "Finalizado";
+    createdAt: string;
+    updatedAt: string;
+}
+
+export async function fetchImprovements(): Promise<ImprovementPoint[]> {
+    const res = await fetch(`${API_URL}/api/improvements`);
+    if (!res.ok) throw new Error("Failed to fetch improvements");
+    return res.json();
+}
+
+export async function createImprovement(formData: FormData): Promise<ImprovementPoint> {
+    const res = await fetch(`${API_URL}/api/improvements`, {
+        method: "POST",
+        body: formData, // multipart for image upload
+    });
+    if (!res.ok) throw new Error("Failed to create improvement");
+    return res.json();
+}
+
+export async function updateImprovementStatus(
+    id: string,
+    status: string
+): Promise<ImprovementPoint> {
+    const res = await fetch(`${API_URL}/api/improvements/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error("Failed to update improvement status");
+    return res.json();
+}
+
+export async function deleteImprovement(id: string): Promise<void> {
+    const res = await fetch(`${API_URL}/api/improvements/${id}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete improvement");
+}
