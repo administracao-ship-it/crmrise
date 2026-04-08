@@ -92,7 +92,7 @@ server.listen(PORT, async () => {
         if (configCount === 0) {
             console.log("🌱 Seeding default global config...");
             await prisma.globalConfig.create({
-                data: { id: "singleton", funnelName: "FÚNIL IMPERIAL ITALINEA" }
+                data: { id: "singleton", funnelName: "CRM RISE" }
             });
             console.log("✅ Config seeding complete.");
         }

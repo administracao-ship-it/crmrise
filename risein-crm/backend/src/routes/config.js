@@ -11,7 +11,7 @@ router.get("/", async (req, res, next) => {
         if (!config) {
             // Seed if somehow missing
             config = await req.prisma.globalConfig.create({
-                data: { id: "singleton", funnelName: "FÚNIL IMPERIAL ITALINEA" },
+                data: { id: "singleton", funnelName: "CRM RISE" },
             });
         }
 
@@ -34,7 +34,7 @@ router.patch("/", async (req, res, next) => {
         const config = await req.prisma.globalConfig.upsert({
             where: { id: "singleton" },
             update: updateData,
-            create: { id: "singleton", ...updateData, funnelName: updateData.funnelName || "FÚNIL IMPERIAL ITALINEA" },
+            create: { id: "singleton", ...updateData, funnelName: updateData.funnelName || "CRM RISE" },
         });
         res.json(config);
     } catch (err) {

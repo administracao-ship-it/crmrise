@@ -100,7 +100,7 @@ model AutomationRule {
 
 model GlobalConfig {
   id            String   @id @default("singleton")
-  funnelName    String   @default("FÚNIL IMPERIAL ITALINEA")
+  funnelName    String   @default("CRM RISE")
   openAiApiKey  String?
   systemPrompt  String?  @default("")
   updatedAt     DateTime @updatedAt

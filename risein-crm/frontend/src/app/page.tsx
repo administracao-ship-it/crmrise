@@ -50,7 +50,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState("Leads");
   const [viewMode, setViewMode] = useState<"kanban" | "list">("list");
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
-  const [funnelName, setFunnelName] = useState("FÚNIL IMPERIAL ITALINEA");
+  const [funnelName, setFunnelName] = useState("CRM RISE");
   const [openAiApiKey, setOpenAiApiKey] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -519,7 +519,7 @@ export default function HomePage() {
               <label>Prompt Mestre (A Personalidade do Agente)</label>
               <textarea 
                 id="system-prompt-input"
-                placeholder="Você é a Ivone, especialista em vendas da Inovar Italinea..."
+                placeholder="Você é a Ivone, especialista em vendas da CRM RISE..."
                 value={systemPrompt}
                 onChange={(e) => setSystemPrompt(e.target.value)}
                 rows={12}
