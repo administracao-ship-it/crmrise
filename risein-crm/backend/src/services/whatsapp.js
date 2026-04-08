@@ -18,11 +18,14 @@ function initWhatsApp(io, prisma) {
         authTimeoutMs: 60000,
         puppeteer: {
             headless: true,
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium",
             args: [
                 "--no-sandbox", 
                 "--disable-setuid-sandbox", 
                 "--disable-gpu",
-                "--disable-dev-shm-usage"
+                "--disable-dev-shm-usage",
+                "--no-zygote",
+                "--single-process"
             ],
         },
     });
@@ -255,11 +258,22 @@ function initWhatsApp(io, prisma) {
     console.log("⏳ Initializing WhatsApp client...");
     io.emit("whatsapp:status", { status: "initializing" });
     
-    whatsappClient.initialize().catch(err => {
-        console.error("❌ Failed to initialize WhatsApp client:", err);
-        whatsappStatus = "disconnected";
-        io.emit("whatsapp:error", err.message);
-    });
+    const initTimeout = setTimeout(() => {
+        if (whatsappStatus === "initializing") {
+            console.error("❌ WhatsApp initialization timed out after 60s");
+            whatsappStatus = "disconnected";
+            io.emit("whatsapp:status", { status: "disconnected", error: "Timeout during initialization" });
+        }
+    }, 60000);
+
+    whatsappClient.initialize()
+        .then(() => clearTimeout(initTimeout))
+        .catch(err => {
+            clearTimeout(initTimeout);
+            console.error("❌ Failed to initialize WhatsApp client:", err);
+            whatsappStatus = "disconnected";
+            io.emit("whatsapp:error", err.message);
+        });
 }
 
 async function sendMessage(phone, text, mediaPath = null) {
