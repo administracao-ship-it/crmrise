@@ -1,4 +1,7 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const isServer = typeof window === 'undefined';
+export const API_URL = isServer 
+  ? (process.env.INTERNAL_BACKEND_URL || "http://backend:3001") 
+  : ""; // Use relative paths in the browser
 
 export interface Stage {
     id: string;

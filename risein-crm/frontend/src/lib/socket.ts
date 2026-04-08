@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const SOCKET_URL = ""; // Use relative paths for browser-side WebSocket
 
 let socket: Socket | null = null;
 
