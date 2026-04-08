@@ -8,11 +8,32 @@ let whatsappStatus = "disconnected";
 let currentQR = null;
 let lastError = null;
 
+function cleanSingletonLock(dir) {
+    if (!fs.existsSync(dir)) return;
+    try {
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+            const fullPath = path.join(dir, file);
+            if (fs.lstatSync(fullPath).isDirectory()) {
+                cleanSingletonLock(fullPath);
+            } else if (file === "SingletonLock") {
+                fs.unlinkSync(fullPath);
+                console.log(`✅ Removed stale lock: ${fullPath}`);
+            }
+        }
+    } catch (err) {
+        // Silently fail if we can't delete it
+    }
+}
+
 function initWhatsApp(io, prisma) {
     if (whatsappClient) {
         console.log("♻️  Restarting WhatsApp client...");
         whatsappClient.destroy();
     }
+
+    // Clean any Chromium locks before starting
+    cleanSingletonLock(path.join(process.cwd(), ".wwebjs_auth"));
 
     whatsappClient = new Client({
         authStrategy: new LocalAuth({ dataPath: ".wwebjs_auth" }),
