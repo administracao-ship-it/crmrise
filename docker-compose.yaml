@@ -2,21 +2,33 @@ services:
   backend:
     build:
       context: ./risein-crm/backend
+      dockerfile: Dockerfile
     environment:
       - DATABASE_URL=file:/app/data/dev.db
       - PORT=3001
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
     ports:
       - "3001:3001"
     volumes:
-      - ./risein-crm/backend:/app/data
-      - ./risein-crm/backend/uploads:/app/uploads
-    restart: always
+      - db_data:/app/data
+      - uploads_data:/app/uploads
+      - wwebjs_auth:/app/.wwebjs_auth
+      - wwebjs_cache:/app/.wwebjs_cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   frontend:
     build:
       context: ./risein-crm/frontend
+      dockerfile: Dockerfile
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:3001
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      - NODE_ENV=production
     ports:
       - "3000:3000"
     labels:
@@ -24,5 +36,12 @@ services:
       - traefik.http.routers.frontend.rule=PathPrefix(`/`)
       - traefik.http.services.frontend.loadbalancer.server.port=3000
     depends_on:
-      - backend
-    restart: always
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  uploads_data:
+  wwebjs_auth:
+  wwebjs_cache:

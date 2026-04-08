@@ -1,0 +1,29 @@
+# Dependencies (reinstalled inside container)
+node_modules/
+
+# SQLite database (mounted as named volume in production)
+dev.db
+dev.db-journal
+dev.db-shm
+dev.db-wal
+
+# WhatsApp session (mounted as named volume in production)
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Media uploads (mounted as named volume in production)
+uploads/
+
+# Environment files (set via Coolify env vars)
+.env
+.env.*
+
+# Temp scripts and debug files
+api_test.js
+check_*.js
+list-*.js
+startup_error.log
+
+# Windows/OS files
+desktop.ini
+.DS_Store

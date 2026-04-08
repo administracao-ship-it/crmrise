@@ -1,0 +1,21 @@
+# Dependencies (reinstalled inside container)
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Environment files (set via Coolify env vars)
+.env
+.env.*
+.env.local
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Debug logs
+dev_log.txt
+
+# Windows/OS files
+desktop.ini
+.DS_Store
