@@ -46,4 +46,5 @@ RUN mkdir -p /app/data /app/uploads /app/.wwebjs_auth /app/.wwebjs_cache
 EXPOSE 3001
 
 # Run db push (creates/migrates SQLite schema) then start the server
-CMD sh -c "npx prisma db push --skip-generate && npm start"
+# --accept-data-loss is used to ensure it never hangs for interactive confirmation in production
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss --skip-generate && npm start"]
