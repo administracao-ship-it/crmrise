@@ -6,6 +6,7 @@ const path = require("path");
 let whatsappClient = null;
 let whatsappStatus = "disconnected";
 let currentQR = null;
+let lastError = null;
 
 function initWhatsApp(io, prisma) {
     if (whatsappClient) {
@@ -272,6 +273,7 @@ function initWhatsApp(io, prisma) {
             clearTimeout(initTimeout);
             console.error("❌ Failed to initialize WhatsApp client:", err);
             whatsappStatus = "disconnected";
+            lastError = err.message;
             io.emit("whatsapp:error", err.message);
         });
 }
@@ -308,7 +310,7 @@ async function sendMessage(phone, text, mediaPath = null) {
 }
 
 function getWhatsAppStatus() {
-    return { status: whatsappStatus, qr: currentQR };
+    return { status: whatsappStatus, qr: currentQR, error: lastError };
 }
 
 async function disconnectWhatsApp() {
