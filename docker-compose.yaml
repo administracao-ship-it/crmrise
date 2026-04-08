@@ -7,6 +7,10 @@ services:
       - DATABASE_URL=file:/app/data/dev.db
       - PORT=3001
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.backend.rule=PathPrefix(`/api`) || PathPrefix(`/socket.io`) || PathPrefix(`/uploads`)
+      - traefik.http.services.backend.loadbalancer.server.port=3001
     volumes:
       - db_data:/app/data
       - uploads_data:/app/uploads
