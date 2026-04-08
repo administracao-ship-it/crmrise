@@ -1,5 +1,5 @@
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
-const qrcode = require("qrcode-terminal");
+const qrcodeTerminal = require("qrcode-terminal");
 const fs = require("fs");
 const path = require("path");
 
@@ -53,17 +53,18 @@ function initWhatsApp(io, prisma) {
     });
 
     whatsappClient.on("qr", async (qr) => {
-        currentQR = qr;
         whatsappStatus = "waiting_qr";
-        qrcode.generate(qr, { small: true });
+        qrcodeTerminal.generate(qr, { small: true });
         console.log("📱 QR Code generated. Scan with your phone.");
         
         try {
             const QRCode = require("qrcode");
             const qrImage = await QRCode.toDataURL(qr);
+            currentQR = qrImage; // Store the Data URL as the current QR
             io.emit("whatsapp:qr", qrImage);
         } catch (err) {
             console.error("Failed to generate QR image:", err);
+            currentQR = qr; // Fallback to raw string
             io.emit("whatsapp:qr", qr); 
         }
     });

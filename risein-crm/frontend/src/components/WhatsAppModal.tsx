@@ -65,11 +65,7 @@ export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDi
     };
 
     const display = getStatusDisplay();
-    const qrUrl = qrCode && qrCode.startsWith("data:image") 
-        ? qrCode 
-        : qrCode 
-            ? `https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=${encodeURIComponent(qrCode)}`
-            : null;
+    const qrUrl = qrCode && qrCode.startsWith("data:image") ? qrCode : null;
 
     return (
         <div className="modal-overlay" onClick={onClose}>
