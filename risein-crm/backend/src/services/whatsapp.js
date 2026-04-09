@@ -62,8 +62,10 @@ async function initWhatsApp(io, prisma) {
         if (whatsappClient) {
             console.log("♻️  Cleaning up previous instance...");
             try {
-                await whatsappClient.destroy();
-                console.log("✅ Previous instance destroyed.");
+                const destroyPromise = whatsappClient.destroy();
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("destroy timeout")), 5000));
+                await Promise.race([destroyPromise, timeoutPromise]).catch(e => console.warn("Destroy timeout, skipping...", e.message));
+                console.log("✅ Previous instance destroyed or skipped.");
             } catch (e) {
                 console.warn("⚠️ Error destroying previous instance:", e.message);
             }
@@ -101,9 +103,12 @@ async function initWhatsApp(io, prisma) {
                 ],
                 handleSIGINT: false,
                 handleSIGTERM: false,
-                handleSIGHUP: false,
-                userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+                handleSIGHUP: false
             },
+            webVersionCache: {
+                type: 'remote',
+                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html'
+            }
         });
         console.log("🛠️ WhatsApp Client created. Calling initialize()...");
     } catch (err) {
@@ -439,8 +444,12 @@ async function getWhatsAppDebug() {
     }
     
     try {
-        const screenshot = await whatsappClient.pupPage.screenshot({ encoding: "base64" });
-        const content = await whatsappClient.pupPage.content();
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Screenshot timeout")), 15000));
+        const screenshotPromise = whatsappClient.pupPage.screenshot({ encoding: "base64" });
+        const screenshot = await Promise.race([screenshotPromise, timeoutPromise]);
+        
+        const contentPromise = whatsappClient.pupPage.content();
+        const content = await Promise.race([contentPromise, timeoutPromise]);
         return {
             status: whatsappStatus,
             qrCount,
@@ -462,7 +471,9 @@ async function disconnectWhatsApp() {
             console.error("Error during logout:", err);
         }
         try {
-            await whatsappClient.destroy();
+            const destroyPromise = whatsappClient.destroy();
+            const timeoutPromise = new Promise((_, r) => setTimeout(() => r(), 5000));
+            await Promise.race([destroyPromise, timeoutPromise]);
         } catch (err) {
             console.error("Error during destroy:", err);
         }
