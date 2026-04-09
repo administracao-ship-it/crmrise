@@ -68,7 +68,7 @@ export default function Header({
     const statusClass =
         whatsappStatus === "connected" || whatsappStatus === "authenticated"
             ? "connected"
-            : whatsappStatus === "waiting_qr"
+            : (whatsappStatus === "waiting_qr" || whatsappStatus === "initializing" || whatsappStatus === "loading")
                 ? "waiting"
                 : "disconnected";
 
@@ -77,7 +77,9 @@ export default function Header({
             ? "WhatsApp Conectado"
             : whatsappStatus === "waiting_qr"
                 ? "Aguardando QR Code"
-                : "WhatsApp Desconectado";
+                : (whatsappStatus === "initializing" || whatsappStatus === "loading")
+                    ? "Iniciando Conexão..."
+                    : "WhatsApp Desconectado";
 
     return (
         <header className="header">
