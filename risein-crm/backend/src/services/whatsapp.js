@@ -10,32 +10,26 @@ let currentQR = null;
 let lastError = null;
 let statusHeartbeat = null;
 
-function cleanSingletonLock(baseDir) {
-    if (!fs.existsSync(baseDir)) return;
+function cleanSingletonLock(dir) {
+    if (!fs.existsSync(dir)) return;
+    
     try {
-        const pathsToClean = [
-            path.join(baseDir, "SingletonLock"),
-            path.join(baseDir, "LOCK"),
-            path.join(baseDir, "Default", "SingletonLock"),
-            path.join(baseDir, "Default", "LOCK"),
-            path.join(baseDir, "session", "SingletonLock"),
-            path.join(baseDir, "session", "LOCK"),
-            path.join(baseDir, "session", "Default", "SingletonLock"),
-            path.join(baseDir, "session", "Default", "LOCK")
-        ];
-
-        pathsToClean.forEach(lockPath => {
-            if (fs.existsSync(lockPath)) {
+        const files = fs.readdirSync(dir);
+        files.forEach(file => {
+            const fullPath = path.join(dir, file);
+            if (fs.lstatSync(fullPath).isDirectory()) {
+                cleanSingletonLock(fullPath);
+            } else if (file === "SingletonLock" || file === "LOCK") {
                 try {
-                    fs.unlinkSync(lockPath);
-                    console.log(`✅ Removed stale lock: ${lockPath}`);
+                    fs.unlinkSync(fullPath);
+                    console.log(`✅ DISCARDED stale lock file: ${fullPath}`);
                 } catch (e) {
-                    console.warn(`⚠️ Could not remove lock at ${lockPath}:`, e.message);
+                    console.warn(`⚠️ Failed to delete lock ${fullPath}:`, e.message);
                 }
             }
         });
     } catch (err) {
-        console.warn("⚠️ Non-critical error during lock cleanup:", err.message);
+        console.warn(`⚠️ Error scanning directory ${dir} for locks:`, err.message);
     }
 }
 
