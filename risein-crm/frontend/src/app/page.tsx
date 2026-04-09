@@ -31,7 +31,8 @@ import {
   updateStage,
   getWhatsAppStatus, 
   connectWhatsApp,
-  disconnectWhatsApp,
+  disconnectWhatsApp as apiDisconnectWhatsApp,
+  resetWhatsApp as apiResetWhatsApp,
   fetchConfig,
   updateConfig 
 } from "@/lib/api";
@@ -312,6 +313,34 @@ export default function HomePage() {
     }
   };
 
+  const wrapConnectWhatsApp = async () => {
+    try {
+      await connectWhatsApp();
+    } catch (err) {
+      console.error("Failed to connect WhatsApp:", err);
+    }
+  };
+
+  const wrapDisconnectWhatsApp = async () => {
+    try {
+      await apiDisconnectWhatsApp();
+      setWhatsappStatus("disconnected");
+      setQrCode(null);
+    } catch (err) {
+      console.error("Failed to disconnect WhatsApp:", err);
+    }
+  };
+
+  const wrapResetWhatsApp = async () => {
+    try {
+      await apiResetWhatsApp();
+      setWhatsappStatus("disconnected");
+      setQrCode(null);
+    } catch (err) {
+      console.error("Failed to reset WhatsApp:", err);
+    }
+  };
+
   const handleLogout = () => {
     document.cookie = "auth-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     window.location.href = "/login";
@@ -544,8 +573,9 @@ export default function HomePage() {
           status={whatsappStatus}
           qrCode={qrCode}
           onClose={() => setShowWhatsAppModal(false)}
-          onConnect={connectWhatsApp}
-          onDisconnect={disconnectWhatsApp}
+          onConnect={wrapConnectWhatsApp}
+          onDisconnect={wrapDisconnectWhatsApp}
+          onReset={wrapResetWhatsApp}
         />
       )}
     </>

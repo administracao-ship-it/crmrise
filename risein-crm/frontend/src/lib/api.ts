@@ -132,6 +132,14 @@ export async function disconnectWhatsApp(): Promise<{ message: string }> {
     return res.json();
 }
 
+export async function resetWhatsApp(): Promise<{ message: string }> {
+    const res = await fetch(`${API_URL}/api/messages/whatsapp/reset`, {
+        method: "POST",
+    });
+    if (!res.ok) throw new Error("Failed to reset WhatsApp session");
+    return res.json();
+}
+
 export async function updateStage(
     id: string,
     data: { name?: string; order?: number }

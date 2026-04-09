@@ -9,11 +9,13 @@ interface WhatsAppModalProps {
     onClose: () => void;
     onConnect?: () => void;
     onDisconnect?: () => void;
+    onReset?: () => void;
 }
 
 export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDisconnect }: WhatsAppModalProps) {
     const [isConnecting, setIsConnecting] = React.useState(false);
     const [isDisconnecting, setIsDisconnecting] = React.useState(false);
+    const [isResetting, setIsResetting] = React.useState(false);
 
     const handleConnect = async () => {
         if (onConnect) {
@@ -28,6 +30,15 @@ export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDi
             setIsDisconnecting(true);
             await onDisconnect();
             setIsDisconnecting(false);
+            onClose();
+        }
+    };
+
+    const handleReset = async () => {
+        if (onReset && window.confirm("Isso apagará todos os dados da conexão atual no servidor e reiniciará o WhatsApp. Você terá que escanear o QR Code novamente. Continuar?")) {
+            setIsResetting(true);
+            await onReset();
+            setIsResetting(false);
             onClose();
         }
     };
@@ -189,6 +200,38 @@ export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDi
                         >
                             {isDisconnecting ? <Loader2 className="animate-spin" size={16} /> : <LogOut size={16} />}
                             {isDisconnecting ? "Desconectando..." : "Desconectar WhatsApp"}
+                        </button>
+                    </div>
+                )}
+
+                {(status === "waiting_qr" || status === "error" || status === "initializing") && (
+                    <div style={{ marginTop: 40, borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 20 }}>
+                        <p style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 12, opacity: 0.6 }}>
+                            Problemas com a conexão? tente o reset físico:
+                        </p>
+                        <button
+                            onClick={handleReset}
+                            disabled={isResetting}
+                            style={{
+                                width: "100%",
+                                padding: "8px 16px",
+                                borderRadius: "4px",
+                                fontSize: 10,
+                                fontWeight: 700,
+                                textTransform: "uppercase" as const,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 6,
+                                border: "1px solid rgba(255,100,100,0.3)",
+                                background: "transparent",
+                                color: "var(--accent-red)",
+                                cursor: isResetting ? "not-allowed" : "pointer",
+                                opacity: isResetting ? 0.5 : 0.8,
+                            }}
+                        >
+                            {isResetting ? <Loader2 className="animate-spin" size={12} /> : <LogOut size={12} />}
+                            {isResetting ? "Limpando..." : "Limpar Sessão e Reiniciar Servidor"}
                         </button>
                     </div>
                 )}

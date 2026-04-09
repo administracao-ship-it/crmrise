@@ -82,7 +82,8 @@ async function initWhatsApp(io, prisma) {
                 ],
                 handleSIGINT: false,
                 handleSIGTERM: false,
-                handleSIGHUP: false
+                handleSIGHUP: false,
+                userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
             },
         });
         console.log("🛠️ WhatsApp Client created. Calling initialize()...");
@@ -409,6 +410,26 @@ function getWhatsAppStatus() {
     return { status: whatsappStatus, qr: currentQR, qrCount, error: lastError };
 }
 
+async function getWhatsAppDebug() {
+    if (!whatsappClient || !whatsappClient.pupPage) {
+        return { message: "Client not initialized or page not available", status: whatsappStatus };
+    }
+    
+    try {
+        const screenshot = await whatsappClient.pupPage.screenshot({ encoding: "base64" });
+        const content = await whatsappClient.pupPage.content();
+        return {
+            status: whatsappStatus,
+            qrCount,
+            screenshot: `data:image/png;base64,${screenshot}`,
+            hasContent: content.length > 0,
+            url: whatsappClient.pupPage.url()
+        };
+    } catch (err) {
+        return { error: err.message, status: whatsappStatus };
+    }
+}
+
 async function disconnectWhatsApp() {
     if (whatsappClient) {
         console.log("⚠️ Desconectando WhatsApp...");
@@ -426,7 +447,22 @@ async function disconnectWhatsApp() {
     }
     whatsappStatus = "disconnected";
     const { getIO } = require('./socket');
-    getIO().emit("whatsapp:disconnected");
+    getIO().emit("whatsapp:status", { status: "disconnected" });
 }
 
-module.exports = { initWhatsApp, sendMessage, getWhatsAppStatus, disconnectWhatsApp };
+async function resetWhatsAppSession() {
+    await disconnectWhatsApp();
+    const authPath = path.join(process.cwd(), ".wwebjs_auth");
+    console.log(`🧨 TOTAL RESET: Deleting ${authPath}...`);
+    if (fs.existsSync(authPath)) {
+        try {
+            // Check if rimraf or similar is needed, but fs.rmSync is available in modern Node
+            fs.rmSync(authPath, { recursive: true, force: true });
+            console.log("✅ Authenticator folder deleted.");
+        } catch (e) {
+            console.error("❌ Failed to delete auth folder:", e.message);
+        }
+    }
+}
+
+module.exports = { initWhatsApp, sendMessage, getWhatsAppStatus, getWhatsAppDebug, disconnectWhatsApp, resetWhatsAppSession };

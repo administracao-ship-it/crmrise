@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-const { sendMessage, getWhatsAppStatus, initWhatsApp } = require("../services/whatsapp");
+const { sendMessage, getWhatsAppStatus, getWhatsAppDebug, initWhatsApp, resetWhatsAppSession } = require("../services/whatsapp");
 
 // Multer configuration
 const storage = multer.diskStorage({
@@ -19,6 +19,15 @@ router.get("/whatsapp/status", (_req, res) => {
     res.json(getWhatsAppStatus());
 });
 
+router.get("/whatsapp/debug", async (_req, res) => {
+    try {
+        const debugInfo = await getWhatsAppDebug();
+        res.json(debugInfo);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.post("/whatsapp/connect", (req, res) => {
     try {
         initWhatsApp(req.io, req.prisma);
@@ -33,6 +42,15 @@ router.post("/whatsapp/disconnect", async (req, res) => {
         const { disconnectWhatsApp } = require("../services/whatsapp");
         await disconnectWhatsApp();
         res.json({ message: "WhatsApp disconnected successfully" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+router.post("/whatsapp/reset", async (req, res) => {
+    try {
+        await resetWhatsAppSession();
+        res.json({ message: "WhatsApp session reset and disconnected" });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
