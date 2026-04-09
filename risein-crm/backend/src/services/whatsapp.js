@@ -7,6 +7,7 @@ const path = require("path");
 let whatsappClient = null;
 let whatsappStatus = "disconnected";
 let currentQR = null;
+let qrCount = 0;
 let lastError = null;
 let statusHeartbeat = null;
 
@@ -33,7 +34,7 @@ function cleanSingletonLock(dir) {
     }
 }
 
-function initWhatsApp(io, prisma) {
+async function initWhatsApp(io, prisma) {
     console.log("🚀 Starting WhatsApp Service...");
     whatsappStatus = "initializing";
     io.emit("whatsapp:status", { status: "initializing" });
@@ -41,7 +42,12 @@ function initWhatsApp(io, prisma) {
     try {
         if (whatsappClient) {
             console.log("♻️  Cleaning up previous instance...");
-            whatsappClient.destroy().catch(() => {});
+            try {
+                await whatsappClient.destroy();
+                console.log("✅ Previous instance destroyed.");
+            } catch (e) {
+                console.warn("⚠️ Error destroying previous instance:", e.message);
+            }
         }
 
         const authPath = path.join(process.cwd(), ".wwebjs_auth");
@@ -67,8 +73,16 @@ function initWhatsApp(io, prisma) {
                     "--no-first-run",
                     "--disable-extensions",
                     "--hide-scrollbars",
-                    "--mute-audio"
+                    "--mute-audio",
+                    "--disable-setuid-sandbox",
+                    "--disable-site-isolation-trials",
+                    "--disable-web-security",
+                    "--font-render-hinting=none",
+                    "--disable-blink-features=AutomationControlled"
                 ],
+                handleSIGINT: false,
+                handleSIGTERM: false,
+                handleSIGHUP: false
             },
         });
         console.log("🛠️ WhatsApp Client created. Calling initialize()...");
@@ -81,8 +95,8 @@ function initWhatsApp(io, prisma) {
 
     whatsappClient.on("qr", async (qr) => {
         whatsappStatus = "waiting_qr";
-        // qrcodeTerminal.generate(qr, { small: true });
-        console.log("📱 QR Code generated. Syncing to frontend...");
+        qrCount++;
+        console.log(`📱 QR Code generated (${qrCount}). Syncing to frontend...`);
         
         try {
             const qrImage = await QRCode.toDataURL(qr, {
@@ -334,13 +348,17 @@ function initWhatsApp(io, prisma) {
     }, 60000);
 
     whatsappClient.initialize()
-        .then(() => clearTimeout(initTimeout))
+        .then(() => {
+            clearTimeout(initTimeout);
+            console.log("🚀 WhatsApp client.initialize() call returned (Promised resolved)");
+        })
         .catch(err => {
             clearTimeout(initTimeout);
             console.error("❌ Failed to initialize WhatsApp client:", err);
             whatsappStatus = "disconnected";
             lastError = err.message;
             io.emit("whatsapp:error", err.message);
+            io.emit("whatsapp:status", { status: "disconnected", error: err.message });
         });
 }
 
@@ -388,7 +406,7 @@ async function sendMessage(phone, text, mediaPath = null) {
 }
 
 function getWhatsAppStatus() {
-    return { status: whatsappStatus, qr: currentQR, error: lastError };
+    return { status: whatsappStatus, qr: currentQR, qrCount, error: lastError };
 }
 
 async function disconnectWhatsApp() {
