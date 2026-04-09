@@ -66,14 +66,14 @@ export default function Header({
         if (e.key === "Escape") handleCancel();
     };
     const statusClass =
-        whatsappStatus === "connected"
+        whatsappStatus === "connected" || whatsappStatus === "authenticated"
             ? "connected"
             : whatsappStatus === "waiting_qr"
                 ? "waiting"
                 : "disconnected";
 
     const statusLabel =
-        whatsappStatus === "connected"
+        whatsappStatus === "connected" || whatsappStatus === "authenticated"
             ? "WhatsApp Conectado"
             : whatsappStatus === "waiting_qr"
                 ? "Aguardando QR Code"

@@ -7,6 +7,7 @@ let whatsappClient = null;
 let whatsappStatus = "disconnected";
 let currentQR = null;
 let lastError = null;
+let statusHeartbeat = null;
 
 function cleanSingletonLock(dir) {
     if (!fs.existsSync(dir)) return;
@@ -280,6 +281,14 @@ function initWhatsApp(io, prisma) {
     whatsappStatus = "initializing";
     console.log("⏳ Initializing WhatsApp client...");
     io.emit("whatsapp:status", { status: "initializing" });
+
+    // Status Heartbeat (every 30 seconds)
+    if (statusHeartbeat) clearInterval(statusHeartbeat);
+    statusHeartbeat = setInterval(() => {
+        if (whatsappClient) {
+            io.emit("whatsapp:status", getWhatsAppStatus());
+        }
+    }, 30000);
     
     const initTimeout = setTimeout(() => {
         if (whatsappStatus === "initializing") {
