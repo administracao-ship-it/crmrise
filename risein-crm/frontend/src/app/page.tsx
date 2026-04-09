@@ -81,6 +81,7 @@ export default function HomePage() {
     }
   }, []);
 
+  useEffect(() => {
     // Fetch initial WhatsApp status
     const syncWhatsAppStatus = async () => {
       try {
