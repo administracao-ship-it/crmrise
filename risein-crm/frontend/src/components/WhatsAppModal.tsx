@@ -12,7 +12,7 @@ interface WhatsAppModalProps {
     onReset?: () => void;
 }
 
-export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDisconnect }: WhatsAppModalProps) {
+export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDisconnect, onReset }: WhatsAppModalProps) {
     const [isConnecting, setIsConnecting] = React.useState(false);
     const [isDisconnecting, setIsDisconnecting] = React.useState(false);
     const [isResetting, setIsResetting] = React.useState(false);
@@ -116,18 +116,29 @@ export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDi
                 </p>
 
                 {(status === "waiting_qr" && qrUrl) && (
-                    <div style={{
-                        background: "white",
-                        padding: 15,
-                        borderRadius: 12,
-                        display: "inline-block",
-                        boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
-                    }}>
-                        <img
-                            src={qrUrl}
-                            alt="WhatsApp QR Code"
-                            style={{ width: 220, height: 220, display: "block" }}
-                        />
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                        <div style={{
+                            background: "white",
+                            padding: 15,
+                            borderRadius: 12,
+                            display: "inline-block",
+                            boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
+                        }}>
+                            <img
+                                src={qrUrl}
+                                alt="WhatsApp QR Code"
+                                style={{ width: 220, height: 220, display: "block" }}
+                            />
+                        </div>
+                        <button 
+                            className="btn-secondary" 
+                            style={{ fontSize: 12, padding: '8px 16px', borderRadius: 8 }}
+                            onClick={handleConnect}
+                            disabled={isConnecting}
+                        >
+                            {isConnecting ? <Loader2 className="animate-spin" size={14} /> : <Link2 size={14} />}
+                            {isConnecting ? "Gerando..." : "Gerar Novo QR Code"}
+                        </button>
                     </div>
                 )}
 

@@ -10,6 +10,24 @@ let currentQR = null;
 let qrCount = 0;
 let lastError = null;
 let statusHeartbeat = null;
+let watchdogTimer = null;
+
+function stopWatchdog() {
+    if (watchdogTimer) {
+        clearTimeout(watchdogTimer);
+        watchdogTimer = null;
+    }
+}
+
+function startWatchdog(io, prisma) {
+    stopWatchdog();
+    watchdogTimer = setTimeout(async () => {
+        if (whatsappStatus === "initializing" || whatsappStatus === "waiting_qr") {
+            console.error("🚨 Watchdog triggered: WhatsApp stuck in initialization/waiting for QR. Restarting...");
+            await initWhatsApp(io, prisma);
+        }
+    }, 180000); // 3 minutes timeout for QR/Init
+}
 
 function cleanSingletonLock(dir) {
     if (!fs.existsSync(dir)) return;
@@ -38,6 +56,7 @@ async function initWhatsApp(io, prisma) {
     console.log("🚀 Starting WhatsApp Service...");
     whatsappStatus = "initializing";
     io.emit("whatsapp:status", { status: "initializing" });
+    startWatchdog(io, prisma);
     
     try {
         if (whatsappClient) {
@@ -98,6 +117,8 @@ async function initWhatsApp(io, prisma) {
         whatsappStatus = "waiting_qr";
         qrCount++;
         console.log(`📱 QR Code generated (${qrCount}). Syncing to frontend...`);
+        // Refresh watchdog on every new QR
+        startWatchdog(io, prisma);
         
         try {
             const qrImage = await QRCode.toDataURL(qr, {
@@ -121,6 +142,7 @@ async function initWhatsApp(io, prisma) {
     whatsappClient.on("ready", () => {
         whatsappStatus = "connected";
         currentQR = null;
+        stopWatchdog(); // Success!
         console.log("✅ WhatsApp client is ready and fully synced!");
         io.emit("whatsapp:ready");
         io.emit("whatsapp:status", { status: "connected" });

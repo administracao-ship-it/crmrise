@@ -81,7 +81,18 @@ export default function HomePage() {
     }
   }, []);
 
-  useEffect(() => {
+    // Fetch initial WhatsApp status
+    const syncWhatsAppStatus = async () => {
+      try {
+        const { status, qr } = await getWhatsAppStatus();
+        setWhatsappStatus(status);
+        if (qr) setQrCode(qr);
+        if (status === "waiting_qr") setShowWhatsAppModal(true);
+      } catch (err) {
+        console.error("Failed to sync WhatsApp status:", err);
+      }
+    };
+
     loadData();
 
     const socket = getSocket();
@@ -153,18 +164,6 @@ export default function HomePage() {
         }))
       );
     });
-
-    // Fetch initial WhatsApp status
-    const syncWhatsAppStatus = async () => {
-      try {
-        const { status, qr } = await getWhatsAppStatus();
-        setWhatsappStatus(status);
-        if (qr) setQrCode(qr);
-        if (status === "waiting_qr") setShowWhatsAppModal(true);
-      } catch (err) {
-        console.error("Failed to sync WhatsApp status:", err);
-      }
-    };
 
     syncWhatsAppStatus();
 
