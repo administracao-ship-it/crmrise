@@ -1,5 +1,5 @@
-const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 const qrcodeTerminal = require("qrcode-terminal");
+const QRCode = require("qrcode");
 const fs = require("fs");
 const path = require("path");
 
@@ -12,18 +12,27 @@ let statusHeartbeat = null;
 function cleanSingletonLock(baseDir) {
     if (!fs.existsSync(baseDir)) return;
     try {
-        const lockPath = path.join(baseDir, "SingletonLock");
-        if (fs.existsSync(lockPath)) {
-            fs.unlinkSync(lockPath);
-            console.log(`✅ Removed stale root lock: ${lockPath}`);
-        }
-        
-        // Also check Default profile subfolder which is common
-        const defaultLockPath = path.join(baseDir, "Default", "SingletonLock");
-        if (fs.existsSync(defaultLockPath)) {
-            fs.unlinkSync(defaultLockPath);
-            console.log(`✅ Removed stale profile lock: ${defaultLockPath}`);
-        }
+        const pathsToClean = [
+            path.join(baseDir, "SingletonLock"),
+            path.join(baseDir, "LOCK"),
+            path.join(baseDir, "Default", "SingletonLock"),
+            path.join(baseDir, "Default", "LOCK"),
+            path.join(baseDir, "session", "SingletonLock"),
+            path.join(baseDir, "session", "LOCK"),
+            path.join(baseDir, "session", "Default", "SingletonLock"),
+            path.join(baseDir, "session", "Default", "LOCK")
+        ];
+
+        pathsToClean.forEach(lockPath => {
+            if (fs.existsSync(lockPath)) {
+                try {
+                    fs.unlinkSync(lockPath);
+                    console.log(`✅ Removed stale lock: ${lockPath}`);
+                } catch (e) {
+                    console.warn(`⚠️ Could not remove lock at ${lockPath}:`, e.message);
+                }
+            }
+        });
     } catch (err) {
         console.warn("⚠️ Non-critical error during lock cleanup:", err.message);
     }
@@ -45,12 +54,15 @@ function initWhatsApp(io, prisma) {
         cleanSingletonLock(authPath);
 
         console.log("📦 Creating WhatsApp Client...");
+        const isWindows = process.platform === "win32";
+        const defaultExecPath = isWindows ? undefined : "/usr/bin/chromium";
+
         whatsappClient = new Client({
             authStrategy: new LocalAuth({ dataPath: ".wwebjs_auth" }),
-            authTimeoutMs: 120000, // Increased to 120s
+            authTimeoutMs: 120000, // 120s
             puppeteer: {
                 headless: true,
-                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium",
+                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || defaultExecPath,
                 args: [
                     "--no-sandbox", 
                     "--disable-setuid-sandbox", 
@@ -64,6 +76,7 @@ function initWhatsApp(io, prisma) {
                 ],
             },
         });
+        console.log("🛠️ WhatsApp Client created. Calling initialize()...");
     } catch (err) {
         console.error("💥 FATA ERROR during WhatsApp initialization:", err);
         whatsappStatus = "error";
@@ -77,7 +90,6 @@ function initWhatsApp(io, prisma) {
         console.log("📱 QR Code generated. Syncing to frontend...");
         
         try {
-            const QRCode = require("qrcode");
             const qrImage = await QRCode.toDataURL(qr, {
                 margin: 2,
                 scale: 8

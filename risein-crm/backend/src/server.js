@@ -17,7 +17,7 @@ const tagRoutes = require("./routes/tags");
 const improvementRoutes = require("./routes/improvements");
 
 const prisma = new PrismaClient({
-    datasourceUrl: process.env.DATABASE_URL || "file:./dev.db"
+    datasourceUrl: process.env.DATABASE_URL
 });
 const app = express();
 const server = http.createServer(app);

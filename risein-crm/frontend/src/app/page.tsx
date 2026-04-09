@@ -85,11 +85,6 @@ export default function HomePage() {
 
     const socket = getSocket();
 
-    socket.on("whatsapp:ready", () => {
-      setWhatsappStatus("connected");
-      setQrCode(null);
-      setShowWhatsAppModal(false);
-    });
     socket.on("whatsapp:status", (data: { status: string, qr?: string }) => {
       setWhatsappStatus(data.status);
       if (data.qr) setQrCode(data.qr);
@@ -107,9 +102,10 @@ export default function HomePage() {
       setWhatsappStatus("authenticated");
       setQrCode(null);
     });
-    socket.on("whatsapp:status", (data: { status: string, qr?: string }) => {
-      setWhatsappStatus(data.status);
-      if (data.qr) setQrCode(data.qr);
+    socket.on("whatsapp:ready", () => {
+      setWhatsappStatus("connected");
+      setQrCode(null);
+      setShowWhatsAppModal(false);
     });
 
     socket.on("lead:created", (lead: Lead) => {
