@@ -9,42 +9,45 @@ let currentQR = null;
 let lastError = null;
 let statusHeartbeat = null;
 
-function cleanSingletonLock(dir) {
-    if (!fs.existsSync(dir)) return;
+function cleanSingletonLock(baseDir) {
+    if (!fs.existsSync(baseDir)) return;
     try {
-        const files = fs.readdirSync(dir);
-        for (const file of files) {
-            const fullPath = path.join(dir, file);
-            if (fs.lstatSync(fullPath).isDirectory()) {
-                cleanSingletonLock(fullPath);
-            } else if (file === "SingletonLock") {
-                fs.unlinkSync(fullPath);
-                console.log(`✅ Removed stale lock: ${fullPath}`);
-            }
+        const lockPath = path.join(baseDir, "SingletonLock");
+        if (fs.existsSync(lockPath)) {
+            fs.unlinkSync(lockPath);
+            console.log(`✅ Removed stale root lock: ${lockPath}`);
+        }
+        
+        // Also check Default profile subfolder which is common
+        const defaultLockPath = path.join(baseDir, "Default", "SingletonLock");
+        if (fs.existsSync(defaultLockPath)) {
+            fs.unlinkSync(defaultLockPath);
+            console.log(`✅ Removed stale profile lock: ${defaultLockPath}`);
         }
     } catch (err) {
-        // Silently fail if we can't delete it
+        console.warn("⚠️ Non-critical error during lock cleanup:", err.message);
     }
 }
 
 function initWhatsApp(io, prisma) {
-    console.log("🚀 Initializing WhatsApp service...");
+    console.log("🚀 Starting WhatsApp Service...");
     whatsappStatus = "initializing";
     io.emit("whatsapp:status", { status: "initializing" });
     
     try {
         if (whatsappClient) {
-            console.log("♻️  Destroying previous WhatsApp client instance...");
-            whatsappClient.destroy().catch(e => console.warn("Error destroying previous client:", e));
+            console.log("♻️  Cleaning up previous instance...");
+            whatsappClient.destroy().catch(() => {});
         }
 
-        // Clean any Chromium locks before starting
         const authPath = path.join(process.cwd(), ".wwebjs_auth");
+        console.log("🧹 Clearing browser locks...");
         cleanSingletonLock(authPath);
 
+        console.log("📦 Creating WhatsApp Client...");
         whatsappClient = new Client({
             authStrategy: new LocalAuth({ dataPath: ".wwebjs_auth" }),
-            authTimeoutMs: 60000,
+            authTimeoutMs: 120000, // Increased to 120s
             puppeteer: {
                 headless: true,
                 executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium",

@@ -104,7 +104,7 @@ export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDi
                     {display.desc}
                 </p>
 
-                {status === "waiting_qr" && qrUrl && (
+                {(status === "waiting_qr" && qrUrl) && (
                     <div style={{
                         background: "white",
                         padding: 15,
@@ -117,6 +117,25 @@ export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDi
                             alt="WhatsApp QR Code"
                             style={{ width: 220, height: 220, display: "block" }}
                         />
+                    </div>
+                )}
+
+                {(status === "initializing" || status === "loading" || status === "authenticated") && (
+                    <div style={{ marginTop: 24, padding: "0 20px" }}>
+                        <button 
+                            className="btn-secondary" 
+                            style={{ 
+                                width: "100%", 
+                                fontSize: 13, 
+                                opacity: 0.7,
+                                background: "rgba(255,255,255,0.05)",
+                                border: "1px solid rgba(255,255,255,0.1)",
+                                color: "var(--text-secondary)"
+                            }}
+                            onClick={onClose}
+                        >
+                            Cancelar / Tentar de Novo
+                        </button>
                     </div>
                 )}
 
