@@ -28,6 +28,9 @@ function cleanSingletonLock(dir) {
 }
 
 function initWhatsApp(io, prisma) {
+    whatsappStatus = "initializing";
+    io.emit("whatsapp:status", { status: "initializing" });
+    
     if (whatsappClient) {
         console.log("♻️  Restarting WhatsApp client...");
         whatsappClient.destroy();
@@ -48,19 +51,9 @@ function initWhatsApp(io, prisma) {
                 "--disable-gpu",
                 "--disable-dev-shm-usage",
                 "--no-zygote",
-                "--single-process",
+                "--no-first-run",
                 "--disable-extensions",
-                "--disable-accelerated-2d-canvas",
-                "--disable-background-timer-throttling",
-                "--disable-backgrounding-occluded-windows",
-                "--disable-breakpad",
-                "--disable-component-extensions-with-background-pages",
-                "--disable-features=TranslateUI",
-                "--disable-ipc-flooding-protection",
-                "--disable-renderer-backgrounding",
-                "--enable-features=NetworkServiceInProcess2",
                 "--hide-scrollbars",
-                "--metrics-recording-only",
                 "--mute-audio"
             ],
         },
