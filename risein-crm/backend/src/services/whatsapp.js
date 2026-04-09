@@ -11,6 +11,7 @@ let qrCount = 0;
 let lastError = null;
 let statusHeartbeat = null;
 let watchdogTimer = null;
+let globalIo = null;
 
 function stopWatchdog() {
     if (watchdogTimer) {
@@ -53,6 +54,7 @@ function cleanSingletonLock(dir) {
 }
 
 async function initWhatsApp(io, prisma) {
+    globalIo = io;
     console.log("🚀 Starting WhatsApp Service...");
     whatsappStatus = "initializing";
     io.emit("whatsapp:status", { status: "initializing" });
@@ -530,8 +532,10 @@ async function disconnectWhatsApp() {
         whatsappClient = null;
     }
     whatsappStatus = "disconnected";
-    const { getIO } = require('./socket');
-    getIO().emit("whatsapp:status", { status: "disconnected" });
+    
+    if (globalIo) {
+        globalIo.emit("whatsapp:status", { status: "disconnected" });
+    }
 }
 
 async function resetWhatsAppSession() {
