@@ -53,8 +53,16 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
         if (!lead) return;
 
         fetchMessages(lead.id)
-            .then(setMessages)
-            .catch(console.error);
+            .then(data => {
+                setMessages(data);
+                setSendError(null);
+            })
+            .catch(err => {
+                console.error("Failed to fetch messages:", err);
+                if (err.message?.includes("Lead not found")) {
+                    setSendError("Este contato não foi encontrado no servidor. Por favor, atualize a lista (F5).");
+                }
+            });
 
         const socket = getSocket();
 
