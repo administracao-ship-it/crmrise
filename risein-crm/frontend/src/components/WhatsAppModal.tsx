@@ -62,6 +62,13 @@ export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDi
                     desc: "Preparando o navegador seguro no servidor...",
                     color: "var(--accent-secondary)",
                 };
+            case "error":
+                return {
+                    icon: <AlertCircle className="text-red-500" size={48} />,
+                    title: "Erro de Conexão",
+                    desc: "Houve um problema ao iniciar o WhatsApp. Tente novamente.",
+                    color: "var(--accent-red)",
+                };
             default:
                 return {
                     icon: <AlertCircle className="text-yellow-500" size={48} />,
@@ -113,7 +120,7 @@ export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDi
                     </div>
                 )}
 
-                {(status === "disconnected" || status === "") && !qrCode && (
+                {(status === "disconnected" || status === "" || status === "error") && !qrCode && (
                     <button
                         className="btn-primary"
                         style={{ width: "100%", marginTop: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}

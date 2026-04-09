@@ -28,36 +28,45 @@ function cleanSingletonLock(dir) {
 }
 
 function initWhatsApp(io, prisma) {
+    console.log("🚀 Initializing WhatsApp service...");
     whatsappStatus = "initializing";
     io.emit("whatsapp:status", { status: "initializing" });
     
-    if (whatsappClient) {
-        console.log("♻️  Restarting WhatsApp client...");
-        whatsappClient.destroy();
+    try {
+        if (whatsappClient) {
+            console.log("♻️  Destroying previous WhatsApp client instance...");
+            whatsappClient.destroy().catch(e => console.warn("Error destroying previous client:", e));
+        }
+
+        // Clean any Chromium locks before starting
+        const authPath = path.join(process.cwd(), ".wwebjs_auth");
+        cleanSingletonLock(authPath);
+
+        whatsappClient = new Client({
+            authStrategy: new LocalAuth({ dataPath: ".wwebjs_auth" }),
+            authTimeoutMs: 60000,
+            puppeteer: {
+                headless: true,
+                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium",
+                args: [
+                    "--no-sandbox", 
+                    "--disable-setuid-sandbox", 
+                    "--disable-gpu",
+                    "--disable-dev-shm-usage",
+                    "--no-zygote",
+                    "--no-first-run",
+                    "--disable-extensions",
+                    "--hide-scrollbars",
+                    "--mute-audio"
+                ],
+            },
+        });
+    } catch (err) {
+        console.error("💥 FATA ERROR during WhatsApp initialization:", err);
+        whatsappStatus = "error";
+        io.emit("whatsapp:status", { status: "error", error: err.message });
+        return;
     }
-
-    // Clean any Chromium locks before starting
-    cleanSingletonLock(path.join(process.cwd(), ".wwebjs_auth"));
-
-    whatsappClient = new Client({
-        authStrategy: new LocalAuth({ dataPath: ".wwebjs_auth" }),
-        authTimeoutMs: 60000,
-        puppeteer: {
-            headless: true,
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium",
-            args: [
-                "--no-sandbox", 
-                "--disable-setuid-sandbox", 
-                "--disable-gpu",
-                "--disable-dev-shm-usage",
-                "--no-zygote",
-                "--no-first-run",
-                "--disable-extensions",
-                "--hide-scrollbars",
-                "--mute-audio"
-            ],
-        },
-    });
 
     whatsappClient.on("qr", async (qr) => {
         whatsappStatus = "waiting_qr";
