@@ -364,11 +364,11 @@ async function initWhatsApp(io, prisma) {
     
     const initTimeout = setTimeout(() => {
         if (whatsappStatus === "initializing") {
-            console.error("❌ WhatsApp initialization timed out after 60s");
+            console.error("❌ WhatsApp initialization timed out after 180s (Puppeteer likely hung or slow)");
             whatsappStatus = "disconnected";
-            io.emit("whatsapp:status", { status: "disconnected", error: "Timeout during initialization" });
+            io.emit("whatsapp:status", { status: "disconnected", error: "Timeout during initialization (VPS slow)" });
         }
-    }, 60000);
+    }, 180000); // 3 minutes for slow VPS
 
     whatsappClient.initialize()
         .then(() => {
@@ -386,7 +386,8 @@ async function initWhatsApp(io, prisma) {
 }
 
 async function sendMessage(phone, text, mediaPath = null) {
-    if (!whatsappClient || (whatsappStatus !== "connected" && whatsappStatus !== "authenticated")) {
+    const isReady = ["connected", "authenticated", "loading"].includes(whatsappStatus);
+    if (!whatsappClient || !isReady) {
         throw new Error(`WhatsApp is not connected (Status: ${whatsappStatus})`);
     }
     const chatId = phone.includes('@') ? phone : `${phone}@c.us`;
