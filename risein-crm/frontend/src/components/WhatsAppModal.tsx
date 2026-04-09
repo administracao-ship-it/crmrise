@@ -54,6 +54,14 @@ export default function WhatsAppModal({ status, qrCode, onClose, onConnect, onDi
                     desc: "Quase pronto! Sincronizando suas mensagens.",
                     color: "var(--accent-secondary)",
                 };
+            case "loading":
+            case "initializing":
+                return {
+                    icon: <Loader2 className="text-blue-500 animate-spin" size={48} />,
+                    title: "Iniciando...",
+                    desc: "Preparando o navegador seguro no servidor...",
+                    color: "var(--accent-secondary)",
+                };
             default:
                 return {
                     icon: <AlertCircle className="text-yellow-500" size={48} />,

@@ -48,38 +48,60 @@ function initWhatsApp(io, prisma) {
                 "--disable-gpu",
                 "--disable-dev-shm-usage",
                 "--no-zygote",
-                "--single-process"
+                "--single-process",
+                "--disable-extensions",
+                "--disable-accelerated-2d-canvas",
+                "--disable-background-timer-throttling",
+                "--disable-backgrounding-occluded-windows",
+                "--disable-breakpad",
+                "--disable-component-extensions-with-background-pages",
+                "--disable-features=TranslateUI",
+                "--disable-ipc-flooding-protection",
+                "--disable-renderer-backgrounding",
+                "--enable-features=NetworkServiceInProcess2",
+                "--hide-scrollbars",
+                "--metrics-recording-only",
+                "--mute-audio"
             ],
         },
     });
 
     whatsappClient.on("qr", async (qr) => {
         whatsappStatus = "waiting_qr";
-        qrcodeTerminal.generate(qr, { small: true });
-        console.log("📱 QR Code generated. Scan with your phone.");
+        // qrcodeTerminal.generate(qr, { small: true });
+        console.log("📱 QR Code generated. Syncing to frontend...");
         
         try {
             const QRCode = require("qrcode");
-            const qrImage = await QRCode.toDataURL(qr);
-            currentQR = qrImage; // Store the Data URL as the current QR
+            const qrImage = await QRCode.toDataURL(qr, {
+                margin: 2,
+                scale: 8
+            });
+            currentQR = qrImage;
             io.emit("whatsapp:qr", qrImage);
         } catch (err) {
             console.error("Failed to generate QR image:", err);
-            currentQR = qr; // Fallback to raw string
+            currentQR = qr;
             io.emit("whatsapp:qr", qr); 
         }
+    });
+
+    whatsappClient.on("loading_screen", (percent, message) => {
+        console.log(`⏳ Loading WhatsApp: ${percent}% - ${message}`);
+        io.emit("whatsapp:status", { status: "loading", percent, message });
     });
 
     whatsappClient.on("ready", () => {
         whatsappStatus = "connected";
         currentQR = null;
-        console.log("✅ WhatsApp client is ready!");
+        console.log("✅ WhatsApp client is ready and fully synced!");
         io.emit("whatsapp:ready");
+        io.emit("whatsapp:status", { status: "connected" });
     });
 
     whatsappClient.on("authenticated", () => {
         whatsappStatus = "authenticated";
-        console.log("🔐 WhatsApp authenticated");
+        console.log("🔐 WhatsApp authentication successful.");
         io.emit("whatsapp:authenticated");
     });
 
@@ -87,6 +109,7 @@ function initWhatsApp(io, prisma) {
         whatsappStatus = "auth_failure";
         console.error("❌ WhatsApp auth failure:", msg);
         io.emit("whatsapp:auth_failure", msg);
+        io.emit("whatsapp:status", { status: "auth_failure", error: msg });
     });
 
     whatsappClient.on("disconnected", (reason) => {
