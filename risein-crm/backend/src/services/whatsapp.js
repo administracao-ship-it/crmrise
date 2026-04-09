@@ -197,6 +197,56 @@ async function initWhatsApp(io, prisma) {
         }
     });
 
+    whatsappClient.on("message_create", async (msg) => {
+        if (!msg.fromMe) return; // Incoming messages handled by 'message' event
+        if (msg.to === "status@broadcast" || msg.to.includes("@g.us")) return;
+
+        try {
+            const phone = msg.to.replace("@c.us", "");
+            let lead = await prisma.lead.findUnique({ where: { phone } });
+            
+            if (!lead && msg.body) {
+                const defaultStage = await prisma.stage.findFirst({ orderBy: { order: "asc" } });
+                if (defaultStage) {
+                    const contact = await whatsappClient.getContactById(msg.to);
+                    const contactName = contact ? (contact.pushname || contact.name || phone) : phone;
+                    lead = await prisma.lead.create({
+                        data: { name: contactName, phone, stageId: defaultStage.id }
+                    });
+                    io.emit("lead:created", lead);
+                    console.log(`🆕 Outbox created new lead: ${contactName}`);
+                }
+            }
+
+            if (!lead) return;
+
+            // Wait 1s to allow CRM API to insert first if this message originated from the CRM
+            setTimeout(async () => {
+                try {
+                    const existing = await prisma.message.findUnique({ where: { whatsappId: msg.id.id } });
+                    if (existing) return; // Already inserted by the CRM API
+
+                    const message = await prisma.message.create({
+                        data: {
+                            whatsappId: msg.id.id,
+                            content: msg.body || null,
+                            isFromMe: true,
+                            leadId: lead.id,
+                            status: "SENT", 
+                        }
+                    });
+                    
+                    io.emit("message:sent", { ...message, lead });
+                    console.log(`📠 Synced outbox message to ${phone}`);
+                } catch (e) {
+                    // Ignore unique constraint or other db errors cleanly
+                }
+            }, 1000);
+        } catch (err) {
+             console.error("Error syncing outbox message:", err);
+        }
+    });
+
     whatsappClient.on("message", async (msg) => {
         try {
             const contact = await msg.getContact();
