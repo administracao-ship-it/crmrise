@@ -849,6 +849,12 @@ body {
 .chat-send-btn:hover {
   background: var(--accent-blue-light);
 }
+.chat-send-btn:disabled {
+  background: var(--text-muted);
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
 
 /* Media Components */
 .chat-bubble.has-media {

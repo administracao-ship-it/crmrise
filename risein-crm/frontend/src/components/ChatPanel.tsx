@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Send, Paperclip, FileIcon, Smile, Mic, Check, CheckCheck, Trash2, Play, Square } from "lucide-react";
+import { X, Send, Paperclip, FileIcon, Smile, Mic, Check, CheckCheck, Trash2, Play, Square, Loader2, AlertCircle, Clock } from "lucide-react";
 import { fetchMessages, sendMessage as apiSendMessage, API_URL } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import type { Lead, Message } from "@/lib/api";
@@ -33,6 +33,7 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
     const [input, setInput] = useState("");
     const [sending, setSending] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [sendError, setSendError] = useState<string | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
@@ -98,16 +99,39 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
 
     const handleSend = async () => {
         if (!input.trim() || !lead || sending) return;
+        
+        const content = input.trim();
+        const tempId = `temp-${Date.now()}`;
+        const tempMsg: Message = {
+            id: tempId,
+            content,
+            type: "chat",
+            status: "PENDING",
+            isFromMe: true,
+            timestamp: new Date().toISOString(),
+            leadId: lead.id
+        };
+
         setSending(true);
+        setSendError(null);
+        
+        // Optimistic update
+        setMessages(prev => [...prev, tempMsg]);
+        setInput("");
+
         try {
-            const msg = await apiSendMessage(lead.id, input.trim());
+            const msg = await apiSendMessage(lead.id, content);
             setMessages((prev) => {
-                if (prev.find((m) => m.id === msg.id)) return prev;
-                return [...prev, msg];
+                // Replace temp message with real one from server
+                return prev.map(m => m.id === tempId ? msg : m);
             });
-            setInput("");
-        } catch (err) {
+        } catch (err: any) {
             console.error("Failed to send message:", err);
+            setSendError(err.message || "Falha ao enviar mensagem");
+            // Highlight the failed message or keep the text in input if preferred.
+            // For now, let's keep the message in list but mark as error or return to input.
+            setInput(content); // Return text to input for retry
+            setMessages(prev => prev.filter(m => m.id !== tempId)); // Remove temp message
         } finally {
             setSending(false);
         }
@@ -335,11 +359,13 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
                                             <div className="message-time">
                                                 {formatTime(msg.timestamp)}
                                                 {msg.isFromMe && (
-                                                    <span style={{ marginLeft: '4px' }}>
-                                                        {(msg.status === "READ") ? (
+                                                    <span style={{ marginLeft: '4px', display: 'inline-flex', alignItems: 'center' }}>
+                                                        {msg.status === "READ" ? (
                                                             <CheckCheck size={12} color="#34b7f1" />
-                                                        ) : (msg.status === "DELIVERED") ? (
+                                                        ) : msg.status === "DELIVERED" ? (
                                                             <CheckCheck size={12} />
+                                                        ) : msg.status === "PENDING" ? (
+                                                            <Clock size={10} className="animate-pulse" />
                                                         ) : (
                                                             <Check size={12} />
                                                         )}
@@ -409,25 +435,36 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
                                 </button>
                             </div>
                         ) : (
-                            <input
-                                type="text"
-                                className="chat-input-field"
-                                placeholder="Pressione Enter para enviar..."
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" && !e.shiftKey) {
-                                        e.preventDefault();
-                                        handleSend();
-                                    }
-                                }}
-                            />
+                                <div style={{ flex: 1, position: 'relative' }}>
+                                    <input
+                                        type="text"
+                                        className={`chat-input-field ${sendError ? 'border-red-500' : ''}`}
+                                        placeholder={sending ? "Enviando..." : "Pressione Enter para enviar..."}
+                                        value={input}
+                                        onChange={(e) => {
+                                            setInput(e.target.value);
+                                            if (sendError) setSendError(null);
+                                        }}
+                                        disabled={sending}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleSend();
+                                            }
+                                        }}
+                                    />
+                                    {sendError && (
+                                        <div className="absolute -top-8 left-0 text-red-500 text-[10px] flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
+                                            <AlertCircle size={10} /> {sendError}
+                                        </div>
+                                    )}
+                                </div>
                         )}
                         
                         <div className="chat-input-actions-right">
                             {(input.trim() || uploading) && !isRecording && !recordedUrl ? (
                                 <button className="chat-send-btn" onClick={handleSend} disabled={sending || !input.trim()}>
-                                    <Send size={18} />
+                                    {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                                 </button>
                             ) : !isRecording && !recordedUrl ? (
                                 <button 

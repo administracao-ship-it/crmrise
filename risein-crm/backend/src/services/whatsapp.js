@@ -308,21 +308,33 @@ async function sendMessage(phone, text, mediaPath = null) {
     
     try {
         let response;
-        if (mediaPath) {
-            console.log(`📡 Sending media to ${chatId}: ${mediaPath}`);
-            const media = MessageMedia.fromFilePath(mediaPath);
-            
-            // Check if it's an audio file to send as voice note (PTT)
-            const isAudio = media.mimetype.startsWith('audio/');
-            
-            response = await whatsappClient.sendMessage(chatId, media, { 
-                caption: text,
-                sendAudioAsVoice: isAudio
-            });
-        } else {
-            console.log(`📡 Sending message to ${chatId}...`);
-            response = await whatsappClient.sendMessage(chatId, text);
-        }
+        
+        // Wrap sending in a timeout to prevent hanging the whole request
+        const sendTimeout = 30000; // 30 seconds
+        const messagePromise = (async () => {
+            if (mediaPath) {
+                console.log(`📡 Sending media to ${chatId}: ${mediaPath}`);
+                const media = MessageMedia.fromFilePath(mediaPath);
+                
+                // Check if it's an audio file to send as voice note (PTT)
+                const isAudio = media.mimetype.startsWith('audio/');
+                
+                return await whatsappClient.sendMessage(chatId, media, { 
+                    caption: text,
+                    sendAudioAsVoice: isAudio
+                });
+            } else {
+                console.log(`📡 Sending message to ${chatId}...`);
+                return await whatsappClient.sendMessage(chatId, text);
+            }
+        })();
+
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error(`Timeout: WhatsApp timed out after ${sendTimeout/1000}s while sending to ${chatId}`)), sendTimeout);
+        });
+
+        response = await Promise.race([messagePromise, timeoutPromise]);
+        
         console.log(`✅ Message sent to ${chatId} (${response.id.id})`);
         return response.id.id; // Return WhatsApp ID
     } catch (err) {
