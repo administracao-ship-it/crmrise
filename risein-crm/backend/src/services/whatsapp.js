@@ -447,10 +447,24 @@ async function sendMessage(phone, text, mediaPath = null) {
     if (!whatsappClient || !isReady) {
         throw new Error(`WhatsApp is not connected (Status: ${whatsappStatus})`);
     }
-    const chatId = phone.includes('@') ? phone : `${phone}@c.us`;
+    const originalChatId = phone.includes('@') ? phone : `${phone}@c.us`;
     
     try {
         let response;
+        let chatId = originalChatId;
+
+        // Validation: Try to get the "Live ID" (LID) first to avoid "No LID for user" errors (especially for Brazilian numbers)
+        try {
+            const numberDetails = await whatsappClient.getNumberId(phone);
+            if (numberDetails && numberDetails._serialized) {
+                chatId = numberDetails._serialized;
+                console.log(`🔍 Resolved internal ID for ${phone}: ${chatId}`);
+            } else {
+                console.warn(`⚠️ Number ${phone} might not be registered on WhatsApp. Attempting with formatted ID.`);
+            }
+        } catch (valErr) {
+            console.warn(`⚠️ getNumberId failed for ${phone}:`, valErr.message);
+        }
         
         // Wrap sending in a timeout to prevent hanging the whole request
         const sendTimeout = 30000; // 30 seconds
