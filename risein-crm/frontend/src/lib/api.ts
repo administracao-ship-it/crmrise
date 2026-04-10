@@ -214,3 +214,26 @@ export async function deleteImprovement(id: string): Promise<void> {
     });
     if (!res.ok) throw new Error("Failed to delete improvement");
 }
+
+export interface BulkContact {
+    name: string;
+    phone: string;
+}
+
+export async function sendBulkMessages(data: {
+    contacts: BulkContact[];
+    message: string;
+    delayMin?: number;
+    delayMax?: number;
+}): Promise<{ success: boolean; total: number }> {
+    const res = await fetch(`${API_URL}/api/messages/whatsapp/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.details || errorData.error || "Failed to start bulk messaging");
+    }
+    return res.json();
+}

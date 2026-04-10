@@ -24,6 +24,7 @@ import NewLeadModal from "@/components/NewLeadModal";
 import WhatsAppModal from "@/components/WhatsAppModal";
 import LeadTable from "@/components/LeadTable";
 import ImprovementsPage from "@/components/ImprovementsPage";
+import DisparosPage from "@/components/DisparosPage";
 import { 
   fetchStages, 
   updateLead, 
@@ -442,6 +443,8 @@ export default function HomePage() {
           )
         ) : activeTab === "Chats" ? (
           <ChatModule stages={stages} />
+        ) : activeTab === "Disparos" ? (
+          <DisparosPage />
         ) : activeTab === "Improvements" ? (
           <div style={{ height: "100%", overflowY: "auto" }}>
             <ImprovementsPage />

@@ -175,4 +175,77 @@ router.post("/:leadId", upload.single("file"), async (req, res, next) => {
     }
 });
 
+router.post("/whatsapp/bulk", async (req, res) => {
+    try {
+        const { contacts, message, delayMin = 10, delayMax = 25 } = req.body;
+        
+        if (!contacts || !Array.isArray(contacts) || !message) {
+            return res.status(400).json({ error: "Contatos ou mensagem inválidos" });
+        }
+
+        // Return immediately so the UI isn't blocked, processing happens in background
+        res.json({ success: true, total: contacts.length, message: "Disparos iniciados" });
+
+        // Run background process
+        (async () => {
+            const defaultStage = await req.prisma.stage.findFirst({ orderBy: { order: "asc" } });
+            
+            for (let i = 0; i < contacts.length; i++) {
+                const contact = contacts[i];
+                const phone = contact.phone.replace(/\D/g, ""); // Keep only digits
+                const personalizedMessage = message.replace(/{nome}/gi, contact.name);
+
+                try {
+                    // 1. Find or Create Lead
+                    let lead = await req.prisma.lead.findUnique({ where: { phone } });
+                    if (!lead) {
+                        lead = await req.prisma.lead.create({
+                            data: {
+                                name: contact.name,
+                                phone: phone,
+                                stageId: defaultStage?.id || "default",
+                                value: 0
+                            }
+                        });
+                        req.io.emit("lead:created", lead);
+                    }
+
+                    // 2. Send Message
+                    const whatsappId = await sendMessage(phone, personalizedMessage);
+
+                    // 3. Save Message
+                    const newMessage = await req.prisma.message.create({
+                        data: {
+                            content: personalizedMessage,
+                            isFromMe: true,
+                            leadId: lead.id,
+                            whatsappId,
+                            status: "SENT"
+                        }
+                    });
+
+                    req.io.emit("message:sent", { ...newMessage, lead });
+                    req.io.emit("bulk:progress", { index: i, total: contacts.length, contact, status: "success" });
+
+                } catch (err) {
+                    console.error(`[BULK] Error sending to ${contact.name}:`, err.message);
+                    req.io.emit("bulk:progress", { index: i, total: contacts.length, contact, status: "error", error: err.message });
+                }
+
+                // 4. Anti-blocking delay (don't wait on the last one)
+                if (i < contacts.length - 1) {
+                    const delay = Math.floor(Math.random() * (delayMax - delayMin + 1) + delayMin) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            
+            req.io.emit("bulk:completed", { total: contacts.length });
+        })();
+
+    } catch (err) {
+        console.error("[BULK] Critical error:", err);
+        res.status(500).json({ error: "Erro interno ao iniciar disparos" });
+    }
+});
+
 module.exports = router;

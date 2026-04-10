@@ -15,7 +15,8 @@ import {
     LogOut,
     Zap,
     Plus,
-    Lightbulb
+    Lightbulb,
+    Send
 } from "lucide-react";
 
 import Link from "next/link";
@@ -26,6 +27,7 @@ const navItems = [
     { icon: Users, label: "Leads", active: true, href: "/" },
     { icon: DollarSign, label: "Processo de Vendas", href: "/" },
     { icon: MessageCircle, label: "Chats", href: "/" },
+    { icon: Send, label: "Disparos", href: "/" },
     { icon: Zap, label: "Automação", href: "/automation" },
     { icon: Calendar, label: "Calendar", href: "/" },
     { icon: Contact, label: "Contacts", href: "/" },
