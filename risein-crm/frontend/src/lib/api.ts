@@ -215,6 +215,11 @@ export async function deleteImprovement(id: string): Promise<void> {
     if (!res.ok) throw new Error("Failed to delete improvement");
 }
 
+export interface BulkContact {
+    name: string;
+    phone: string;
+}
+
 export interface BulkJob {
     id: string;
     message: string;
