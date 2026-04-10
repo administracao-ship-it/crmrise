@@ -175,24 +175,69 @@ router.post("/:leadId", upload.single("file"), async (req, res, next) => {
     }
 });
 
+router.get("/whatsapp/bulk/history", async (req, res, next) => {
+    try {
+        const jobs = await req.prisma.bulkJob.findMany({
+            orderBy: { createdAt: "desc" },
+            take: 20
+        });
+        res.json(jobs);
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.post("/whatsapp/media-upload", upload.single("file"), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "Nenhum arquivo enviado" });
+        }
+        res.json({ 
+            mediaUrl: `/uploads/${req.file.filename}`,
+            mimeType: req.file.mimetype,
+            filename: req.file.originalname 
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.post("/whatsapp/bulk", async (req, res) => {
     try {
-        const { contacts, message, delayMin = 10, delayMax = 25 } = req.body;
+        const { contacts, message, mediaUrl, delayMin = 10, delayMax = 25 } = req.body;
         
         if (!contacts || !Array.isArray(contacts) || !message) {
             return res.status(400).json({ error: "Contatos ou mensagem inválidos" });
         }
 
-        // Return immediately so the UI isn't blocked, processing happens in background
-        res.json({ success: true, total: contacts.length, message: "Disparos iniciados" });
+        // 1. Create BulkJob record
+        const bulkJob = await req.prisma.bulkJob.create({
+            data: {
+                message,
+                mediaUrl: mediaUrl || null,
+                totalContacts: contacts.length,
+                status: "RUNNING"
+            }
+        });
+
+        // Return immediately so the UI isn't blocked
+        res.json({ success: true, jobId: bulkJob.id, message: "Disparos iniciados" });
 
         // Run background process
         (async () => {
             const defaultStage = await req.prisma.stage.findFirst({ orderBy: { order: "asc" } });
+            let successes = 0;
+            let errors = 0;
             
+            // Resolve media path if exists
+            let absoluteMediaPath = null;
+            if (mediaUrl) {
+                absoluteMediaPath = path.join(__dirname, "../../", mediaUrl);
+            }
+
             for (let i = 0; i < contacts.length; i++) {
                 const contact = contacts[i];
-                const phone = contact.phone.replace(/\D/g, ""); // Keep only digits
+                const phone = contact.phone.replace(/\D/g, ""); 
                 const personalizedMessage = message.replace(/{nome}/gi, contact.name);
 
                 try {
@@ -210,36 +255,63 @@ router.post("/whatsapp/bulk", async (req, res) => {
                         req.io.emit("lead:created", lead);
                     }
 
-                    // 2. Send Message
-                    const whatsappId = await sendMessage(phone, personalizedMessage);
+                    // 2. Send Message (with media if provided)
+                    const whatsappId = await sendMessage(phone, personalizedMessage, absoluteMediaPath);
 
-                    // 3. Save Message
+                    // 3. Save Message to DB
                     const newMessage = await req.prisma.message.create({
                         data: {
                             content: personalizedMessage,
                             isFromMe: true,
                             leadId: lead.id,
                             whatsappId,
-                            status: "SENT"
+                            status: "SENT",
+                            mediaUrl: mediaUrl || null,
+                            type: mediaUrl ? "image" : "text" // Simplified: assume image for now or detect from mime
                         }
                     });
 
+                    successes++;
                     req.io.emit("message:sent", { ...newMessage, lead });
-                    req.io.emit("bulk:progress", { index: i, total: contacts.length, contact, status: "success" });
+                    req.io.emit("bulk:progress", { index: i + 1, total: contacts.length, contact, status: "success", jobId: bulkJob.id });
 
                 } catch (err) {
+                    errors++;
                     console.error(`[BULK] Error sending to ${contact.name}:`, err.message);
-                    req.io.emit("bulk:progress", { index: i, total: contacts.length, contact, status: "error", error: err.message });
+                    req.io.emit("bulk:progress", { index: i + 1, total: contacts.length, contact, status: "error", error: err.message, jobId: bulkJob.id });
                 }
 
-                // 4. Anti-blocking delay (don't wait on the last one)
+                // Update Progress in DB every 5 messages or at the end
+                if (i % 5 === 0 || i === contacts.length - 1) {
+                    await req.prisma.bulkJob.update({
+                        where: { id: bulkJob.id },
+                        data: {
+                            processedCount: i + 1,
+                            successCount: successes,
+                            errorCount: errors
+                        }
+                    });
+                }
+
+                // 4. Anti-blocking delay
                 if (i < contacts.length - 1) {
                     const delay = Math.floor(Math.random() * (delayMax - delayMin + 1) + delayMin) * 1000;
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
             }
             
-            req.io.emit("bulk:completed", { total: contacts.length });
+            // Final update
+            await req.prisma.bulkJob.update({
+                where: { id: bulkJob.id },
+                data: {
+                    status: "COMPLETED",
+                    processedCount: contacts.length,
+                    successCount: successes,
+                    errorCount: errors
+                }
+            });
+
+            req.io.emit("bulk:completed", { total: contacts.length, success: successes, error: errors, jobId: bulkJob.id });
         })();
 
     } catch (err) {

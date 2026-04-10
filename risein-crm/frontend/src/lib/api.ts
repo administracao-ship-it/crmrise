@@ -215,17 +215,25 @@ export async function deleteImprovement(id: string): Promise<void> {
     if (!res.ok) throw new Error("Failed to delete improvement");
 }
 
-export interface BulkContact {
-    name: string;
-    phone: string;
+export interface BulkJob {
+    id: string;
+    message: string;
+    mediaUrl?: string;
+    totalContacts: number;
+    processedCount: number;
+    successCount: number;
+    errorCount: number;
+    status: string;
+    createdAt: string;
 }
 
 export async function sendBulkMessages(data: {
     contacts: BulkContact[];
     message: string;
+    mediaUrl?: string;
     delayMin?: number;
     delayMax?: number;
-}): Promise<{ success: boolean; total: number }> {
+}): Promise<{ success: boolean; jobId: string }> {
     const res = await fetch(`${API_URL}/api/messages/whatsapp/bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -235,5 +243,22 @@ export async function sendBulkMessages(data: {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.details || errorData.error || "Failed to start bulk messaging");
     }
+    return res.json();
+}
+
+export async function fetchBulkHistory(): Promise<BulkJob[]> {
+    const res = await fetch(`${API_URL}/api/messages/whatsapp/bulk/history`);
+    if (!res.ok) throw new Error("Failed to fetch bulk history");
+    return res.json();
+}
+
+export async function uploadCampaignMedia(file: File): Promise<{ mediaUrl: string; mimeType: string }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${API_URL}/api/messages/whatsapp/media-upload`, {
+        method: "POST",
+        body: formData,
+    });
+    if (!res.ok) throw new Error("Failed to upload media");
     return res.json();
 }
