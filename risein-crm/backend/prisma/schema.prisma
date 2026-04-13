@@ -41,6 +41,7 @@ model Lead {
   phase     String?
   city      String?
   closedAt  DateTime?
+  avatarUrl String?
   isAgentActive Boolean @default(false)
 
   stageId   String

@@ -212,8 +212,16 @@ async function initWhatsApp(io, prisma) {
                 if (defaultStage) {
                     const contact = await whatsappClient.getContactById(msg.to);
                     const contactName = contact ? (contact.pushname || contact.name || phone) : phone;
+                    
+                    let avatarUrl = null;
+                    if (contact) {
+                        try {
+                            avatarUrl = await contact.getProfilePicUrl();
+                        } catch (err) {}
+                    }
+                    
                     lead = await prisma.lead.create({
-                        data: { name: contactName, phone, stageId: defaultStage.id }
+                        data: { name: contactName, phone, avatarUrl, stageId: defaultStage.id }
                     });
                     io.emit("lead:created", lead);
                     console.log(`🆕 Outbox created new lead: ${contactName}`);
@@ -269,10 +277,16 @@ async function initWhatsApp(io, prisma) {
                     return;
                 }
 
+                let avatarUrl = null;
+                try {
+                    avatarUrl = await contact.getProfilePicUrl();
+                } catch (err) {}
+
                 lead = await prisma.lead.create({
                     data: {
                         name: contactName,
                         phone,
+                        avatarUrl,
                         stageId: defaultStage.id,
                     },
                 });

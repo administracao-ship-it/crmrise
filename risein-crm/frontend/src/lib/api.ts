@@ -19,6 +19,7 @@ export interface Lead {
     phase?: string;
     city?: string;
     closedAt?: string;
+    avatarUrl?: string;
     isAgentActive?: boolean;
     stageId: string;
     userId?: string;

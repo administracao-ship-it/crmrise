@@ -80,9 +80,18 @@ function LeadCard({ lead, onClick, onEdit, onDelete }: LeadCardProps) {
             <div className="lead-card-header">
                 <div
                     className="lead-card-avatar"
-                    style={{ background: getAvatarColor(lead.name) }}
+                    style={{ background: lead.avatarUrl ? "transparent" : getAvatarColor(lead.name) }}
                 >
-                    {getInitials(lead.name)}
+                    {lead.avatarUrl ? (
+                        <img 
+                            src={lead.avatarUrl} 
+                            alt={lead.name} 
+                            style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+                            referrerPolicy="no-referrer"
+                        />
+                    ) : (
+                        getInitials(lead.name)
+                    )}
                 </div>
                 <div className="lead-card-info">
                     <span className="lead-name">{lead.name}</span>
