@@ -68,6 +68,14 @@ function LeadCard({ lead, onClick, onEdit, onDelete }: LeadCardProps) {
 
     const lastMessage = lead.messages?.[0];
 
+    const formatDisplayName = (text: string) => {
+        if (!text) return "";
+        return text.split('@')[0];
+    };
+
+    const displayName = formatDisplayName(lead.name);
+    const displayPhone = formatDisplayName(lead.phone);
+
     return (
         <div
             ref={setNodeRef}
@@ -80,22 +88,22 @@ function LeadCard({ lead, onClick, onEdit, onDelete }: LeadCardProps) {
             <div className="lead-card-header">
                 <div
                     className="lead-card-avatar"
-                    style={{ background: lead.avatarUrl ? "transparent" : getAvatarColor(lead.name) }}
+                    style={{ background: lead.avatarUrl ? "transparent" : getAvatarColor(displayName) }}
                 >
                     {lead.avatarUrl ? (
                         <img 
                             src={lead.avatarUrl} 
-                            alt={lead.name} 
+                            alt={displayName} 
                             style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
                             referrerPolicy="no-referrer"
                         />
                     ) : (
-                        getInitials(lead.name)
+                        getInitials(displayName)
                     )}
                 </div>
                 <div className="lead-card-info">
-                    <span className="lead-name">{lead.name}</span>
-                    <div className="lead-phone">{lead.phone}</div>
+                    <span className="lead-name">{displayName}</span>
+                    <div className="lead-phone">{displayPhone}</div>
                 </div>
                 <div className="lead-actions">
                     <button

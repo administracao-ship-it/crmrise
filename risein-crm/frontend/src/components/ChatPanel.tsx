@@ -21,12 +21,18 @@ function formatTime(dateStr: string): string {
 }
 
 function getInitials(name: string): string {
+    if (!name) return "";
     return name
         .split(" ")
-        .map((w) => w[0])
+        .map((w) => w?.[0] || "")
         .join("")
         .toUpperCase()
         .slice(0, 2);
+}
+
+function formatDisplayName(text: string): string {
+    if (!text) return "";
+    return text.split('@')[0];
 }
 
 export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatPanelProps) {
@@ -286,11 +292,20 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
                     <div className="chat-header">
                         <div className="chat-contact">
                             <div className="chat-contact-avatar">
-                                {getInitials(lead.name)}
+                                {lead.avatarUrl ? (
+                                    <img 
+                                        src={lead.avatarUrl} 
+                                        alt={formatDisplayName(lead.name)} 
+                                        style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+                                        referrerPolicy="no-referrer"
+                                    />
+                                ) : (
+                                    getInitials(formatDisplayName(lead.name))
+                                )}
                             </div>
                             <div>
-                                <div className="chat-contact-name">{lead.name}</div>
-                                <div className="chat-contact-phone">{lead.phone}</div>
+                                <div className="chat-contact-name">{formatDisplayName(lead.name)}</div>
+                                <div className="chat-contact-phone">{formatDisplayName(lead.phone)}</div>
                             </div>
                         </div>
                         <div style={{ display: "flex", gap: "8px" }}>
