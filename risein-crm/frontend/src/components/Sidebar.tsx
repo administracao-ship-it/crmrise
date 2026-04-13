@@ -49,9 +49,11 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         if (saved === "light") {
             setIsLight(true);
             document.documentElement.classList.add("light-theme");
+            document.documentElement.classList.remove("dark-theme");
         } else {
             setIsLight(false);
             document.documentElement.classList.remove("light-theme");
+            document.documentElement.classList.add("dark-theme");
         }
     }, []);
 
@@ -60,9 +62,11 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         setIsLight(newVal);
         if (newVal) {
             document.documentElement.classList.add("light-theme");
+            document.documentElement.classList.remove("dark-theme");
             localStorage.setItem("theme", "light");
         } else {
             document.documentElement.classList.remove("light-theme");
+            document.documentElement.classList.add("dark-theme");
             localStorage.setItem("theme", "dark");
         }
     };
@@ -88,13 +92,14 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                         }}
                         className={`sidebar-item ${activeTab === item.label ? "active" : ""}`}
                         title={item.label}
-                        style={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        style={{ cursor: "pointer" }}
                     >
                         <item.icon size={20} />
+                        <span className="sidebar-label">{item.label}</span>
                     </Link>
                 ))}
             </nav>
-            <div style={{ marginTop: "auto", paddingBottom: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="sidebar-footer">
                 <div
                     className="sidebar-item"
                     title={isLight ? "Ativar Modo Escuro" : "Ativar Modo Claro"}
@@ -102,14 +107,16 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                     style={{ cursor: "pointer", color: isLight ? "var(--accent-orange)" : "var(--accent-blue)" }}
                 >
                     {isLight ? <Moon size={20} /> : <Sun size={20} />}
+                    <span className="sidebar-label">{isLight ? "Modo Escuro" : "Modo Claro"}</span>
                 </div>
                 <div
                     className={`sidebar-item ${activeTab === "Settings" ? "active" : ""}`}
-                    title="Settings"
+                    title="Configurações"
                     onClick={() => onTabChange("Settings")}
                     style={{ cursor: "pointer" }}
                 >
                     <Settings size={20} />
+                    <span className="sidebar-label">Configurações</span>
                 </div>
                 <div
                     className="sidebar-item"
@@ -118,6 +125,7 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                     style={{ cursor: "pointer", color: "var(--accent-red)" }}
                 >
                     <LogOut size={20} />
+                    <span className="sidebar-label">Sair</span>
                 </div>
             </div>
         </aside>

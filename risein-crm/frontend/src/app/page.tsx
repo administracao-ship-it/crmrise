@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -39,6 +39,7 @@ import {
 } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import type { Stage, Lead, Message } from "@/lib/api";
+import toast from 'react-hot-toast';
 
 export default function HomePage() {
   const [stages, setStages] = useState<Stage[]>([]);
@@ -60,6 +61,12 @@ export default function HomePage() {
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [defaultStageId, setDefaultStageId] = useState<string | null>(null);
   const [editingStage, setEditingStage] = useState<{ id: string, name: string } | null>(null);
+  const [editLeadValue, setEditLeadValue] = useState("");
+  const [editStageValue, setEditStageValue] = useState("");
+  const [confirmDialog, setConfirmDialog] = useState<{
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -181,11 +188,11 @@ export default function HomePage() {
     };
   }, [loadData, editingLead]);
 
-  const totalLeads = stages.reduce((acc, s) => acc + s.leads.length, 0);
-  const totalValue = stages.reduce(
+  const totalLeads = useMemo(() => stages.reduce((acc, s) => acc + s.leads.length, 0), [stages]);
+  const totalValue = useMemo(() => stages.reduce(
     (acc, s) => acc + s.leads.reduce((sum, l) => sum + (l.value || 0), 0),
     0
-  );
+  ), [stages]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(event.active.id as string);
@@ -265,20 +272,30 @@ export default function HomePage() {
   };
 
   const handleDeleteLead = async (lead: Lead) => {
-    if (!confirm(`Tem certeza que deseja remover o lead ${lead.name}?`)) return;
-    try {
-      await deleteLead(lead.id);
-    } catch (err) {
-      console.error("Failed to delete lead:", err);
-    }
+    setConfirmDialog({
+      message: `Deseja remover permanentemente o lead "${lead.name}"?`,
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        try {
+          await deleteLead(lead.id);
+          toast.success(`Lead "${lead.name}" removido`);
+        } catch (err) {
+          console.error("Failed to delete lead:", err);
+          toast.error("Erro ao remover lead");
+        }
+      },
+    });
   };
 
   const handleUpdateLeadName = async (newName: string) => {
     if (!editingLead || !newName.trim()) return;
     try {
       await updateLead(editingLead.id, { name: newName.trim() });
+      setEditingLead(null);
+      toast.success("Lead atualizado com sucesso");
     } catch (err) {
       console.error("Failed to update lead name:", err);
+      toast.error("Erro ao atualizar lead");
     }
   };
 
@@ -287,9 +304,11 @@ export default function HomePage() {
     try {
       await updateStage(editingStage.id, { name: newName.trim() });
       setEditingStage(null);
-      loadData(); // Refresh to see new name
+      loadData();
+      toast.success("Etapa atualizada com sucesso");
     } catch (err) {
       console.error("Failed to update stage name:", err);
+      toast.error("Erro ao atualizar etapa");
     }
   };
 
@@ -347,7 +366,7 @@ export default function HomePage() {
     window.location.href = "/login";
   };
 
-  const filteredStages = stages.map((stage) => ({
+  const filteredStages = useMemo(() => stages.map((stage) => ({
     ...stage,
     leads: stage.leads.filter(
       (lead) =>
@@ -355,7 +374,7 @@ export default function HomePage() {
         lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         lead.phone.includes(searchQuery)
     ),
-  }));
+  })), [stages, searchQuery]);
 
   if (loading) {
     return (
@@ -417,9 +436,10 @@ export default function HomePage() {
                     title={stage.name}
                     leads={stage.leads}
                     onLeadClick={setSelectedLead}
-                    onEditStage={setEditingStage}
-                    onEditLead={setEditingLead}
+                    onEditStage={(s) => { setEditingStage(s); setEditStageValue(s.name); }}
+                    onEditLead={(l) => { setEditingLead(l); setEditLeadValue(l.name); }}
                     onDeleteLead={handleDeleteLead}
+                    onAddLead={handleAddLeadClick}
                   />
                 ))}
               </div>
@@ -478,53 +498,50 @@ export default function HomePage() {
       )}
 
       {editingLead && (
-        <div className="modal-overlay">
-          <div className="modal">
+        <div className="modal-overlay" onClick={() => setEditingLead(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>Editar Lead</h2>
             <div className="form-group">
               <label>Nome do Lead</label>
-              <input 
-                type="text" 
-                defaultValue={editingLead.name}
+              <input
+                type="text"
+                value={editLeadValue}
+                onChange={(e) => setEditLeadValue(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleUpdateLeadName(e.currentTarget.value);
+                  if (e.key === 'Enter') handleUpdateLeadName(editLeadValue);
+                  if (e.key === 'Escape') setEditingLead(null);
                 }}
                 autoFocus
-                onBlur={(e) => handleUpdateLeadName(e.currentTarget.value)}
               />
             </div>
             <div className="modal-actions">
               <button className="btn-secondary" onClick={() => setEditingLead(null)}>Cancelar</button>
-              <button className="btn-primary" onClick={() => {
-                const input = document.querySelector('.modal input') as HTMLInputElement;
-                handleUpdateLeadName(input.value);
-              }}>Salvar</button>
+              <button className="btn-primary" onClick={() => handleUpdateLeadName(editLeadValue)}>Salvar</button>
             </div>
           </div>
         </div>
       )}
 
       {editingStage && (
-        <div className="modal-overlay">
-          <div className="modal">
+        <div className="modal-overlay" onClick={() => setEditingStage(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>Editar Nome da Etapa</h2>
             <div className="form-group">
               <label>Novo Nome</label>
-              <input 
-                type="text" 
-                defaultValue={editingStage.name}
+              <input
+                type="text"
+                value={editStageValue}
+                onChange={(e) => setEditStageValue(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleUpdateStageName(e.currentTarget.value);
+                  if (e.key === 'Enter') handleUpdateStageName(editStageValue);
+                  if (e.key === 'Escape') setEditingStage(null);
                 }}
                 autoFocus
               />
             </div>
             <div className="modal-actions">
               <button className="btn-secondary" onClick={() => setEditingStage(null)}>Cancelar</button>
-              <button className="btn-primary" onClick={() => {
-                const input = document.querySelector('.modal input') as HTMLInputElement;
-                handleUpdateStageName(input.value);
-              }}>Salvar</button>
+              <button className="btn-primary" onClick={() => handleUpdateStageName(editStageValue)}>Salvar</button>
             </div>
           </div>
         </div>
@@ -581,6 +598,20 @@ export default function HomePage() {
           onReset={wrapResetWhatsApp}
         />
       )}
+
+      {confirmDialog && (
+        <div className="modal-overlay" style={{ background: "rgba(0,0,0,0.75)" }} onClick={() => setConfirmDialog(null)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon">🗑️</div>
+            <p className="confirm-message">{confirmDialog.message}</p>
+            <div className="confirm-actions">
+              <button className="btn-secondary" onClick={() => setConfirmDialog(null)}>Cancelar</button>
+              <button className="btn-danger" onClick={confirmDialog.onConfirm}>Remover</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
   );
 }

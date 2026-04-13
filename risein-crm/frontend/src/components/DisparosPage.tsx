@@ -12,6 +12,7 @@ import {
     type BulkContact, type BulkJob 
 } from "@/lib/api";
 import * as XLSX from 'xlsx';
+import toast from 'react-hot-toast';
 
 export default function DisparosPage() {
     const [contactsText, setContactsText] = useState("");
@@ -109,7 +110,7 @@ export default function DisparosPage() {
                 setContactsText(prev => prev ? prev + "\n" + formatted : formatted);
                 addLog(new Date().toLocaleTimeString(), `Importados ${data.length} contatos da planilha.`, 'info');
             } catch (err) {
-                alert("Erro ao ler planilha. Verifique o formato.");
+                toast.error("Erro ao ler planilha. Verifique o formato.");
             }
         };
         reader.readAsBinaryString(file);
@@ -141,11 +142,11 @@ export default function DisparosPage() {
     const handleStart = async () => {
         const contacts = parseContacts();
         if (contacts.length === 0) {
-            alert("Nenhum contato válido encontrado. Use o formato: Nome;Telefone");
+            toast.error("Nenhum contato válido encontrado. Use o formato: Nome;Telefone");
             return;
         }
         if (!message.trim()) {
-            alert("Por favor, digite uma mensagem.");
+            toast.error("Por favor, digite uma mensagem.");
             return;
         }
 
@@ -571,9 +572,9 @@ export default function DisparosPage() {
                 .current-target { font-size: 0.85rem; margin-top: 10px; }
                 .status-tag { 
                     font-size: 0.65rem; padding: 2px 4px; border-radius: 4px; margin-left: 6px; 
-                    background: #10b981; color: white;
+                    background: var(--accent-green); color: white;
                 }
-                .status-tag.error { background: #ef4444; }
+                .status-tag.error { background: var(--accent-red); }
 
                 .action-bar { margin-top: 24px; display: flex; justify-content: flex-end; }
                 .btn-start {
@@ -601,9 +602,9 @@ export default function DisparosPage() {
                 .job-date { font-size: 0.8rem; color: var(--text-secondary); }
                 .job-status {
                     font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;
-                    background: #3b82f6; color: white; text-transform: uppercase;
+                    background: var(--accent-blue); color: white; text-transform: uppercase;
                 }
-                .job-status.COMPLETED { background: #10b981; }
+                .job-status.COMPLETED { background: var(--accent-green); }
                 .job-message { font-size: 0.9rem; color: var(--text-primary); line-height: 1.4; }
                 .job-media-info {
                     display: flex; align-items: center; gap: 6px;
@@ -621,8 +622,8 @@ export default function DisparosPage() {
                 .progress-mini .fill { height: 100%; background: var(--accent-blue); border-radius: 2px; }
                 .job-progress span { font-size: 0.75rem; color: var(--text-secondary); }
                 .job-stats { display: flex; gap: 12px; font-size: 0.8rem; font-weight: 600; }
-                .job-stats .success { color: #10b981; }
-                .job-stats .error { color: #ef4444; }
+                .job-stats .success { color: var(--accent-green); }
+                .job-stats .error { color: var(--accent-red); }
 
                 .empty-history {
                     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -639,9 +640,9 @@ export default function DisparosPage() {
                 }
                 .log-entry { margin-bottom: 4px; }
                 .log-time { color: var(--text-secondary); margin-right: 6px; }
-                .log-entry.success { color: #10b981; }
-                .log-entry.error { color: #ef4444; }
-                .log-entry.info { color: #3b82f6; }
+                .log-entry.success { color: var(--accent-green); }
+                .log-entry.error { color: var(--accent-red); }
+                .log-entry.info { color: var(--accent-blue); }
             `}</style>
         </div>
     );

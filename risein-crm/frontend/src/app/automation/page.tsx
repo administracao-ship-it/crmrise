@@ -5,6 +5,7 @@ import FlowEditor from '../../components/automation/FlowEditor';
 import { ArrowLeft, Play, Pause, Trash2, Settings, Layers, Zap, Info, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { ReactFlowProvider } from 'reactflow';
+import toast from 'react-hot-toast';
 
 export default function AutomationPage() {
   const [automations, setAutomations] = useState<any[]>([]);
@@ -75,7 +76,7 @@ export default function AutomationPage() {
         const updated = await res.json();
         setAutomations(automations.map(a => a.id === updated.id ? updated : a));
         setSelectedAutomation(updated);
-        alert('Automação salva com sucesso!');
+        toast.success('Automação salva com sucesso!');
       }
     } catch (err) {
       console.error('Save failed', err);
@@ -155,36 +156,42 @@ export default function AutomationPage() {
       }
   };
 
-  if (loading) return <div className="p-10">Carregando automações...</div>;
+  if (loading) return <div style={{ padding: 40, color: 'var(--text-secondary)' }}>Carregando automações...</div>;
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-inter">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-primary)', fontFamily: 'Inter, sans-serif' }}>
       {/* Top Header */}
-      <header className="h-16 bg-white border-b px-6 flex items-center justify-between z-20 shadow-sm">
-        <div className="flex items-center space-x-4">
-          <Link href="/" className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600">
+      <header style={{
+        height: 64, background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)',
+        padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 20,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Link href="/" style={{ padding: 8, borderRadius: '50%', color: 'var(--text-secondary)', transition: 'all 0.15s' }}>
             <ArrowLeft size={20} />
           </Link>
-          <div className="h-6 w-px bg-slate-200" />
-          <div className="flex items-center space-x-2">
-            <div className="bg-blue-600 p-1.5 rounded-lg">
-                <Layers size={18} className="text-white" />
+          <div style={{ height: 24, width: 1, background: 'var(--border-color)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ background: 'var(--accent-blue)', padding: 6, borderRadius: 8 }}>
+                <Layers size={18} style={{ color: 'white' }} />
             </div>
-            <h1 className="text-lg font-extrabold text-slate-800 tracking-tight">Rise In <span className="text-blue-600">FLOW</span></h1>
+            <h1 style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>Rise In <span style={{ color: 'var(--accent-blue)' }}>FLOW</span></h1>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {selectedAutomation && (
-            <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200">
-               <span className="px-3 text-xs font-bold text-slate-500 uppercase">Status:</span>
+            <div style={{ display: 'flex', alignItems: 'center', padding: 4, background: 'var(--bg-tertiary)', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+               <span style={{ padding: '0 12px', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Status:</span>
                <button 
                 onClick={() => toggleActive(selectedAutomation.id)}
-                className={`flex items-center space-x-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm ${
-                    selectedAutomation.isActive 
-                    ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
-                    : 'bg-slate-300 text-slate-600 hover:bg-slate-400'
-                }`}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 8,
+                  fontSize: 11, fontWeight: 700, transition: 'all 0.15s', border: 'none', cursor: 'pointer',
+                  background: selectedAutomation.isActive ? 'var(--accent-green)' : 'var(--bg-tertiary)',
+                  color: selectedAutomation.isActive ? 'white' : 'var(--text-secondary)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                }}
                >
                  {selectedAutomation.isActive ? <Play size={14} fill="white" /> : <Pause size={14} fill="currentColor" />}
                  <span>{selectedAutomation.isActive ? 'ATIVO' : 'DESATIVADO'}</span>
@@ -193,7 +200,11 @@ export default function AutomationPage() {
           )}
           <button 
             onClick={createNewAutomation}
-            className="flex items-center space-x-2 bg-slate-900 border border-slate-700 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg hover:bg-slate-800 transition-all active:scale-95"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, background: 'var(--accent-blue)',
+              color: 'white', padding: '8px 20px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+              border: 'none', cursor: 'pointer', boxShadow: 'var(--premium-shadow)', transition: 'all 0.15s'
+            }}
           >
             <Plus size={18} />
             <span>NOVO FLUXO</span>
@@ -201,42 +212,53 @@ export default function AutomationPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Sidebar - Automation List */}
-        <aside className="w-80 bg-white border-r flex flex-col z-10 shadow-sm">
-          <div className="p-4 border-b bg-slate-50">
-            <div className="relative">
+        <aside style={{ width: 320, background: 'var(--bg-secondary)', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+          <div style={{ padding: 16, borderBottom: '1px solid var(--border-color)', background: 'var(--bg-tertiary)' }}>
+            <div style={{ position: 'relative' }}>
                 <input 
                     type="text" 
                     placeholder="Pesquisar automações..." 
-                    className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-inner"
+                    style={{
+                      width: '100%', paddingLeft: 36, paddingRight: 16, paddingTop: 8, paddingBottom: 8,
+                      background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12,
+                      fontSize: 12, fontWeight: 500, color: 'var(--text-primary)', outline: 'none'
+                    }}
                 />
-                <div className="absolute left-3 top-2.5 text-slate-400"><Layers size={14} /></div>
+                <div style={{ position: 'absolute', left: 12, top: 10, color: 'var(--text-muted)' }}><Layers size={14} /></div>
             </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {automations.map((a) => (
               <div 
                 key={a.id}
                 onClick={() => setSelectedAutomation(a)}
-                className={`p-4 rounded-2xl cursor-pointer transition-all border-2 relative group overflow-hidden ${
-                  selectedAutomation?.id === a.id 
-                  ? 'bg-blue-50 border-blue-500 shadow-md ring-4 ring-blue-50/50' 
-                  : 'bg-white border-slate-100 hover:border-slate-300 hover:shadow-sm'
-                }`}
+                style={{
+                  padding: 16, borderRadius: 16, cursor: 'pointer', transition: 'all 0.2s',
+                  border: selectedAutomation?.id === a.id ? '2px solid var(--accent-blue)' : '2px solid var(--border-color)',
+                  background: selectedAutomation?.id === a.id ? 'rgba(45, 106, 223, 0.08)' : 'var(--bg-card)',
+                  position: 'relative', overflow: 'hidden',
+                  boxShadow: selectedAutomation?.id === a.id ? 'var(--premium-shadow)' : 'none'
+                }}
               >
-                {a.isActive && <div className="absolute top-0 right-0 w-2 h-2 bg-emerald-500 rounded-bl-lg animate-pulse" />}
-                <div className="flex justify-between items-start">
+                {a.isActive && <div style={{ position: 'absolute', top: 0, right: 0, width: 8, height: 8, background: 'var(--accent-green)', borderBottomLeftRadius: 8 }} />}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <h4 className="font-extrabold text-sm text-slate-800 line-clamp-1">{a.name}</h4>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 flex items-center">
-                        <Zap size={10} className="mr-1 text-blue-500" /> {a.triggerType}
+                    <h4 style={{ fontWeight: 800, fontSize: 13, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.name}</h4>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: 4, display: 'flex', alignItems: 'center' }}>
+                        <Zap size={10} style={{ marginRight: 4, color: 'var(--accent-blue)' }} /> {a.triggerType}
                     </span>
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); deleteAutomation(a.id); }}
-                    className="p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all rounded-lg hover:bg-red-50"
+                    style={{
+                      padding: 8, color: 'var(--text-muted)', background: 'transparent', border: 'none',
+                      cursor: 'pointer', borderRadius: 8, transition: 'all 0.15s', opacity: 0.5
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.color = 'var(--accent-red)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.color = 'var(--text-muted)'; }}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -245,9 +267,9 @@ export default function AutomationPage() {
             ))}
 
             {automations.length === 0 && (
-                <div className="text-center py-10">
-                    <div className="mb-4 flex justify-center opacity-20"><Zap size={48} /></div>
-                    <p className="text-sm font-bold text-slate-400">Nenhuma automação criada ainda.</p>
+                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                    <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center', opacity: 0.2 }}><Zap size={48} /></div>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)' }}>Nenhuma automação criada ainda.</p>
                 </div>
             )}
           </div>
@@ -255,7 +277,7 @@ export default function AutomationPage() {
         </aside>
 
         {/* Main Editor */}
-        <main className="flex-1 bg-slate-100">
+        <main style={{ flex: 1, background: 'var(--bg-primary)' }}>
           <ReactFlowProvider>
             {selectedAutomation ? (
               <FlowEditor 
@@ -265,12 +287,12 @@ export default function AutomationPage() {
                 onSave={handleSave} 
               />
             ) : (
-              <div className="flex items-center justify-center h-full text-slate-400 flex-col">
-                 <div className="p-8 bg-white rounded-full shadow-2xl mb-6 shadow-slate-200 ring-8 ring-white/50">
-                    <Zap size={64} className="text-blue-600 animate-pulse" />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)', flexDirection: 'column' }}>
+                 <div style={{ padding: 32, background: 'var(--bg-secondary)', borderRadius: '50%', boxShadow: 'var(--premium-shadow)', marginBottom: 24, border: '1px solid var(--border-color)' }}>
+                    <Zap size={64} style={{ color: 'var(--accent-blue)', animation: 'pulse 2s infinite' }} />
                  </div>
-                 <h2 className="text-xl font-black text-slate-700 uppercase tracking-tighter">Seleção de Fluxo</h2>
-                 <p className="text-sm font-medium mt-2 max-w-xs text-center">Inicie uma nova jornada de automação clicando em "+ NOVO FLUXO" ou selecione ao lado.</p>
+                 <h2 style={{ fontSize: 20, fontWeight: 900, color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '-0.5px' }}>Seleção de Fluxo</h2>
+                 <p style={{ fontSize: 13, fontWeight: 500, marginTop: 8, maxWidth: 280, textAlign: 'center', color: 'var(--text-secondary)' }}>Inicie uma nova jornada de automação clicando em "+ NOVO FLUXO" ou selecione ao lado.</p>
               </div>
             )}
           </ReactFlowProvider>
@@ -279,3 +301,4 @@ export default function AutomationPage() {
     </div>
   );
 }
+

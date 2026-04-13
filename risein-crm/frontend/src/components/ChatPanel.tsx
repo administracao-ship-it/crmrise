@@ -5,6 +5,7 @@ import { X, Send, Paperclip, FileIcon, Smile, Mic, Check, CheckCheck, Trash2, Pl
 import { fetchMessages, sendMessage as apiSendMessage, API_URL } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import type { Lead, Message } from "@/lib/api";
+import toast from "react-hot-toast";
 
 interface ChatPanelProps {
     lead: Lead | null;
@@ -187,7 +188,7 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
             setRecordingTime(0);
         } catch (err) {
             console.error("Microphone access denied:", err);
-            alert("Permissão de microfone negada ou erro ao acessar.");
+            toast.error("Permissão de microfone negada ou erro ao acessar.");
         }
     };
 
@@ -226,7 +227,7 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
         if (!recordedBlob || !lead) return;
         
         if (recordedBlob.size < 500) {
-            alert("O áudio parece estar vazio ou é muito curto. Tente gravar novamente.");
+            toast.error("O áudio parece estar vazio ou é muito curto. Tente gravar novamente.");
             return;
         }
 
@@ -245,7 +246,7 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
             discardRecording();
         } catch (err) {
             console.error("Failed to send recording:", err);
-            alert("Falha ao enviar áudio. Verifique sua conexão ou se o WhatsApp está pronto.");
+            toast.error("Falha ao enviar áudio. Verifique sua conexão ou se o WhatsApp está pronto.");
         } finally {
             setUploading(false);
         }
@@ -267,7 +268,7 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
             });
         } catch (err) {
             console.error("Failed to upload file:", err);
-            alert("Falha ao enviar arquivo.");
+            toast.error("Falha ao enviar arquivo.");
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";

@@ -6,7 +6,7 @@ import {
     verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import LeadCard from "./LeadCard";
-import { Inbox, Pencil } from "lucide-react";
+import { Inbox, Pencil, Plus } from "lucide-react";
 import type { Lead, Stage } from "@/lib/api";
 
 interface KanbanColumnProps {
@@ -17,6 +17,7 @@ interface KanbanColumnProps {
     onEditStage: (stage: { id: string, name: string }) => void;
     onEditLead: (lead: Lead) => void;
     onDeleteLead: (lead: Lead) => void;
+    onAddLead?: (stageId: string) => void;
 }
 
 export default function KanbanColumn({
@@ -27,6 +28,7 @@ export default function KanbanColumn({
     onEditStage,
     onEditLead,
     onDeleteLead,
+    onAddLead,
 }: KanbanColumnProps) {
     const { setNodeRef, isOver } = useDroppable({ 
         id,
@@ -82,6 +84,16 @@ export default function KanbanColumn({
                         ))
                     )}
                 </SortableContext>
+                {onAddLead && (
+                    <button
+                        className="kanban-add-lead-btn"
+                        onClick={() => onAddLead(id)}
+                        title="Adicionar lead nesta etapa"
+                    >
+                        <Plus size={14} />
+                        Novo Lead
+                    </button>
+                )}
             </div>
         </div>
     );

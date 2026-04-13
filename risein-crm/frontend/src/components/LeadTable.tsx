@@ -12,12 +12,12 @@ interface LeadTableProps {
 export default function LeadTable({ leads, onLeadClick }: LeadTableProps) {
   const getStageColor = (stageName: string) => {
     const name = stageName.toUpperCase();
-    if (name.includes("NOVO")) return "#a855f7"; // Purple
-    if (name.includes("CONTATO")) return "#3b82f6"; // Blue
-    if (name.includes("CALCULO") || name.includes("ORÇAMENTO")) return "#06b6d4"; // Cyan
-    if (name.includes("QUALIFICADOS")) return "#ef4444"; // Red
-    if (name.includes("VENDIDO")) return "#22c55e"; // Green
-    return "#64748b"; // Gray default
+    if (name.includes("NOVO")) return "var(--accent-blue)";
+    if (name.includes("CONTATO")) return "var(--accent-blue-light, #3b82f6)";
+    if (name.includes("CALCULO") || name.includes("ORÇAMENTO")) return "var(--accent-cyan, #06b6d4)";
+    if (name.includes("QUALIFICADOS")) return "var(--accent-red)";
+    if (name.includes("VENDIDO")) return "var(--accent-green)";
+    return "var(--text-muted)";
   };
 
   return (
