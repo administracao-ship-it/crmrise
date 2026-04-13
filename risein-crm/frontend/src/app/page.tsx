@@ -23,7 +23,6 @@ import ChatModule from "@/components/ChatModule";
 import NewLeadModal from "@/components/NewLeadModal";
 import WhatsAppModal from "@/components/WhatsAppModal";
 import LeadTable from "@/components/LeadTable";
-import ImprovementsPage from "@/components/ImprovementsPage";
 import DisparosPage from "@/components/DisparosPage";
 import { 
   fetchStages, 
@@ -465,25 +464,7 @@ export default function HomePage() {
           <ChatModule stages={stages} />
         ) : activeTab === "Disparos" ? (
           <DisparosPage />
-        ) : activeTab === "Improvements" ? (
-          <div style={{ height: "100%", overflowY: "auto" }}>
-            <ImprovementsPage />
-          </div>
-        ) : (
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            color: "var(--text-secondary)",
-            fontSize: "1.2rem",
-            flexDirection: "column",
-            gap: 20
-          }}>
-            <Bot size={64} style={{ opacity: 0.2 }} />
-            <p>Módulo de <strong>{activeTab}</strong> em desenvolvimento...</p>
-          </div>
-        )}
+        ) : null}
       </main>
 
       <ChatPanel lead={selectedLead} onClose={() => setSelectedLead(null)} />

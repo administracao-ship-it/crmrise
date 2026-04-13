@@ -23,17 +23,10 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 
 const navItems = [
-    { icon: Home, label: "Home", href: "/" },
     { icon: Users, label: "Leads", active: true, href: "/" },
-    { icon: DollarSign, label: "Processo de Vendas", href: "/" },
     { icon: MessageCircle, label: "Chats", href: "/" },
     { icon: Send, label: "Disparos", href: "/" },
     { icon: Zap, label: "Automação", href: "/automation" },
-    { icon: Calendar, label: "Calendar", href: "/" },
-    { icon: Contact, label: "Contacts", href: "/" },
-    { icon: Bot, label: "AI Agent", href: "/" },
-    { icon: Mail, label: "Mail", href: "/" },
-    { icon: Lightbulb, label: "Improvements", href: "/" },
 ];
 
 interface SidebarProps {

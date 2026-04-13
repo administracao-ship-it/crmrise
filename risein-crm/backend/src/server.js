@@ -14,7 +14,6 @@ const { initWhatsApp, getWhatsAppStatus } = require("./services/whatsapp");
 const automationService = require("./services/automationService");
 const automationRoutes = require("./routes/automation");
 const tagRoutes = require("./routes/tags");
-const improvementRoutes = require("./routes/improvements");
 
 const prisma = new PrismaClient({
     datasourceUrl: process.env.DATABASE_URL
@@ -55,7 +54,6 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/automation", automationRoutes);
 app.use("/api/tags", tagRoutes);
-app.use("/api/improvements", improvementRoutes);
 
 app.use((err, _req, res, _next) => {
     console.error("[ERROR]", err.message);
