@@ -15,23 +15,19 @@ interface HeaderProps {
     onViewChange: (mode: "kanban" | "list") => void;
     funnelName: string;
     onUpdateFunnelName: (name: string) => void;
-    onOpenSettings?: () => void;
     onLogout: () => void;
 }
 
 export default function Header({
     totalLeads,
     totalValue,
-    whatsappStatus,
     onNewLead,
-    onStatusClick,
     searchQuery,
     onSearchChange,
     viewMode,
     onViewChange,
     funnelName,
     onUpdateFunnelName,
-    onOpenSettings,
     onLogout,
 }: HeaderProps) {
     const [isEditing, setIsEditing] = useState(false);
@@ -65,21 +61,6 @@ export default function Header({
         if (e.key === "Enter") handleSave();
         if (e.key === "Escape") handleCancel();
     };
-    const statusClass =
-        whatsappStatus === "connected" || whatsappStatus === "authenticated"
-            ? "connected"
-            : (whatsappStatus === "waiting_qr" || whatsappStatus === "initializing" || whatsappStatus === "loading")
-                ? "waiting"
-                : "disconnected";
-
-    const statusLabel =
-        whatsappStatus === "connected" || whatsappStatus === "authenticated"
-            ? "WhatsApp Conectado"
-            : whatsappStatus === "waiting_qr"
-                ? "Aguardando QR Code"
-                : (whatsappStatus === "initializing" || whatsappStatus === "loading")
-                    ? "Iniciando Conexão..."
-                    : "WhatsApp Desconectado";
 
     return (
         <header className="header">
@@ -147,23 +128,10 @@ export default function Header({
             </div>
 
             <div className="header-actions">
-                <button className="btn-automate" onClick={onOpenSettings}>
-                  <div className="bolt-icon">⚡</div>
-                  AUTOMATIZE
-                </button>
-                
                 <button className="btn-primary" onClick={onNewLead}>
                     <Plus size={14} />
                     + NOVO LEAD
                 </button>
-
-                <div
-                    className={`whatsapp-status-icon ${statusClass}`}
-                    onClick={onStatusClick}
-                    title={statusLabel}
-                >
-                    {whatsappStatus === "connected" ? <Wifi size={14} /> : <WifiOff size={14} />}
-                </div>
 
                 <div
                     className="whatsapp-status-icon disconnected"

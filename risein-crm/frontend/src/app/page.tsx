@@ -23,6 +23,7 @@ import ChatModule from "@/components/ChatModule";
 import NewLeadModal from "@/components/NewLeadModal";
 import WhatsAppModal from "@/components/WhatsAppModal";
 import LeadTable from "@/components/LeadTable";
+import SettingsPage from "@/components/SettingsPage";
 import DisparosPage from "@/components/DisparosPage";
 import { 
   fetchStages, 
@@ -55,7 +56,6 @@ export default function HomePage() {
   const [funnelName, setFunnelName] = useState("CRM RISE");
   const [openAiApiKey, setOpenAiApiKey] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
-  const [showConfigModal, setShowConfigModal] = useState(false);
 
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [defaultStageId, setDefaultStageId] = useState<string | null>(null);
@@ -326,7 +326,6 @@ export default function HomePage() {
       setOpenAiApiKey(newKey.trim());
       setSystemPrompt(newPrompt.trim());
       await updateConfig({ openAiApiKey: newKey.trim(), systemPrompt: newPrompt.trim() });
-      setShowConfigModal(false);
     } catch (err) {
       console.error("Failed to update OpenAI config:", err);
     }
@@ -399,16 +398,13 @@ export default function HomePage() {
       <Header
         totalLeads={totalLeads}
         totalValue={totalValue}
-        whatsappStatus={whatsappStatus}
         onNewLead={() => setShowNewLead(true)}
-        onStatusClick={() => setShowWhatsAppModal(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         viewMode={viewMode}
         onViewChange={setViewMode}
         funnelName={funnelName}
         onUpdateFunnelName={handleUpdateFunnelName}
-        onOpenSettings={() => setShowConfigModal(true)}
         onLogout={handleLogout}
       />
 
@@ -464,6 +460,17 @@ export default function HomePage() {
           <ChatModule stages={stages} />
         ) : activeTab === "Disparos" ? (
           <DisparosPage />
+        ) : activeTab === "Settings" ? (
+          <SettingsPage 
+            funnelName={funnelName}
+            onUpdateFunnelName={handleUpdateFunnelName}
+            openAiApiKey={openAiApiKey}
+            systemPrompt={systemPrompt}
+            onUpdateOpenAi={handleUpdateConfig}
+            whatsappStatus={whatsappStatus}
+            onOpenWhatsAppModal={() => setShowWhatsAppModal(true)}
+            stages={stages}
+          />
         ) : null}
       </main>
 
@@ -523,47 +530,6 @@ export default function HomePage() {
             <div className="modal-actions">
               <button className="btn-secondary" onClick={() => setEditingStage(null)}>Cancelar</button>
               <button className="btn-primary" onClick={() => handleUpdateStageName(editStageValue)}>Salvar</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showConfigModal && (
-        <div className="modal-overlay">
-          <div className="modal" style={{ width: '500px' }}>
-            <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><div className="bolt-icon">⚡</div> Agente IA Nativo</h2>
-            <p style={{ fontSize: '12px', opacity: 0.7, marginBottom: '16px' }}>Configure a chave da OpenAI e o cérebro (prompt) da Ivone para respostas automáticas inteligentes.</p>
-            
-            <div className="form-group" style={{ marginBottom: "16px" }}>
-              <label>OpenAI API Key (sk-...)</label>
-              <input 
-                id="openai-key-input"
-                type="password" 
-                placeholder="sk-proj-..."
-                value={openAiApiKey}
-                onChange={(e) => setOpenAiApiKey(e.target.value)}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Prompt Mestre (A Personalidade do Agente)</label>
-              <textarea 
-                id="system-prompt-input"
-                placeholder="Você é a Ivone, especialista em vendas da CRM RISE..."
-                value={systemPrompt}
-                onChange={(e) => setSystemPrompt(e.target.value)}
-                rows={12}
-                style={{ resize: 'vertical', fontFamily: 'monospace', fontSize: '13px' }}
-              />
-            </div>
-
-            <div className="modal-actions" style={{ marginTop: '24px' }}>
-              <button className="btn-secondary" onClick={() => setShowConfigModal(false)}>Cancelar</button>
-              <button className="btn-primary" onClick={() => {
-                const keyInput = document.getElementById('openai-key-input') as HTMLInputElement;
-                const promptInput = document.getElementById('system-prompt-input') as HTMLTextAreaElement;
-                handleUpdateConfig(keyInput.value, promptInput.value);
-              }}>Salvar IA</button>
             </div>
           </div>
         </div>
