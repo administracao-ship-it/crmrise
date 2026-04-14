@@ -83,6 +83,14 @@ export async function deleteLead(id: string): Promise<void> {
     if (!res.ok) throw new Error("Failed to delete lead");
 }
 
+export async function refreshLeadAvatar(id: string): Promise<Lead> {
+    const res = await fetch(`${API_URL}/api/leads/${id}/avatar`, {
+        method: "POST",
+    });
+    if (!res.ok) throw new Error("Failed to refresh lead avatar");
+    return res.json();
+}
+
 export async function fetchMessages(leadId: string): Promise<Message[]> {
     const res = await fetch(`${API_URL}/api/messages/${leadId}`);
     if (!res.ok) throw new Error("Failed to fetch messages");

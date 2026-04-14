@@ -623,4 +623,27 @@ async function resetWhatsAppSession() {
     }
 }
 
-module.exports = { initWhatsApp, sendMessage, getWhatsAppStatus, getWhatsAppDebug, disconnectWhatsApp, resetWhatsAppSession };
+async function getProfilePicUrl(phone) {
+    if (!whatsappClient || whatsappStatus !== "connected") {
+        return null;
+    }
+
+    try {
+        const chatId = phone.includes('@') ? phone : `${phone}@c.us`;
+        const url = await whatsappClient.getProfilePicUrl(chatId);
+        return url;
+    } catch (err) {
+        console.warn(`⚠️ Failed to fetch profile pic for ${phone}:`, err.message);
+        return null;
+    }
+}
+
+module.exports = { 
+    initWhatsApp, 
+    sendMessage, 
+    getWhatsAppStatus, 
+    getWhatsAppDebug, 
+    disconnectWhatsApp, 
+    resetWhatsAppSession,
+    getProfilePicUrl 
+};

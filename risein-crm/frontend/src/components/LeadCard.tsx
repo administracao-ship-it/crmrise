@@ -96,6 +96,15 @@ function LeadCard({ lead, onClick, onEdit, onDelete }: LeadCardProps) {
                             alt={displayName} 
                             style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
                             referrerPolicy="no-referrer"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                const parent = (e.target as HTMLImageElement).parentElement;
+                                if (parent) {
+                                    const fallback = document.createElement('span');
+                                    fallback.innerText = getInitials(displayName);
+                                    parent.appendChild(fallback);
+                                }
+                            }}
                         />
                     ) : (
                         getInitials(displayName)

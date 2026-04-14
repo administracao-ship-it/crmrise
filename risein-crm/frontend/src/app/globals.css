@@ -2658,3 +2658,54 @@ body {
     display: flex;
     align-items: center;
 }
+
+/* Avatar Refresh and AI Badge Styles */
+.avatar-refresh-btn {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.avatar-refresh-btn:hover {
+    color: var(--accent-blue);
+    border-color: var(--accent-blue);
+    transform: scale(1.1);
+}
+
+.ai-badge-mini {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    background: var(--accent-blue);
+    color: white;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.4);
+    border: 1.5px solid var(--bg-card);
+}
+
+.shadow-glow {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+.chat-avatar img {
+    border-radius: 50%;
+}

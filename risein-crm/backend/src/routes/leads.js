@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const automationService = require("../services/automationService");
+const whatsappService = require("../services/whatsapp");
 
 router.get("/", async (req, res, next) => {
     try {
@@ -96,6 +97,29 @@ router.delete("/:id", async (req, res, next) => {
         await req.prisma.lead.delete({ where: { id: req.params.id } });
         req.io.emit("lead:deleted", req.params.id);
         res.status(204).end();
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.post("/:id/avatar", async (req, res, next) => {
+    try {
+        const lead = await req.prisma.lead.findUnique({
+            where: { id: req.params.id }
+        });
+
+        if (!lead) return res.status(404).json({ error: "Lead not found" });
+
+        const avatarUrl = await whatsappService.getProfilePicUrl(lead.phone);
+        
+        const updatedLead = await req.prisma.lead.update({
+            where: { id: lead.id },
+            data: { avatarUrl },
+            include: { stage: true }
+        });
+
+        req.io.emit("lead:updated", updatedLead);
+        res.json(updatedLead);
     } catch (err) {
         next(err);
     }

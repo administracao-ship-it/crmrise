@@ -72,8 +72,37 @@ export default function ChatList({
               style={{ borderLeft: selectedLeadId === lead.id ? '4px solid #3b82f6' : '4px solid transparent' }}
             >
               <div className="chat-avatar-container">
-                <div className="chat-avatar" style={{ width: '40px', height: '40px', fontSize: '15px', fontWeight: 600 }}>
-                   {lead.name.charAt(0).toUpperCase()}
+                <div 
+                  className="chat-avatar" 
+                  style={{ 
+                    width: '40px', 
+                    height: '40px', 
+                    fontSize: '15px', 
+                    fontWeight: 600,
+                    overflow: 'hidden',
+                    position: 'relative'
+                  }}
+                >
+                   {lead.avatarUrl ? (
+                     <img 
+                       src={lead.avatarUrl} 
+                       alt={lead.name}
+                       className="w-full h-full object-cover"
+                       onError={(e) => {
+                         // Fallback elegant logic
+                         (e.target as HTMLImageElement).style.display = 'none';
+                         const parent = (e.target as HTMLImageElement).parentElement;
+                         if (parent) {
+                           const fallback = document.createElement('span');
+                           fallback.innerText = lead.name.charAt(0).toUpperCase();
+                           parent.appendChild(fallback);
+                         }
+                       }}
+                     />
+                   ) : (
+                     <span className="uppercase">{lead.name.charAt(0)}</span>
+                   )}
+                   
                    {lead.isAgentActive && (
                      <div className="ai-badge-mini" title="IA Ativa">
                        <Bot size={10} />

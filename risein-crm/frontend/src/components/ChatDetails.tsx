@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { 
   User, Phone, DollarSign, Calendar, MapPin, 
-  ExternalLink, ShieldCheck, Home, Target, ArrowRight, Bot
+  ExternalLink, ShieldCheck, Home, Target, ArrowRight, Bot, RefreshCw
 } from "lucide-react";
-import { type Lead, type Stage, updateLead } from "@/lib/api";
+import { type Lead, type Stage, updateLead, refreshLeadAvatar } from "@/lib/api";
 import toast from "react-hot-toast";
 
 interface ChatDetailsProps {
@@ -76,8 +76,47 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
   return (
     <div className="chat-details-container glass-panel">
       <div className="chat-details-header">
-        <div className="chat-details-avatar-editable shadow-glow">
-          {lead.name.charAt(0).toUpperCase()}
+        <div 
+          className="chat-details-avatar-editable shadow-glow" 
+          style={{ 
+            overflow: 'hidden', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            position: 'relative'
+          }}
+        >
+          {lead.avatarUrl ? (
+            <img 
+              src={lead.avatarUrl} 
+              alt={lead.name}
+              className="w-full h-full object-cover"
+              onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
+            />
+          ) : (
+            <span>{lead.name.charAt(0).toUpperCase()}</span>
+          )}
+          
+          <button 
+            className="avatar-refresh-btn" 
+            onClick={async () => {
+              setSaving(true);
+              try {
+                await refreshLeadAvatar(lead.id);
+                toast.success("Dados do WhatsApp atualizados");
+                // The socket event lead:updated will handle the UI update if we're listing leads globally 
+                // but since this is a local component we might need a refresh or state update.
+                window.location.reload();
+              } catch (err) {
+                toast.error("Erro ao sincronizar foto");
+              } finally {
+                setSaving(false);
+              }
+            }}
+            title="Sincronizar Foto e Dados"
+          >
+            <RefreshCw size={12} className={saving ? "animate-spin" : ""} />
+          </button>
         </div>
         
         <input 
