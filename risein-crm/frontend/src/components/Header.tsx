@@ -21,7 +21,9 @@ interface HeaderProps {
 export default function Header({
     totalLeads,
     totalValue,
+    whatsappStatus,
     onNewLead,
+    onStatusClick,
     searchQuery,
     onSearchChange,
     viewMode,
@@ -134,7 +136,15 @@ export default function Header({
                 </button>
 
                 <div
-                    className="whatsapp-status-icon disconnected"
+                    className={`whatsapp-status-icon ${whatsappStatus === 'connected' || whatsappStatus === 'authenticated' ? 'connected' : whatsappStatus === 'waiting_qr' || whatsappStatus === 'initializing' || whatsappStatus === 'loading' ? 'waiting' : 'disconnected'}`}
+                    onClick={onStatusClick}
+                    title={`WhatsApp: ${whatsappStatus}`}
+                >
+                    {whatsappStatus === 'connected' || whatsappStatus === 'authenticated' ? <Wifi size={14} /> : <WifiOff size={14} />}
+                </div>
+
+                <div
+                    className="whatsapp-status-icon logout"
                     onClick={onLogout}
                     title="Sair do CRM"
                     style={{ marginLeft: '4px' }}

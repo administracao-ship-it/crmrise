@@ -160,7 +160,7 @@ export async function fetchConfig(): Promise<{ funnelName: string; openAiApiKey?
     return res.json();
 }
 
-export async function updateConfig(data: { funnelName?: string; openAiApiKey?: string; systemPrompt?: string }): Promise<{ funnelName: string; openAiApiKey?: string; systemPrompt?: string }> {
+export async function updateConfig(data: { funnelName?: string; openAiApiKey?: string; systemPrompt?: string }): Promise<{ funnelName?: string; openAiApiKey?: string; systemPrompt?: string }> {
     const res = await fetch(`${API_URL}/api/config`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -168,6 +168,34 @@ export async function updateConfig(data: { funnelName?: string; openAiApiKey?: s
     });
     if (!res.ok) throw new Error("Failed to update config");
     return res.json();
+}
+
+// --- Tags ---
+export interface Tag {
+    id: string;
+    name: string;
+    color?: string;
+}
+
+export async function fetchTags(): Promise<Tag[]> {
+    const res = await fetch(`${API_URL}/api/tags`);
+    if (!res.ok) throw new Error("Failed to fetch tags");
+    return res.json();
+}
+
+export async function createTag(data: { name: string; color?: string }): Promise<Tag> {
+    const res = await fetch(`${API_URL}/api/tags`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to create tag");
+    return res.json();
+}
+
+export async function deleteTag(id: string): Promise<void> {
+    const res = await fetch(`${API_URL}/api/tags/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Failed to delete tag");
 }
 
 // --- Improvement Points ---

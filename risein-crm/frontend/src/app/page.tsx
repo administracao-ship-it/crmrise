@@ -399,7 +399,9 @@ export default function HomePage() {
       <Header
         totalLeads={totalLeads}
         totalValue={totalValue}
+        whatsappStatus={whatsappStatus}
         onNewLead={() => setShowNewLead(true)}
+        onStatusClick={() => setShowWhatsAppModal(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         viewMode={viewMode}
