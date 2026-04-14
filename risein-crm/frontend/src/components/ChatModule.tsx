@@ -15,7 +15,19 @@ export default function ChatModule({ stages }: ChatModuleProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const allLeads = stages.flatMap(s => s.leads);
-  const filteredLeads = allLeads.filter(l => 
+  
+  // Sorting logical: Leads with more recent messages context first
+  const sortedLeads = [...allLeads].sort((a, b) => {
+    const timeA = a.messages && a.messages.length > 0 
+      ? new Date(a.messages[0].timestamp).getTime() 
+      : new Date(a.createdAt).getTime();
+    const timeB = b.messages && b.messages.length > 0 
+      ? new Date(b.messages[0].timestamp).getTime() 
+      : new Date(b.createdAt).getTime();
+    return timeB - timeA;
+  });
+
+  const filteredLeads = sortedLeads.filter(l => 
     l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     l.phone.includes(searchQuery)
   );

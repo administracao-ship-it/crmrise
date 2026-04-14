@@ -1,7 +1,9 @@
 "use client";
 
-import { Search, CheckCircle2, Clock } from "lucide-react";
+import { Search, CheckCircle2, Trash2, Bot } from "lucide-react";
 import type { Lead } from "@/lib/api";
+import { deleteLead } from "@/lib/api";
+import toast from "react-hot-toast";
 
 interface ChatListProps {
   leads: Lead[];
@@ -18,6 +20,34 @@ export default function ChatList({
   searchQuery,
   onSearchChange
 }: ChatListProps) {
+
+  const handleDelete = async (e: React.MouseEvent, lead: Lead) => {
+    e.stopPropagation();
+    if (!window.confirm(`Deseja excluir permanentemente o lead "${lead.name}"?`)) return;
+    
+    try {
+      await deleteLead(lead.id);
+      toast.success("Lead excluído");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao excluir lead");
+    }
+  };
+
+  const formatChatTime = (timestamp?: string) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    const now = new Date();
+    
+    const isToday = date.toDateString() === now.toDateString();
+    
+    if (isToday) {
+      return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    } else {
+      return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+    }
+  };
+
   return (
     <div className="chat-list-container">
       <div className="chat-list-search">
@@ -42,15 +72,22 @@ export default function ChatList({
               style={{ borderLeft: selectedLeadId === lead.id ? '4px solid #3b82f6' : '4px solid transparent' }}
             >
               <div className="chat-avatar-container">
-                <div className="chat-avatar" style={{ width: '38px', height: '38px', fontSize: '14px' }}>
+                <div className="chat-avatar" style={{ width: '40px', height: '40px', fontSize: '15px', fontWeight: 600 }}>
                    {lead.name.charAt(0).toUpperCase()}
+                   {lead.isAgentActive && (
+                     <div className="ai-badge-mini" title="IA Ativa">
+                       <Bot size={10} />
+                     </div>
+                   )}
                 </div>
               </div>
               
               <div className="chat-item-info">
                 <div className="chat-item-header">
                   <span className="chat-item-name">{lead.name}</span>
-                  <span className="chat-item-time">10:42</span>
+                  <span className="chat-item-time">
+                    {formatChatTime(lead.messages && lead.messages.length > 0 ? lead.messages[0].timestamp : lead.createdAt)}
+                  </span>
                 </div>
                 <div className="chat-item-footer">
                   <p className="chat-item-last-msg">
@@ -58,8 +95,15 @@ export default function ChatList({
                       ? lead.messages[0].content 
                       : "Nenhuma mensagem ainda"}
                   </p>
-                  {/* Unread count or checkmark */}
-                  <CheckCircle2 size={12} className="chat-status-icon" />
+                  <div className="chat-item-actions">
+                    <button 
+                      className="chat-delete-btn"
+                      onClick={(e) => handleDelete(e, lead)}
+                      title="Excluir Lead"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

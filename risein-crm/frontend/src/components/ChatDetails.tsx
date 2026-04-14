@@ -73,9 +73,9 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
   };
 
   return (
-    <div className="chat-details-container">
+    <div className="chat-details-container glass-panel">
       <div className="chat-details-header">
-        <div className="chat-details-avatar-editable">
+        <div className="chat-details-avatar-editable shadow-glow">
           {lead.name.charAt(0).toUpperCase()}
         </div>
         
@@ -84,118 +84,113 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
           value={editedLead.name || ""}
           onChange={(e) => handleChange("name", e.target.value)}
           onBlur={() => handleBlur("name")}
+          style={{ textAlign: 'center', fontSize: '1.4rem', fontWeight: 700 }}
         />
-        <p style={{ opacity: 0.5, fontSize: "12px", marginBottom: "16px" }}>{lead.id}</p>
         
-        <div className="chat-details-actions" style={{ display: 'flex', gap: '8px' }}>
-          <button className="btn-social-outline" onClick={handleOpenProfile}>
-            <ExternalLink size={14} /> Perfil
+        <div className="lead-status-badges" style={{ display: 'flex', gap: '8px', marginBottom: '20px', justifyContent: 'center' }}>
+            <span className="badge-glass">ID: {lead.id.slice(-6)}</span>
+            <span className="badge-glass" style={{ borderColor: 'var(--accent-blue)', color: 'var(--accent-blue)' }}>{currentStage?.name}</span>
+        </div>
+        
+        <div className="chat-details-actions-grid">
+          <button className="chat-action-card" onClick={handleOpenProfile}>
+            <ExternalLink size={18} />
+            <span>Ver Perfil</span>
           </button>
           <button 
-            className={`btn-social-outline ${editedLead.isAgentActive ? 'ai-active' : ''}`} 
+            className={`chat-action-card ${editedLead.isAgentActive ? 'active' : ''}`} 
             onClick={() => {
               const newValue = !editedLead.isAgentActive;
               handleChange("isAgentActive", newValue);
               setSaving(true);
-              updateLead(lead.id, { isAgentActive: newValue }).finally(() => setSaving(false));
-            }}
-            style={{ 
-              borderColor: editedLead.isAgentActive ? 'var(--accent-blue)' : 'var(--border-color)',
-              color: editedLead.isAgentActive ? '#fff' : 'inherit',
-              backgroundColor: editedLead.isAgentActive ? 'var(--accent-blue)' : 'transparent',
-              transition: 'all 0.2s ease'
+              updateLead(lead.id, { isAgentActive: newValue })
+                .then(() => toast.success(`IA ${newValue ? 'ativada' : 'desativada'}`))
+                .finally(() => setSaving(false));
             }}
           >
-            <Bot size={14} /> IA: {editedLead.isAgentActive ? 'ON' : 'OFF'}
+            <Bot size={18} />
+            <span>IA: {editedLead.isAgentActive ? 'ON' : 'OFF'}</span>
           </button>
         </div>
       </div>
 
-      <div className="chat-details-section">
-        <h4>Informações do Lead</h4>
-        <div className="chat-details-grid">
-          <div className="detail-item">
-            <Phone size={14} />
-            <input 
-              className="detail-input"
-              value={editedLead.phone || ""}
-              onChange={(e) => handleChange("phone", e.target.value)}
-              onBlur={() => handleBlur("phone")}
-              placeholder="Telefone"
-            />
+      <div className="chat-details-content-scroll">
+          <div className="chat-details-section">
+            <h4 className="section-title">Dados Comerciais</h4>
+            <div className="compact-grid">
+              <div className="detail-item-v2">
+                <label><Phone size={12} /> Telefone</label>
+                <input 
+                  value={editedLead.phone || ""}
+                  onChange={(e) => handleChange("phone", e.target.value)}
+                  onBlur={() => handleBlur("phone")}
+                />
+              </div>
+              <div className="detail-item-v2">
+                <label><DollarSign size={12} /> Valor Estimado</label>
+                <input 
+                  type="number"
+                  value={editedLead.value || 0}
+                  onChange={(e) => handleChange("value", e.target.value ? parseFloat(e.target.value) : 0)}
+                  onBlur={() => handleBlur("value")}
+                />
+              </div>
+              <div className="detail-item-v2">
+                <label><MapPin size={12} /> Localização</label>
+                <input 
+                  value={editedLead.city || ""}
+                  onChange={(e) => handleChange("city", e.target.value)}
+                  onBlur={() => handleBlur("city")}
+                />
+              </div>
+              <div className="detail-item-v2">
+                <label><Home size={12} /> Ambiente</label>
+                <input 
+                  value={editedLead.title || ""}
+                  onChange={(e) => handleChange("title", e.target.value)}
+                  onBlur={() => handleBlur("title")}
+                />
+              </div>
+            </div>
           </div>
-          <div className="detail-item">
-            <DollarSign size={14} />
-            <input 
-              className="detail-input"
-              type="number"
-              value={editedLead.value || 0}
-              onChange={(e) => handleChange("value", e.target.value ? parseFloat(e.target.value) : 0)}
-              onBlur={() => handleBlur("value")}
-              placeholder="Valor"
-            />
+
+          <div className="chat-details-section">
+            <h4 className="section-title">Qualificação</h4>
+            <div className="detail-item-v2 full-width">
+              <label><Target size={12} /> Nível de Qualificação</label>
+              <input 
+                value={editedLead.phase || ""}
+                onChange={(e) => handleChange("phase", e.target.value)}
+                onBlur={() => handleBlur("phase")}
+                placeholder="Ex: Lead Quente, Frio..."
+              />
+            </div>
           </div>
-          <div className="detail-item">
-            <MapPin size={14} />
-            <input 
-              className="detail-input"
-              value={editedLead.city || ""}
-              onChange={(e) => handleChange("city", e.target.value)}
-              onBlur={() => handleBlur("city")}
-              placeholder="Cidade"
-            />
+
+          <div className="chat-details-section">
+            <h4 className="section-title">Histórico</h4>
+            <div className="history-pill">
+              <Calendar size={12} />
+              <span>Entrou no funil em {new Date(lead.createdAt).toLocaleDateString('pt-BR')}</span>
+            </div>
           </div>
-          <div className="detail-item">
-            <Home size={14} />
-            <input 
-              className="detail-input"
-              value={editedLead.title || ""}
-              onChange={(e) => handleChange("title", e.target.value)}
-              onBlur={() => handleBlur("title")}
-              placeholder="Ambiente"
-            />
-          </div>
-          <div className="detail-item">
-            <Calendar size={14} />
-            <span style={{ color: "white" }}>Criado em {new Date(lead.createdAt).toLocaleDateString('pt-BR')}</span>
-          </div>
-        </div>
       </div>
 
-      <div className="chat-details-section">
-        <h4>Qualificação</h4>
-        <div className="detail-item">
-          <Target size={14} />
-          <input 
-            className="detail-input"
-            value={editedLead.phase || ""}
-            onChange={(e) => handleChange("phase", e.target.value)}
-            onBlur={() => handleBlur("phase")}
-            placeholder="Nível de Qualificação"
-          />
-        </div>
-      </div>
-
-      {nextStage && (
-        <div className="chat-details-section">
-          <h4>Próxima Etapa</h4>
-          <div className="detail-item" style={{ background: "rgba(59, 130, 246, 0.1)", borderColor: "rgba(59, 130, 246, 0.3)" }}>
-            <ArrowRight size={14} color="#3b82f6" />
-            <span style={{ color: "#3b82f6", fontWeight: "600" }}>{nextStage.name}</span>
-          </div>
-        </div>
-      )}
-
-      <div className="chat-details-footer" style={{ marginTop: "auto", paddingTop: "24px" }}>
-        <button 
-          className="btn-primary" 
-          style={{ width: '100%', opacity: nextStage ? 1 : 0.5 }} 
-          disabled={saving || !nextStage}
-          onClick={handleMoveStage}
-        >
-          {saving ? "PROCESSANDO..." : "MOVER PARA PRÓXIMA ETAPA"}
-        </button>
+      <div className="chat-details-footer-fixed">
+        {nextStage ? (
+            <button 
+              className="btn-primary-glow"
+              disabled={saving}
+              onClick={handleMoveStage}
+            >
+              {saving ? "AVANÇANDO..." : `AVANÇAR PARA: ${nextStage.name.toUpperCase()}`}
+              {!saving && <ArrowRight size={16} />}
+            </button>
+        ) : (
+            <div className="max-stage-reached">🚀 Lead no estágio final</div>
+        )}
       </div>
     </div>
   );
+}
 }
