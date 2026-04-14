@@ -6,6 +6,7 @@ import {
   ExternalLink, ShieldCheck, Home, Target, ArrowRight, Bot
 } from "lucide-react";
 import { type Lead, type Stage, updateLead } from "@/lib/api";
+import toast from "react-hot-toast";
 
 interface ChatDetailsProps {
   lead: Lead | null;
@@ -192,5 +193,4 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
       </div>
     </div>
   );
-}
 }
