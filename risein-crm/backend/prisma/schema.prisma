@@ -104,11 +104,13 @@ model AutomationRule {
 }
 
 model GlobalConfig {
-  id            String   @id @default("singleton")
-  funnelName    String   @default("CRM RISE")
-  openAiApiKey  String?
-  systemPrompt  String?  @default("")
-  updatedAt     DateTime @updatedAt
+  id                   String   @id @default("singleton")
+  funnelName           String   @default("CRM RISE")
+  openAiApiKey         String?
+  systemPrompt         String?  @default("")
+  humanTakeoverMessage String?  @default("Olá, tudo bem?")
+  aiTriggerMessages    String?  @default("[]")
+  updatedAt            DateTime @updatedAt
 }
 
 model ImprovementPoint {

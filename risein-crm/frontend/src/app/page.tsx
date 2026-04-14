@@ -57,6 +57,8 @@ export default function HomePage() {
   const [funnelName, setFunnelName] = useState("CRM RISE");
   const [openAiApiKey, setOpenAiApiKey] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [humanTakeoverMessage, setHumanTakeoverMessage] = useState("Olá, tudo bem?");
+  const [aiTriggerMessages, setAiTriggerMessages] = useState("[]");
 
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [defaultStageId, setDefaultStageId] = useState<string | null>(null);
@@ -82,6 +84,8 @@ export default function HomePage() {
       if (configData.funnelName) setFunnelName(configData.funnelName);
       if (configData.openAiApiKey) setOpenAiApiKey(configData.openAiApiKey);
       if (configData.systemPrompt) setSystemPrompt(configData.systemPrompt);
+      if (configData.humanTakeoverMessage) setHumanTakeoverMessage(configData.humanTakeoverMessage);
+      if (configData.aiTriggerMessages) setAiTriggerMessages(configData.aiTriggerMessages);
     } catch (err) {
       console.error("Failed to load initial data:", err);
     } finally {
@@ -322,13 +326,23 @@ export default function HomePage() {
     }
   };
 
-  const handleUpdateConfig = async (newKey: string, newPrompt: string) => {
+  const handleUpdateConfig = async (data: { 
+    openAiApiKey?: string; 
+    systemPrompt?: string; 
+    humanTakeoverMessage?: string; 
+    aiTriggerMessages?: string; 
+  }) => {
     try {
-      setOpenAiApiKey(newKey.trim());
-      setSystemPrompt(newPrompt.trim());
-      await updateConfig({ openAiApiKey: newKey.trim(), systemPrompt: newPrompt.trim() });
+      if (data.openAiApiKey !== undefined) setOpenAiApiKey(data.openAiApiKey.trim());
+      if (data.systemPrompt !== undefined) setSystemPrompt(data.systemPrompt.trim());
+      if (data.humanTakeoverMessage !== undefined) setHumanTakeoverMessage(data.humanTakeoverMessage.trim());
+      if (data.aiTriggerMessages !== undefined) setAiTriggerMessages(data.aiTriggerMessages);
+
+      await updateConfig(data);
+      toast.success("Configurações de IA atualizadas");
     } catch (err) {
       console.error("Failed to update OpenAI config:", err);
+      toast.error("Erro ao atualizar configurações de IA");
     }
   };
 
@@ -469,6 +483,8 @@ export default function HomePage() {
             onUpdateFunnelName={handleUpdateFunnelName}
             openAiApiKey={openAiApiKey}
             systemPrompt={systemPrompt}
+            humanTakeoverMessage={humanTakeoverMessage}
+            aiTriggerMessages={aiTriggerMessages}
             onUpdateOpenAi={handleUpdateConfig}
             whatsappStatus={whatsappStatus}
             onOpenWhatsAppModal={() => setShowWhatsAppModal(true)}

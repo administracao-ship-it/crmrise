@@ -154,13 +154,31 @@ export async function updateStage(
     return res.json();
 }
 
-export async function fetchConfig(): Promise<{ funnelName: string; openAiApiKey?: string; systemPrompt?: string }> {
+export async function fetchConfig(): Promise<{ 
+    funnelName: string; 
+    openAiApiKey?: string; 
+    systemPrompt?: string;
+    humanTakeoverMessage?: string;
+    aiTriggerMessages?: string;
+}> {
     const res = await fetch(`${API_URL}/api/config`);
     if (!res.ok) throw new Error("Failed to fetch config");
     return res.json();
 }
 
-export async function updateConfig(data: { funnelName?: string; openAiApiKey?: string; systemPrompt?: string }): Promise<{ funnelName?: string; openAiApiKey?: string; systemPrompt?: string }> {
+export async function updateConfig(data: { 
+    funnelName?: string; 
+    openAiApiKey?: string; 
+    systemPrompt?: string;
+    humanTakeoverMessage?: string;
+    aiTriggerMessages?: string;
+}): Promise<{ 
+    funnelName?: string; 
+    openAiApiKey?: string; 
+    systemPrompt?: string;
+    humanTakeoverMessage?: string;
+    aiTriggerMessages?: string;
+}> {
     const res = await fetch(`${API_URL}/api/config`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

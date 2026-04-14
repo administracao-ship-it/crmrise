@@ -230,6 +230,17 @@ async function initWhatsApp(io, prisma) {
 
             if (!lead) return;
 
+            // --- AI Human Takeover Logic ---
+            const config = await prisma.globalConfig.findUnique({ where: { id: "singleton" } });
+            if (config && config.humanTakeoverMessage && msg.body === config.humanTakeoverMessage) {
+                console.log(`🤖 [Takeover] AI desativada para o lead ${lead.name} via mensagem manual.`);
+                await prisma.lead.update({
+                    where: { id: lead.id },
+                    data: { isAgentActive: false }
+                });
+                io.emit("lead:updated", { ...lead, isAgentActive: false });
+            }
+
             // Wait 1s to allow CRM API to insert first if this message originated from the CRM
             setTimeout(async () => {
                 try {
@@ -329,9 +340,33 @@ async function initWhatsApp(io, prisma) {
 
             io.emit("message:received", { ...message, lead });
 
+            // --- AI Activation / Trigger Logic ---
+            const config = await prisma.globalConfig.findUnique({ where: { id: "singleton" } });
+            
+            if (!lead.isAgentActive && config) {
+                const triggerMessagesStr = config.aiTriggerMessages || "[]";
+                let triggers = [];
+                try {
+                    triggers = JSON.parse(triggerMessagesStr);
+                } catch (e) {
+                    console.error("Failed to parse aiTriggerMessages:", e);
+                }
+
+                const userMessage = (msg.body || "").toLowerCase();
+                const shouldActivate = triggers.length > 0 && triggers.some(t => userMessage.includes(t.toLowerCase()));
+
+                if (shouldActivate) {
+                    console.log(`🤖 [Trigger] IA ativada para o lead ${lead.name} via gatilho.`);
+                    lead = await prisma.lead.update({
+                        where: { id: lead.id },
+                        data: { isAgentActive: true }
+                    });
+                    io.emit("lead:updated", lead);
+                }
+            }
+
             // Native OpenAI Agent Integration
             if (lead.isAgentActive) {
-                const config = await prisma.globalConfig.findUnique({ where: { id: "singleton" } });
                 if (config && config.openAiApiKey) {
                     try {
                         console.log(`🤖 Processando IA para o lead ${lead.name}...`);

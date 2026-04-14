@@ -7,10 +7,13 @@ export default function SettingsPage({
     onUpdateFunnelName,
     openAiApiKey,
     systemPrompt,
+    humanTakeoverMessage,
+    aiTriggerMessages,
     onUpdateOpenAi,
     whatsappStatus,
     onOpenWhatsAppModal,
     stages,
+    ...props
 }: any) {
     const [activeSection, setActiveSection] = useState("integrações");
     
@@ -18,6 +21,9 @@ export default function SettingsPage({
     const [localFunnelName, setLocalFunnelName] = useState(funnelName || "");
     const [localApiKey, setLocalApiKey] = useState(openAiApiKey || "");
     const [localPrompt, setLocalPrompt] = useState(systemPrompt || "");
+    const [localTakeover, setLocalTakeover] = useState(humanTakeoverMessage || "Olá, tudo bem?");
+    const [localTriggers, setLocalTriggers] = useState<string[]>([]);
+    const [newTrigger, setNewTrigger] = useState("");
 
     const [tags, setTags] = useState<any[]>([]);
     const [loadingTags, setLoadingTags] = useState(false);
@@ -26,7 +32,22 @@ export default function SettingsPage({
         setLocalFunnelName(funnelName || "");
         setLocalApiKey(openAiApiKey || "");
         setLocalPrompt(systemPrompt || "");
-    }, [funnelName, openAiApiKey, systemPrompt]);
+        setLocalTakeover(humanTakeoverMessage || "Olá, tudo bem?");
+        try {
+            setLocalTriggers(JSON.parse(aiTriggerMessages || "[]"));
+        } catch (e) {
+            setLocalTriggers([]);
+        }
+    }, [funnelName, openAiApiKey, systemPrompt, humanTakeoverMessage, aiTriggerMessages]);
+
+    const handleAddTrigger = () => {
+        if (!newTrigger.trim()) return;
+        if (localTriggers.includes(newTrigger.trim())) return;
+        const updated = [...localTriggers, newTrigger.trim()];
+        setLocalTriggers(updated);
+        setNewTrigger("");
+        onUpdateOpenAi({ aiTriggerMessages: JSON.stringify(updated) });
+    };
 
     useEffect(() => {
         if (activeSection === "etiquetas") {
@@ -202,8 +223,8 @@ export default function SettingsPage({
                                 </div>
                             </div>
 
-                            {/* Card OpenAI */}
-                            <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                            {/* --- OPENAI CONFIGURATION --- */}
+                            <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "24px" }}>
                                 <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginBottom: "24px" }}>
                                     <div style={{ background: "rgba(16, 163, 127, 0.1)", padding: "12px", borderRadius: "10px", color: "#10a37f" }}>
                                         <Bot size={24} />
@@ -211,12 +232,12 @@ export default function SettingsPage({
                                     <div>
                                         <h4 style={{ fontSize: "1.1rem", marginBottom: "4px", fontWeight: 600 }}>OpenAI (ChatGPT)</h4>
                                         <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", margin: 0 }}>
-                                            Configurações do comportamento do seu robô vendedor.
+                                            Configure a chave da API para habilitar os recursos de inteligência artificial.
                                         </p>
                                     </div>
                                 </div>
                                 
-                                <div className="form-group" style={{ marginBottom: "20px" }}>
+                                <div className="form-group">
                                     <label style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px", fontWeight: 600, fontSize: "0.9rem" }}>
                                         <Key size={14} /> Chave de API (OpenAI)
                                     </label>
@@ -227,28 +248,149 @@ export default function SettingsPage({
                                         placeholder="sk-..."
                                         style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)" }}
                                     />
+                                    <button 
+                                        className="btn-primary" 
+                                        onClick={() => onUpdateOpenAi({ openAiApiKey: localApiKey })}
+                                        style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", marginTop: "16px" }}
+                                    >
+                                        <Save size={16} /> Salvar Chave
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* --- PROMPT DA IA --- */}
+                            <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "24px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+                                    <div style={{ background: "rgba(139, 92, 246, 0.1)", padding: "8px", borderRadius: "8px", color: "#8b5cf6" }}>
+                                        <Bot size={20} />
+                                    </div>
+                                    <h4 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>Prompt da IA</h4>
                                 </div>
 
-                                <div className="form-group" style={{ marginBottom: "24px" }}>
-                                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600, fontSize: "0.9rem" }}>
-                                        Comportamento Base (System Prompt)
-                                    </label>
-                                    <textarea 
-                                        value={localPrompt} 
-                                        onChange={(e) => setLocalPrompt(e.target.value)}
-                                        rows={6}
-                                        placeholder="Você é um vendedor especialista..."
-                                        style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", resize: "vertical" }}
-                                    />
+                                <div style={{ 
+                                    background: "rgba(239, 68, 68, 0.05)", 
+                                    border: "1px dashed rgba(239, 68, 68, 0.3)", 
+                                    padding: "16px", 
+                                    borderRadius: "8px",
+                                    marginBottom: "16px",
+                                    color: "#ef4444",
+                                    display: "flex",
+                                    gap: "12px",
+                                    alignItems: "flex-start"
+                                }}>
+                                    <div style={{ marginTop: "2px" }}><Save size={16} /></div>
+                                    <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>
+                                        REGRAS PRIORITÁRIAS:<br/>
+                                        <span style={{ fontWeight: 400, color: "var(--text-secondary)" }}>
+                                            Estas instruções moldam a personalidade e limites do robô.
+                                        </span>
+                                    </div>
                                 </div>
+
+                                <textarea 
+                                    value={localPrompt} 
+                                    onChange={(e) => setLocalPrompt(e.target.value)}
+                                    rows={8}
+                                    placeholder="Ex: Você é um vendedor atencioso. Use emojis moderadamente. Nunca fale de preços sem perguntar o nome..."
+                                    style={{ width: "100%", padding: "15px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", resize: "vertical", fontSize: "0.9rem", lineHeight: "1.5" }}
+                                />
 
                                 <button 
                                     className="btn-primary" 
-                                    onClick={handleSaveAI}
-                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px" }}
+                                    onClick={() => onUpdateOpenAi({ systemPrompt: localPrompt })}
+                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", marginTop: "16px" }}
                                 >
-                                    <Save size={16} /> Salvar Inteligência
+                                    <Save size={16} /> Atualizar Prompt
                                 </button>
+                            </div>
+
+                            {/* --- HUMAN TAKEOVER --- */}
+                            <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "24px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                                    <div style={{ background: "rgba(245, 158, 11, 0.1)", padding: "8px", borderRadius: "8px", color: "#f59e0b" }}>
+                                        <Power size={20} />
+                                    </div>
+                                    <h4 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>Mensagem de Takeover Humano</h4>
+                                </div>
+                                <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "16px" }}>
+                                    Quando essa mensagem exata for enviada pelo CRM, a IA será pausada automaticamente para aquele lead.
+                                </p>
+
+                                <input 
+                                    type="text" 
+                                    value={localTakeover} 
+                                    onChange={(e) => setLocalTakeover(e.target.value)}
+                                    placeholder="Ex: Olá, tudo bem?"
+                                    style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)" }}
+                                />
+
+                                <button 
+                                    className="btn-primary" 
+                                    onClick={() => onUpdateOpenAi({ humanTakeoverMessage: localTakeover })}
+                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", marginTop: "16px" }}
+                                >
+                                    <Save size={16} /> Salvar Takeover
+                                </button>
+                            </div>
+
+                            {/* --- AI TRIGGERS --- */}
+                            <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "32px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+                                    <div style={{ background: "rgba(16, 185, 129, 0.1)", padding: "8px", borderRadius: "8px", color: "#10b981" }}>
+                                        <MessageCircle size={20} />
+                                    </div>
+                                    <h4 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>Mensagens Gatilho da IA</h4>
+                                </div>
+                                <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "20px" }}>
+                                    Adicione as mensagens de gatilho que ativam a IA. Quando o lead enviar uma mensagem que contém qualquer um desses textos, a IA será ativada.
+                                </p>
+
+                                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
+                                    {localTriggers.map((trigger, idx) => (
+                                        <div key={idx} style={{ 
+                                            display: "flex", 
+                                            alignItems: "center", 
+                                            justifyContent: "space-between", 
+                                            padding: "10px 16px", 
+                                            background: "var(--bg-primary)", 
+                                            borderRadius: "8px", 
+                                            border: "1px solid var(--border-color)" 
+                                        }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                                <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>{idx + 1}.</span>
+                                                <span style={{ fontSize: "0.9rem" }}>{trigger}</span>
+                                            </div>
+                                            <button 
+                                                onClick={() => {
+                                                    const newTriggers = localTriggers.filter((_, i) => i !== idx);
+                                                    setLocalTriggers(newTriggers);
+                                                    onUpdateOpenAi({ aiTriggerMessages: JSON.stringify(newTriggers) });
+                                                }}
+                                                style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", padding: "4px" }}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div style={{ display: "flex", gap: "10px" }}>
+                                    <input 
+                                        type="text" 
+                                        value={newTrigger}
+                                        onChange={(e) => setNewTrigger(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleAddTrigger()}
+                                        placeholder="Novo gatilho..."
+                                        style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)" }}
+                                    />
+                                    <button 
+                                        onClick={handleAddTrigger}
+                                        className="btn-secondary" 
+                                        style={{ padding: "0 16px", borderRadius: "8px" }}
+                                    >
+                                        Adicionar
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
