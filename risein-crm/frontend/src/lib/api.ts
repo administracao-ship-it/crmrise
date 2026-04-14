@@ -22,6 +22,7 @@ export interface Lead {
     avatarUrl?: string;
     isAgentActive?: boolean;
     stageId: string;
+    order?: number;
     userId?: string;
     createdAt: string;
     tags?: Tag[];

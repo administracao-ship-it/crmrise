@@ -113,21 +113,21 @@ export default function HomePage() {
     }
   }, []);
 
-  useEffect(() => {
-    // Fetch initial WhatsApp status
-    const syncWhatsAppStatus = async () => {
-      try {
-        const { status, qr } = await getWhatsAppStatus();
-        setWhatsappStatus(status);
-        if (qr) setQrCode(qr);
-        if (status === "waiting_qr") setShowWhatsAppModal(true);
-      } catch (err) {
-        console.error("Failed to sync WhatsApp status:", err);
-      }
-    };
+  const syncWhatsAppStatus = useCallback(async () => {
+    try {
+      const { status, qr } = await getWhatsAppStatus();
+      setWhatsappStatus(status);
+      if (qr) setQrCode(qr);
+      if (status === "waiting_qr") setShowWhatsAppModal(true);
+    } catch (err) {
+      console.error("Failed to sync WhatsApp status:", err);
+    }
+  }, []);
 
+  useEffect(() => {
     loadData();
-  }, [loadData]);
+    syncWhatsAppStatus();
+  }, [loadData, syncWhatsAppStatus]);
 
   const handleLeadClick = (lead: Lead) => {
     setSelectedLead(lead);
@@ -176,6 +176,7 @@ export default function HomePage() {
   };
 
   useEffect(() => {
+    const socket = getSocket();
 
     socket.on("whatsapp:status", (data: { status: string, qr?: string }) => {
       setWhatsappStatus(data.status);
