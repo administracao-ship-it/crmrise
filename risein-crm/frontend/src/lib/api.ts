@@ -24,6 +24,7 @@ export interface Lead {
     stageId: string;
     userId?: string;
     createdAt: string;
+    tags?: Tag[];
     stage?: Stage;
     messages?: Message[];
 }
@@ -162,6 +163,16 @@ export async function updateStage(
     return res.json();
 }
 
+export async function createStage(data: { name: string; order: number }): Promise<Stage> {
+    const res = await fetch(`${API_URL}/api/stages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to create stage");
+    return res.json();
+}
+
 export async function fetchConfig(): Promise<{ 
     funnelName: string; 
     openAiApiKey?: string; 
@@ -222,6 +233,30 @@ export async function createTag(data: { name: string; color?: string }): Promise
 export async function deleteTag(id: string): Promise<void> {
     const res = await fetch(`${API_URL}/api/tags/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to delete tag");
+}
+
+export async function addTagToLead(leadId: string, tagId: string): Promise<Lead> {
+    const res = await fetch(`${API_URL}/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            tags: { connect: [{ id: tagId }] }
+        }),
+    });
+    if (!res.ok) throw new Error("Failed to add tag to lead");
+    return res.json();
+}
+
+export async function removeTagFromLead(leadId: string, tagId: string): Promise<Lead> {
+    const res = await fetch(`${API_URL}/api/leads/${leadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            tags: { disconnect: [{ id: tagId }] }
+        }),
+    });
+    if (!res.ok) throw new Error("Failed to remove tag from lead");
+    return res.json();
 }
 
 // --- Improvement Points ---

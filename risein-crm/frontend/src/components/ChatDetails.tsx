@@ -3,9 +3,13 @@
 import { useState, useEffect } from "react";
 import { 
   User, Phone, DollarSign, Calendar, MapPin, 
-  ExternalLink, ShieldCheck, Home, Target, ArrowRight, Bot, RefreshCw
+  ExternalLink, ShieldCheck, Home, Target, ArrowRight, Bot, RefreshCw,
+  Tags, X, Plus
 } from "lucide-react";
-import { type Lead, type Stage, updateLead, refreshLeadAvatar } from "@/lib/api";
+import { 
+  type Lead, type Stage, type Tag, updateLead, refreshLeadAvatar, 
+  fetchTags, addTagToLead, removeTagFromLead 
+} from "@/lib/api";
 import toast from "react-hot-toast";
 
 interface ChatDetailsProps {
@@ -16,12 +20,18 @@ interface ChatDetailsProps {
 export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
   const [editedLead, setEditedLead] = useState<Partial<Lead>>({});
   const [saving, setSaving] = useState(false);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [showTagSelector, setShowTagSelector] = useState(false);
 
   useEffect(() => {
     if (lead) {
       setEditedLead(lead);
     }
   }, [lead]);
+
+  useEffect(() => {
+    fetchTags().then(setAllTags).catch(console.error);
+  }, []);
 
   if (!lead) return (
     <div className="chat-details-empty">
@@ -70,6 +80,29 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
        console.error("Failed to move stage:", err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAddTag = async (tag: Tag) => {
+    if (!lead) return;
+    try {
+      await addTagToLead(lead.id, tag.id);
+      toast.success(`Tag ${tag.name} adicionada`);
+      setShowTagSelector(false);
+      window.location.reload();
+    } catch (err) {
+      toast.error("Erro ao adicionar tag");
+    }
+  };
+
+  const handleRemoveTag = async (tagId: string) => {
+    if (!lead) return;
+    try {
+      await removeTagFromLead(lead.id, tagId);
+      toast.success("Tag removida");
+      window.location.reload();
+    } catch (err) {
+      toast.error("Erro ao remover tag");
     }
   };
 
@@ -205,6 +238,50 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
                 placeholder="Ex: Lead Quente, Frio..."
               />
             </div>
+          </div>
+
+          <div className="chat-details-section">
+            <h4 className="section-title"><Tags size={16} /> Tags</h4>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {lead.tags?.map(tag => (
+                <span 
+                  key={tag.id} 
+                  className="tag-pill" 
+                  style={{ backgroundColor: `${tag.color}22`, color: tag.color, borderColor: tag.color }}
+                >
+                  {tag.name}
+                  <button onClick={() => handleRemoveTag(tag.id)} className="ml-1 hover:opacity-70">
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
+              <button 
+                className="tag-pill-add"
+                onClick={() => setShowTagSelector(!showTagSelector)}
+              >
+                <Plus size={12} /> Add Tag
+              </button>
+            </div>
+
+            {showTagSelector && (
+              <div className="tag-selector-popup glass-panel p-2">
+                <div className="grid grid-cols-2 gap-2">
+                  {allTags
+                    .filter(t => !lead.tags?.some(lt => lt.id === t.id))
+                    .map(tag => (
+                      <button 
+                        key={tag.id} 
+                        className="tag-select-item"
+                        style={{ borderColor: tag.color }}
+                        onClick={() => handleAddTag(tag)}
+                      >
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }}></span>
+                        {tag.name}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="chat-details-section">

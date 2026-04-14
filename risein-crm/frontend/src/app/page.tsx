@@ -14,7 +14,7 @@ import {
   DragOverlay,
   MeasuringStrategy,
 } from "@dnd-kit/core";
-import { Bot } from "lucide-react";
+import { Bot, MessageCircle, X } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import KanbanColumn from "@/components/KanbanColumn";
@@ -26,11 +26,14 @@ import LeadTable from "@/components/LeadTable";
 import SettingsPage from "@/components/SettingsPage";
 import DisparosPage from "@/components/DisparosPage";
 import AiMetricsPage from "@/components/AiMetricsPage";
+import DashboardPage from "@/components/DashboardPage";
+import ChatDetails from "@/components/ChatDetails";
 import { 
   fetchStages, 
   updateLead, 
   deleteLead,
   updateStage,
+  createStage,
   getWhatsAppStatus, 
   connectWhatsApp,
   disconnectWhatsApp as apiDisconnectWhatsApp,
@@ -80,7 +83,23 @@ export default function HomePage() {
         fetchStages(),
         fetchConfig()
       ]);
+      
       setStages(stagesData);
+
+      // Auto-create terminal stages if they don't exist
+      const terminalNames = ["Vendidos", "Perdidos", "Não Leads"];
+      const missing = terminalNames.filter(name => !stagesData.some(s => s.name.toLowerCase() === name.toLowerCase()));
+      
+      if (missing.length > 0) {
+        let lastOrder = stagesData.length > 0 ? Math.max(...stagesData.map(s => s.order)) : 0;
+        for (const name of missing) {
+          lastOrder++;
+          await createStage({ name, order: lastOrder });
+        }
+        const updatedStages = await fetchStages();
+        setStages(updatedStages);
+      }
+
       if (configData.funnelName) setFunnelName(configData.funnelName);
       if (configData.openAiApiKey) setOpenAiApiKey(configData.openAiApiKey);
       if (configData.systemPrompt) setSystemPrompt(configData.systemPrompt);
@@ -379,15 +398,32 @@ export default function HomePage() {
     window.location.href = "/login";
   };
 
-  const filteredStages = useMemo(() => stages.map((stage) => ({
-    ...stage,
-    leads: stage.leads.filter(
-      (lead) =>
-        !searchQuery ||
-        lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lead.phone.includes(searchQuery)
-    ),
-  })), [stages, searchQuery]);
+  const filteredStages = useMemo(() => {
+    let baseStages = stages;
+    
+    // Filter terminal stages out of main Leads tab
+    if (activeTab === "Leads") {
+      baseStages = stages.filter(s => 
+        !["vendidos", "perdidos", "não leads"].includes(s.name.toLowerCase())
+      );
+    } else if (activeTab === "Vendidos") {
+      baseStages = stages.filter(s => s.name.toLowerCase().includes("vendid"));
+    } else if (activeTab === "Perdidos") {
+      baseStages = stages.filter(s => s.name.toLowerCase().includes("perdid"));
+    } else if (activeTab === "Não Leads") {
+      baseStages = stages.filter(s => s.name.toLowerCase().includes("não lead"));
+    }
+
+    return baseStages.map((stage) => ({
+      ...stage,
+      leads: stage.leads.filter(
+        (lead) =>
+          !searchQuery ||
+          lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          lead.phone.includes(searchQuery)
+      ),
+    }));
+  }, [stages, searchQuery, activeTab]);
 
   if (loading) {
     return (
@@ -426,7 +462,9 @@ export default function HomePage() {
       />
 
       <main className="main-content">
-        {activeTab === "Leads" ? (
+        {activeTab === "Dashboard" ? (
+          <DashboardPage stages={stages} />
+        ) : activeTab === "Leads" || activeTab === "Vendidos" || activeTab === "Perdidos" || activeTab === "Não Leads" ? (
           viewMode === "kanban" ? (
             <DndContext
               sensors={sensors}
@@ -495,7 +533,32 @@ export default function HomePage() {
         ) : null}
       </main>
 
-      <ChatPanel lead={selectedLead} onClose={() => setSelectedLead(null)} />
+      {selectedLead && (activeTab !== "Chats") && (
+        <div className="kanban-modal-overlay" onClick={() => setSelectedLead(null)}>
+          <button className="modal-close-btn" onClick={() => setSelectedLead(null)}>
+            <X size={20} />
+          </button>
+          <div className="kanban-modal-content" onClick={(e) => e.stopPropagation()}>
+            <ChatDetails lead={selectedLead} stages={stages} />
+            <div className="p-4 bg-gray-900 border-t border-white/10 flex justify-center">
+              <button 
+                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium py-2 px-4 rounded-lg transition-colors"
+                onClick={() => {
+                  setSelectedLead(null);
+                  setActiveTab("Chats");
+                }}
+              >
+                <MessageCircle size={18} />
+                Abrir conversa no Chat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "Chats" && (
+        <ChatPanel lead={selectedLead} onClose={() => setSelectedLead(null)} />
+      )}
 
       {showNewLead && (
         <NewLeadModal

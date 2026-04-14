@@ -17,15 +17,23 @@ import {
     Plus,
     Lightbulb,
     Send,
-    BarChart3
+    BarChart3,
+    CheckCircle,
+    XCircle,
+    UserMinus,
+    LayoutDashboard
 } from "lucide-react";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
 const navItems = [
+    { icon: LayoutDashboard, label: "Dashboard", href: "/" },
     { icon: Users, label: "Leads", active: true, href: "/" },
     { icon: MessageCircle, label: "Chats", href: "/" },
+    { icon: CheckCircle, label: "Vendidos", href: "/" },
+    { icon: XCircle, label: "Perdidos", href: "/" },
+    { icon: UserMinus, label: "Não Leads", href: "/" },
     { icon: Send, label: "Disparos", href: "/" },
     { icon: BarChart3, label: "Métricas", href: "/" },
     { icon: Zap, label: "Automação", href: "/automation" },

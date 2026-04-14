@@ -6,7 +6,11 @@ const whatsappService = require("../services/whatsapp");
 router.get("/", async (req, res, next) => {
     try {
         const leads = await req.prisma.lead.findMany({
-            include: { stage: true, messages: { take: 1, orderBy: { timestamp: "desc" } } },
+            include: { 
+                stage: true, 
+                tags: true,
+                messages: { take: 1, orderBy: { timestamp: "desc" } } 
+            },
             orderBy: { createdAt: "desc" },
         });
         res.json(leads);
@@ -19,7 +23,11 @@ router.get("/:id", async (req, res, next) => {
     try {
         const lead = await req.prisma.lead.findUnique({
             where: { id: req.params.id },
-            include: { stage: true, messages: { orderBy: { timestamp: "asc" } } },
+            include: { 
+                stage: true, 
+                tags: true,
+                messages: { orderBy: { timestamp: "asc" } } 
+            },
         });
         if (!lead) return res.status(404).json({ error: "Lead not found" });
         res.json(lead);
@@ -43,7 +51,7 @@ router.post("/", async (req, res, next) => {
                 city,
                 ...(closedAt && { closedAt: new Date(closedAt) })
             },
-            include: { stage: true },
+            include: { stage: true, tags: true },
         });
         req.io.emit("lead:created", lead);
         
@@ -59,7 +67,7 @@ router.post("/", async (req, res, next) => {
 
 router.patch("/:id", async (req, res, next) => {
     try {
-        const { name, phone, value, stageId, userId, title, phase, city, closedAt, isAgentActive } = req.body;
+        const { name, phone, value, stageId, userId, title, phase, city, closedAt, isAgentActive, tags } = req.body;
         
         const updateData = {};
         if (name !== undefined) updateData.name = name;
@@ -72,11 +80,12 @@ router.patch("/:id", async (req, res, next) => {
         if (city !== undefined) updateData.city = city;
         if (closedAt !== undefined) updateData.closedAt = closedAt ? new Date(closedAt) : null;
         if (isAgentActive !== undefined) updateData.isAgentActive = Boolean(isAgentActive);
+        if (tags !== undefined) updateData.tags = tags;
 
         const lead = await req.prisma.lead.update({
             where: { id: req.params.id },
             data: updateData,
-            include: { stage: true },
+            include: { stage: true, tags: true },
         });
         req.io.emit("lead:updated", lead);
 
@@ -115,7 +124,7 @@ router.post("/:id/avatar", async (req, res, next) => {
         const updatedLead = await req.prisma.lead.update({
             where: { id: lead.id },
             data: { avatarUrl },
-            include: { stage: true }
+            include: { stage: true, tags: true }
         });
 
         req.io.emit("lead:updated", updatedLead);
