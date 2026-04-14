@@ -16,7 +16,8 @@ import {
     Zap,
     Plus,
     Lightbulb,
-    Send
+    Send,
+    BarChart3
 } from "lucide-react";
 
 import Link from "next/link";
@@ -26,6 +27,7 @@ const navItems = [
     { icon: Users, label: "Leads", active: true, href: "/" },
     { icon: MessageCircle, label: "Chats", href: "/" },
     { icon: Send, label: "Disparos", href: "/" },
+    { icon: BarChart3, label: "Métricas", href: "/" },
     { icon: Zap, label: "Automação", href: "/automation" },
 ];
 

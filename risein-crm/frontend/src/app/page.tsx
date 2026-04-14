@@ -25,6 +25,7 @@ import WhatsAppModal from "@/components/WhatsAppModal";
 import LeadTable from "@/components/LeadTable";
 import SettingsPage from "@/components/SettingsPage";
 import DisparosPage from "@/components/DisparosPage";
+import AiMetricsPage from "@/components/AiMetricsPage";
 import { 
   fetchStages, 
   updateLead, 
@@ -471,6 +472,8 @@ export default function HomePage() {
             onOpenWhatsAppModal={() => setShowWhatsAppModal(true)}
             stages={stages}
           />
+        ) : activeTab === "Métricas" ? (
+          <AiMetricsPage />
         ) : null}
       </main>
 

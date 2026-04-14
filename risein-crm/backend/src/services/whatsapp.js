@@ -398,11 +398,18 @@ async function initWhatsApp(io, prisma) {
                             // Send via Whatsapp directly
                             const responseWhatsappId = await sendMessage(lead.phone, aiResponse);
                             
+                            // Update lead to mark AI service time
+                            await prisma.lead.update({
+                                where: { id: lead.id },
+                                data: { aiServedAt: new Date() }
+                            });
+
                             // Save Assistant msg to CRM DB
                             const botMessage = await prisma.message.create({
                                 data: {
                                     content: aiResponse,
                                     isFromMe: true,
+                                    fromAi: true,
                                     leadId: lead.id,
                                     whatsappId: responseWhatsappId
                                 }

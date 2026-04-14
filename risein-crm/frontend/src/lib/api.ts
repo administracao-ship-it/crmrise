@@ -268,3 +268,24 @@ export async function uploadCampaignMedia(file: File): Promise<{ mediaUrl: strin
     if (!res.ok) throw new Error("Failed to upload media");
     return res.json();
 }
+
+export interface AiMetrics {
+    summary: {
+        totalAiMessages: number;
+        leadsServed: number;
+        humanMessages: number;
+        convertedLeads: number;
+        efficiency: number;
+    };
+    chartData: { date: string; count: number }[];
+}
+
+export async function fetchAiMetrics(startDate?: string, endDate?: string): Promise<AiMetrics> {
+    const params = new URLSearchParams();
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
+    
+    const res = await fetch(`${API_URL}/api/metrics/ai?${params.toString()}`);
+    if (!res.ok) throw new Error("Failed to fetch AI metrics");
+    return res.json();
+}

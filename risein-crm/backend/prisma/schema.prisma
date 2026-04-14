@@ -52,6 +52,8 @@ model Lead {
   tags      Tag[]
   followUp  FollowUp?
 
+  aiServedAt DateTime?
+
   // Indexes for query performance
   @@index([stageId])
   @@index([userId])
@@ -66,6 +68,7 @@ model Message {
   mimeType  String?
   status    String   @default("SENT") // SENT, DELIVERED, READ
   isFromMe  Boolean  @default(false)
+  fromAi    Boolean  @default(false)
   timestamp DateTime @default(now())
   
   leadId    String
