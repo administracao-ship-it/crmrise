@@ -612,7 +612,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {activeTab === "Chats" && (
+      {selectedLead && activeTab !== "Chats" && (
         <ChatPanel lead={selectedLead} onClose={() => setSelectedLead(null)} />
       )}
 
