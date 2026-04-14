@@ -14,6 +14,8 @@ interface KanbanColumnProps {
     title: string;
     leads: Lead[];
     onLeadClick: (lead: Lead) => void;
+    onShowDetails: (lead: Lead) => void;
+    onQuickMove: (leadId: string, targetStage: string) => void;
     onEditStage: (stage: { id: string, name: string }) => void;
     onEditLead: (lead: Lead) => void;
     onDeleteLead: (lead: Lead) => void;
@@ -25,6 +27,8 @@ export default function KanbanColumn({
     title,
     leads,
     onLeadClick,
+    onShowDetails,
+    onQuickMove,
     onEditStage,
     onEditLead,
     onDeleteLead,
@@ -78,6 +82,8 @@ export default function KanbanColumn({
                                 key={lead.id} 
                                 lead={lead} 
                                 onClick={onLeadClick} 
+                                onShowDetails={onShowDetails}
+                                onQuickMove={onQuickMove}
                                 onEdit={onEditLead}
                                 onDelete={onDeleteLead}
                             />

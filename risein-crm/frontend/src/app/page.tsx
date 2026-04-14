@@ -56,6 +56,7 @@ export default function HomePage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [activeTab, setActiveTab] = useState("Leads");
   const [viewMode, setViewMode] = useState<"kanban" | "list">("list");
+  const [showDetailsLead, setShowDetailsLead] = useState<Lead | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [funnelName, setFunnelName] = useState("CRM RISE");
   const [openAiApiKey, setOpenAiApiKey] = useState("");
@@ -126,8 +127,55 @@ export default function HomePage() {
     };
 
     loadData();
+  }, [loadData]);
 
-    const socket = getSocket();
+  const handleLeadClick = (lead: Lead) => {
+    setSelectedLead(lead);
+    setActiveTab("Chats");
+  };
+
+  const handleShowDetails = (lead: Lead) => {
+    setShowDetailsLead(lead);
+  };
+
+  const handleQuickMove = async (leadId: string, targetStageName: string) => {
+    try {
+      const targetStage = stages.find(s => s.name.toLowerCase().includes(targetStageName.toLowerCase()));
+      if (!targetStage) {
+        toast.error(`Etapa "${targetStageName}" não encontrada`);
+        return;
+      }
+
+      await updateLead(leadId, { 
+        stageId: targetStage.id,
+        order: targetStage.leads.length
+      });
+      
+      // Update local state optimistically
+      setStages(prev => prev.map(s => {
+        // Remove from old stage
+        if (s.leads.some(l => l.id === leadId)) {
+          return { ...s, leads: s.leads.filter(l => l.id === leadId) };
+        }
+        // Add to new stage
+        if (s.id === targetStage.id) {
+          const movingLead = stages.flatMap(st => st.leads).find(l => l.id === leadId);
+          if (movingLead) {
+             return { ...s, leads: [...s.leads, { ...movingLead, stageId: targetStage.id }] };
+          }
+        }
+        return s;
+      }));
+
+      await loadData(); // Refresh to ensure sync
+      toast.success(`Movido para ${targetStage.name}`);
+    } catch (err) {
+      console.error("Failed to move lead:", err);
+      toast.error("Erro ao mover lead");
+    }
+  };
+
+  useEffect(() => {
 
     socket.on("whatsapp:status", (data: { status: string, qr?: string }) => {
       setWhatsappStatus(data.status);
@@ -480,17 +528,19 @@ export default function HomePage() {
             >
               <div className="kanban-board">
                 {filteredStages.map((stage) => (
-                  <KanbanColumn
-                    key={stage.id}
-                    id={stage.id}
-                    title={stage.name}
-                    leads={stage.leads}
-                    onLeadClick={setSelectedLead}
-                    onEditStage={(s) => { setEditingStage(s); setEditStageValue(s.name); }}
-                    onEditLead={(l) => { setEditingLead(l); setEditLeadValue(l.name); }}
-                    onDeleteLead={handleDeleteLead}
-                    onAddLead={handleAddLeadClick}
-                  />
+                    <KanbanColumn
+                      key={stage.id}
+                      id={stage.id}
+                      title={stage.name}
+                      leads={stage.leads}
+                      onLeadClick={handleLeadClick}
+                      onShowDetails={handleShowDetails}
+                      onQuickMove={handleQuickMove}
+                      onEditStage={(s) => { setEditingStage(s); setEditStageValue(s.name); }}
+                      onEditLead={(l) => { setEditingLead(l); setEditLeadValue(l.name); }}
+                      onDeleteLead={handleDeleteLead}
+                      onAddLead={handleAddLeadClick}
+                    />
                 ))}
               </div>
               <DragOverlay>
@@ -508,11 +558,15 @@ export default function HomePage() {
           ) : (
             <LeadTable 
               leads={filteredStages.flatMap(s => s.leads)} 
-              onLeadClick={setSelectedLead} 
+              onLeadClick={handleLeadClick} 
             />
           )
         ) : activeTab === "Chats" ? (
-          <ChatModule stages={stages} />
+          <ChatModule 
+            stages={stages} 
+            selectedLead={selectedLead}
+            onSelectLead={setSelectedLead}
+          />
         ) : activeTab === "Disparos" ? (
           <DisparosPage />
         ) : activeTab === "Settings" ? (
@@ -533,19 +587,20 @@ export default function HomePage() {
         ) : null}
       </main>
 
-      {selectedLead && (activeTab !== "Chats") && (
-        <div className="kanban-modal-overlay" onClick={() => setSelectedLead(null)}>
-          <button className="modal-close-btn" onClick={() => setSelectedLead(null)}>
+      {showDetailsLead && (
+        <div className="kanban-modal-overlay" onClick={() => setShowDetailsLead(null)}>
+          <button className="modal-close-btn" onClick={() => setShowDetailsLead(null)}>
             <X size={20} />
           </button>
           <div className="kanban-modal-content" onClick={(e) => e.stopPropagation()}>
-            <ChatDetails lead={selectedLead} stages={stages} />
+            <ChatDetails lead={showDetailsLead} stages={stages} />
             <div className="p-4 bg-gray-900 border-t border-white/10 flex justify-center">
               <button 
                 className="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium py-2 px-4 rounded-lg transition-colors"
                 onClick={() => {
-                  setSelectedLead(null);
-                  setActiveTab("Chats");
+                  const leadToForward = showDetailsLead;
+                  setShowDetailsLead(null);
+                  handleLeadClick(leadToForward);
                 }}
               >
                 <MessageCircle size={18} />

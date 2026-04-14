@@ -2837,3 +2837,67 @@ body {
     cursor: pointer;
     border: 1px solid rgba(255,255,255,0.1);
 }
+
+.lead-quick-actions {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quick-action {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.quick-action:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.quick-action.vendidos:hover {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.quick-action.perdidos:hover {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.quick-action.nao-leads:hover {
+    color: #94a3b8;
+    border-color: rgba(148, 163, 184, 0.3);
+    background: rgba(148, 163, 184, 0.1);
+}
+
+.quick-action.details {
+    margin-left: auto;
+    color: var(--accent-blue);
+    background: rgba(0, 102, 255, 0.05);
+}
+
+.quick-action.details:hover {
+    background: var(--accent-blue);
+    color: white;
+}
+
+.quick-action-divider {
+    width: 1px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    margin-left: 4px;
+}

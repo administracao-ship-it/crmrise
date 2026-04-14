@@ -3,12 +3,14 @@
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { MessageCircle, Pencil, Trash2 } from "lucide-react";
+import { MessageCircle, Pencil, Trash2, CheckCircle, XCircle, UserMinus, Info } from "lucide-react";
 import type { Lead } from "@/lib/api";
 
 interface LeadCardProps {
     lead: Lead;
     onClick: (lead: Lead) => void;
+    onShowDetails: (lead: Lead) => void;
+    onQuickMove: (leadId: string, targetStage: string) => void;
     onEdit: (lead: Lead) => void;
     onDelete: (lead: Lead) => void;
 }
@@ -44,7 +46,7 @@ function getAvatarColor(name: string): string {
     return colors[Math.abs(hash) % colors.length];
 }
 
-function LeadCard({ lead, onClick, onEdit, onDelete }: LeadCardProps) {
+function LeadCard({ lead, onClick, onShowDetails, onQuickMove, onEdit, onDelete }: LeadCardProps) {
     const {
         attributes,
         listeners,
@@ -137,6 +139,38 @@ function LeadCard({ lead, onClick, onEdit, onDelete }: LeadCardProps) {
                     {formatValue(lead.value)}
                 </span>
                 <span className="lead-date">{formatDate(lead.createdAt)}</span>
+            </div>
+
+            <div className="lead-quick-actions">
+                 <button 
+                    className="quick-action vendidos" 
+                    title="Venda Realizada"
+                    onClick={(e) => { e.stopPropagation(); onQuickMove(lead.id, "Vendidos"); }}
+                >
+                    <CheckCircle size={14} />
+                </button>
+                <button 
+                    className="quick-action perdidos" 
+                    title="Lead Perdido"
+                    onClick={(e) => { e.stopPropagation(); onQuickMove(lead.id, "Perdidos"); }}
+                >
+                    <XCircle size={14} />
+                </button>
+                <button 
+                    className="quick-action nao-leads" 
+                    title="Não Lead"
+                    onClick={(e) => { e.stopPropagation(); onQuickMove(lead.id, "Não Leads"); }}
+                >
+                    <UserMinus size={14} />
+                </button>
+                <div className="quick-action-divider" />
+                <button 
+                    className="quick-action details" 
+                    title="Ver Detalhes (CRM)"
+                    onClick={(e) => { e.stopPropagation(); onShowDetails(lead); }}
+                >
+                    <Info size={14} />
+                </button>
             </div>
 
             {lastMessage && (

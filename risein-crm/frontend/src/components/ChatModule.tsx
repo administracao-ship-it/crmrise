@@ -8,11 +8,16 @@ import type { Lead, Stage } from "@/lib/api";
 
 interface ChatModuleProps {
   stages: Stage[];
+  selectedLead?: Lead | null;
+  onSelectLead?: (lead: Lead | null) => void;
 }
 
-export default function ChatModule({ stages }: ChatModuleProps) {
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+export default function ChatModule({ stages, selectedLead: externalLead, onSelectLead: externalOnSelect }: ChatModuleProps) {
+  const [internalSelectedLead, setInternalSelectedLead] = useState<Lead | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const selectedLead = externalLead !== undefined ? externalLead : internalSelectedLead;
+  const setSelectedLead = externalOnSelect !== undefined ? externalOnSelect : setInternalSelectedLead;
 
   const allLeads = stages.flatMap(s => s.leads);
   
