@@ -53,10 +53,14 @@ router.post("/", upload.single("image"), async (req, res, next) => {
 // PATCH update status
 router.patch("/:id", async (req, res, next) => {
     try {
-        const { status } = req.body;
+        const { status, archived } = req.body;
+        const data = {};
+        if (status !== undefined) data.status = status;
+        if (archived !== undefined) data.archived = archived;
+
         const item = await req.prisma.improvementPoint.update({
             where: { id: req.params.id },
-            data: { ...(status && { status }) },
+            data,
         });
         res.json(item);
     } catch (err) {

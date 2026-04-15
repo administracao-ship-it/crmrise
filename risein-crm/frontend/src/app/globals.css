@@ -4150,5 +4150,246 @@ body {
   box-shadow: 0 0 40px rgba(0,0,0,0.5);
 }
 
+/* ============================================
+   IMPROVEMENTS - TRELLO STYLE & ARCHIVE
+   ============================================ */
+
+.imp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.imp-btn-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.imp-btn-toggle:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary);
+}
+
+.imp-btn-toggle.active {
+  background: rgba(0, 102, 255, 0.1);
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+.imp-count-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--accent-red);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.trello-col {
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  max-height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+}
+
+.trello-col-header {
+  border-top: 3px solid;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.01);
+  margin-bottom: 0;
+  border-radius: 11px 11px 0 0;
+  padding: 12px 16px !important;
+}
+
+.imp-cards-container {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.imp-cards-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.imp-cards-container::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+}
+
+.trello-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.trello-card:hover {
+  border-color: rgba(255,255,255,0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.imp-card-title-trello {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.imp-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.imp-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.imp-card-date-trello {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.imp-attachment-badge {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.imp-empty-trello {
+  padding: 20px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Modals & Detail */
+.trello-modal {
+  max-width: 540px !important;
+}
+
+.imp-modal-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.imp-action-icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.imp-action-icon-btn:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.imp-detail-img-wrap-trello {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  cursor: zoom-in;
+  border: 1px solid var(--border-color);
+}
+
+.imp-detail-footer-trello {
+  padding: 12px 20px !important;
+}
+
+.imp-btn-delete-trello {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: rgba(239,68,68,0.1);
+  color: var(--accent-red);
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.imp-btn-delete-trello:hover {
+  background: var(--accent-red);
+  color: white;
+}
+
+.imp-upload-zone-trello {
+  border: 1.5px dashed var(--border-color);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(255,255,255,0.02);
+}
+
+.imp-upload-zone-trello:hover {
+  border-color: var(--accent-blue);
+  background: rgba(0, 102, 255, 0.05);
+}
+
+.imp-upload-placeholder-trello {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+
 
 
