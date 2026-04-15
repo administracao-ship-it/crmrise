@@ -9,6 +9,7 @@ router.get("/", async (req, res, next) => {
                 leads: {
                     include: {
                         messages: { take: 1, orderBy: { timestamp: "desc" } },
+                        tags: true,
                     },
                     orderBy: { createdAt: "desc" },
                 },
