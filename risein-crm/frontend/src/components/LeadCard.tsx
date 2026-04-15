@@ -115,6 +115,24 @@ function LeadCard({ lead, onClick, onShowDetails, onQuickMove, onEdit, onDelete 
                 <div className="lead-card-info">
                     <span className="lead-name">{displayName}</span>
                     <div className="lead-phone">{displayPhone}</div>
+                    
+                    {lead.tags && lead.tags.length > 0 && (
+                        <div className="lead-card-tags">
+                            {lead.tags.map(tag => (
+                                <span 
+                                    key={tag.id} 
+                                    className="lead-card-tag-badge" 
+                                    style={{ 
+                                        color: tag.color, 
+                                        backgroundColor: `${tag.color}15`,
+                                        borderColor: `${tag.color}30`
+                                    }}
+                                >
+                                    {tag.name}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </div>
                 <div className="lead-actions">
                     <button

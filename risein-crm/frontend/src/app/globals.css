@@ -742,6 +742,26 @@ body {
   font-weight: 500;
 }
 
+.lead-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  margin-bottom: 2px;
+}
+
+.lead-card-tag-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 1px solid transparent;
+  display: inline-block;
+  line-height: normal;
+}
+
 .lead-footer {
   display: flex;
   align-items: center;
@@ -2956,14 +2976,25 @@ body {
 }
 
 /* Tag Creation Styles */
+.tag-creation-box {
+  min-height: 40px;
+}
+
 .tag-input-field {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 8px 12px;
   color: white;
   font-size: 0.85rem;
   outline: none;
+  transition: all 0.2s;
+  min-width: 120px;
+}
+
+.tag-input-field:focus {
+  border-color: var(--accent-blue);
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .tag-color-picker {

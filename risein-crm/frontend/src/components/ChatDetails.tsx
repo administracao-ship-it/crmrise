@@ -244,12 +244,13 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
               <div className="tag-selector-popup glass-panel p-3">
                 <div className="mb-3 border-b border-white/10 pb-3">
                   <p className="text-xs text-secondary mb-2 uppercase font-bold">Nova Etiqueta</p>
-                  <div className="flex gap-2">
+                  <div className="tag-creation-box flex items-center gap-2 mt-2">
                     <input 
                        className="tag-input-field flex-1" 
-                       placeholder="Nome..." 
+                       placeholder="Nova etiqueta..." 
                        value={newTagName}
                        onChange={(e) => setNewTagName(e.target.value)}
+                       autoFocus
                     />
                     <input 
                       type="color" 
