@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Lightbulb, Plus, X, Image as ImageIcon, ChevronRight, ChevronLeft,
-  Trash2, Loader2, Clock, CheckCircle2, AlertCircle
+  Trash2, Loader2, Clock, CheckCircle2, AlertCircle, Calendar, FileText, ZoomIn
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -24,6 +24,12 @@ const COLUMNS: { key: Status; label: string; icon: React.ReactNode; color: strin
   { key: "Finalizado", label: "Concluído",  icon: <CheckCircle2 size={16} />, color: "#10b981", prev: "Ajustando" },
 ];
 
+const STATUS_MAP: Record<Status, { label: string; color: string }> = {
+  Pendente:   { label: "Solicitada", color: "#f59e0b" },
+  Ajustando:  { label: "Pendente",   color: "#4c96ff" },
+  Finalizado: { label: "Concluído",  color: "#10b981" },
+};
+
 const API = "";
 
 async function apiFetch(url: string, opts?: RequestInit) {
@@ -37,11 +43,13 @@ export default function ImprovementsPage() {
   const [items, setItems] = useState<Improvement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<Improvement | null>(null);
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
@@ -94,6 +102,8 @@ export default function ImprovementsPage() {
         body: JSON.stringify({ status: newStatus }),
       });
       setItems(prev => prev.map(i => i.id === id ? updated : i));
+      // Update the detail modal if it's open for this item
+      setSelectedItem(prev => prev?.id === id ? updated : prev);
     } catch {
       toast.error("Erro ao mover card");
     }
@@ -103,6 +113,7 @@ export default function ImprovementsPage() {
     try {
       await apiFetch(`/api/improvements/${id}`, { method: "DELETE" });
       setItems(prev => prev.filter(i => i.id !== id));
+      if (selectedItem?.id === id) setSelectedItem(null);
       toast.success("Removido");
     } catch {
       toast.error("Erro ao remover");
@@ -113,6 +124,8 @@ export default function ImprovementsPage() {
     acc[col.key] = items.filter(i => i.status === col.key);
     return acc;
   }, {} as Record<Status, Improvement[]>);
+
+  const selectedCol = selectedItem ? COLUMNS.find(c => c.key === selectedItem.status) : null;
 
   return (
     <div className="imp-root">
@@ -148,25 +161,32 @@ export default function ImprovementsPage() {
                 ) : (
                   grouped[col.key].map(item => (
                     <div key={item.id} className="imp-card">
-                      {item.imageUrl && (
-                        <div className="imp-card-img-wrap">
-                          <img src={item.imageUrl} alt={item.title} className="imp-card-img" />
-                        </div>
-                      )}
-                      <div className="imp-card-body">
-                        <p className="imp-card-title">{item.title}</p>
-                        {item.description && (
-                          <p className="imp-card-desc">{item.description}</p>
+                      {/* Clickable area for details */}
+                      <div className="imp-card-clickable" onClick={() => setSelectedItem(item)}>
+                        {item.imageUrl && (
+                          <div className="imp-card-img-wrap">
+                            <img src={item.imageUrl} alt={item.title} className="imp-card-img" />
+                            <div className="imp-card-img-overlay">
+                              <ZoomIn size={20} color="white" />
+                            </div>
+                          </div>
                         )}
-                        <p className="imp-card-date">
-                          {new Date(item.createdAt).toLocaleDateString("pt-BR")}
-                        </p>
+                        <div className="imp-card-body">
+                          <p className="imp-card-title">{item.title}</p>
+                          {item.description && (
+                            <p className="imp-card-desc">{item.description}</p>
+                          )}
+                          <p className="imp-card-date">
+                            {new Date(item.createdAt).toLocaleDateString("pt-BR")}
+                          </p>
+                        </div>
                       </div>
+                      
                       <div className="imp-card-actions">
                         {col.prev && (
                           <button
                             className="imp-move-btn imp-move-prev"
-                            onClick={() => handleMove(item.id, col.prev!)}
+                            onClick={(e) => { e.stopPropagation(); handleMove(item.id, col.prev!); }}
                             title={`Mover para ${COLUMNS.find(c => c.key === col.prev)?.label}`}
                           >
                             <ChevronLeft size={14} />
@@ -174,7 +194,7 @@ export default function ImprovementsPage() {
                         )}
                         <button
                           className="imp-delete-btn"
-                          onClick={() => handleDelete(item.id)}
+                          onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
                           title="Remover"
                         >
                           <Trash2 size={13} />
@@ -182,7 +202,7 @@ export default function ImprovementsPage() {
                         {col.next && (
                           <button
                             className="imp-move-btn imp-move-next"
-                            onClick={() => handleMove(item.id, col.next!)}
+                            onClick={(e) => { e.stopPropagation(); handleMove(item.id, col.next!); }}
                             title={`Mover para ${COLUMNS.find(c => c.key === col.next)?.label}`}
                           >
                             <ChevronRight size={14} />
@@ -198,7 +218,117 @@ export default function ImprovementsPage() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Detail Modal */}
+      {selectedItem && (
+        <div className="imp-modal-overlay" onClick={() => setSelectedItem(null)}>
+          <div className="imp-modal imp-modal-detail" onClick={e => e.stopPropagation()}>
+            <div className="imp-modal-header">
+              <div className="imp-detail-header-left">
+                <h2 className="imp-modal-title">
+                  <FileText size={20} />
+                  Detalhes da Solicitação
+                </h2>
+                <span
+                  className="imp-detail-status-badge"
+                  style={{
+                    color: STATUS_MAP[selectedItem.status].color,
+                    background: `${STATUS_MAP[selectedItem.status].color}18`,
+                    border: `1px solid ${STATUS_MAP[selectedItem.status].color}40`,
+                  }}
+                >
+                  {STATUS_MAP[selectedItem.status].label}
+                </span>
+              </div>
+              <button className="imp-modal-close" onClick={() => setSelectedItem(null)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="imp-modal-body">
+              {/* Image */}
+              {selectedItem.imageUrl && (
+                <div
+                  className="imp-detail-img-wrap"
+                  onClick={() => setLightboxImg(selectedItem.imageUrl!)}
+                  title="Clique para ampliar"
+                >
+                  <img src={selectedItem.imageUrl} alt={selectedItem.title} className="imp-detail-img" />
+                  <div className="imp-detail-img-overlay">
+                    <ZoomIn size={24} color="white" />
+                    <span>Ampliar</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Title */}
+              <div className="imp-detail-section">
+                <p className="imp-detail-label">Título</p>
+                <p className="imp-detail-value-main">{selectedItem.title}</p>
+              </div>
+
+              {/* Description */}
+              {selectedItem.description && (
+                <div className="imp-detail-section">
+                  <p className="imp-detail-label">Descrição</p>
+                  <p className="imp-detail-description">{selectedItem.description}</p>
+                </div>
+              )}
+
+              {/* Date */}
+              <div className="imp-detail-section">
+                <p className="imp-detail-label"><Calendar size={12} /> Data de criação</p>
+                <p className="imp-detail-date">
+                  {new Date(selectedItem.createdAt).toLocaleDateString("pt-BR", {
+                    day: "2-digit", month: "long", year: "numeric"
+                  })}
+                </p>
+              </div>
+            </div>
+
+            {/* Move actions in footer */}
+            <div className="imp-modal-footer imp-detail-footer">
+              <div className="imp-detail-move-row">
+                {selectedCol?.prev && (
+                  <button
+                    className="imp-detail-move-btn imp-detail-move-prev"
+                    onClick={() => handleMove(selectedItem.id, selectedCol.prev!)}
+                  >
+                    <ChevronLeft size={16} />
+                    Mover para {COLUMNS.find(c => c.key === selectedCol.prev)?.label}
+                  </button>
+                )}
+                <button
+                  className="imp-btn-delete-detail"
+                  onClick={() => handleDelete(selectedItem.id)}
+                >
+                  <Trash2 size={15} /> Remover
+                </button>
+                {selectedCol?.next && (
+                  <button
+                    className="imp-detail-move-btn imp-detail-move-next"
+                    onClick={() => handleMove(selectedItem.id, selectedCol.next!)}
+                  >
+                    Mover para {COLUMNS.find(c => c.key === selectedCol.next)?.label}
+                    <ChevronRight size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxImg && (
+        <div className="imp-lightbox" onClick={() => setLightboxImg(null)}>
+          <button className="imp-lightbox-close" onClick={() => setLightboxImg(null)}>
+            <X size={24} />
+          </button>
+          <img src={lightboxImg} alt="Imagem ampliada" className="imp-lightbox-img" onClick={e => e.stopPropagation()} />
+        </div>
+      )}
+
+      {/* Create Modal */}
       {showModal && (
         <div className="imp-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="imp-modal" onClick={e => e.stopPropagation()}>
@@ -234,10 +364,7 @@ export default function ImprovementsPage() {
 
               <div className="imp-field">
                 <label className="imp-label">Imagem (opcional)</label>
-                <div
-                  className="imp-upload-zone"
-                  onClick={() => fileRef.current?.click()}
-                >
+                <div className="imp-upload-zone" onClick={() => fileRef.current?.click()}>
                   {imagePreview ? (
                     <div className="imp-preview-wrap">
                       <img src={imagePreview} alt="preview" className="imp-preview-img" />
