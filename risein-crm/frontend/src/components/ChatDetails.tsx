@@ -131,20 +131,22 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
   };
 
   return (
-    <div className="chat-details-container glass-panel">
+    <div className="chat-details-container wa-contact-info">
       <div className="chat-details-header">
         <div 
-          className="chat-details-avatar-editable shadow-glow" 
-          style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
+          className="chat-details-avatar-editable circle-shadow" 
+          style={{ width: '120px', height: '120px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 20px' }}
         >
           {lead.avatarUrl ? (
             <img src={lead.avatarUrl} alt={lead.name} className="w-full h-full object-cover" />
           ) : (
-            <span>{lead.name.charAt(0).toUpperCase()}</span>
+            <div className="w-full h-full bg-[#6a7175] flex items-center justify-center text-4xl font-bold text-white">
+               {lead.name.charAt(0).toUpperCase()}
+            </div>
           )}
           
           <button 
-            className="avatar-refresh-btn" 
+            className="avatar-refresh-btn-wa" 
             onClick={async () => {
               setSaving(true);
               try {
@@ -158,30 +160,31 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
               }
             }}
           >
-            <RefreshCw size={12} className={saving ? "animate-spin" : ""} />
+            <RefreshCw size={14} className={saving ? "animate-spin" : ""} />
           </button>
         </div>
         
         <input 
-          className="chat-details-name-input"
+          className="wa-contact-name-input"
           value={editedLead.name || ""}
           onChange={(e) => handleChange("name", e.target.value)}
           onBlur={() => handleBlur("name")}
-          style={{ textAlign: 'center', fontSize: '1.4rem', fontWeight: 700 }}
         />
         
-        <div className="lead-status-badges" style={{ display: 'flex', gap: '8px', marginBottom: '20px', justifyContent: 'center' }}>
-            <span className="badge-glass">ID: {lead.id.slice(-6)}</span>
-            <span className="badge-glass" style={{ borderColor: 'var(--accent-blue)', color: 'var(--accent-blue)' }}>{currentStage?.name}</span>
+        <p className="wa-contact-phone-sub">{lead.phone}</p>
+
+        <div className="lead-status-row">
+            <span className="wa-badge">ID: {lead.id.slice(-6)}</span>
+            <span className="wa-badge" style={{ color: 'var(--accent-wa)', borderColor: 'var(--accent-wa)' }}>{currentStage?.name}</span>
         </div>
         
-        <div className="chat-details-actions-grid">
-          <button className="chat-action-card" onClick={() => window.open(`https://wa.me/${lead.phone.replace(/\D/g, '')}`, '_blank')}>
+        <div className="wa-details-actions">
+          <button className="wa-action-btn" onClick={() => window.open(`https://wa.me/${lead.phone.replace(/\D/g, '')}`, '_blank')}>
             <ExternalLink size={18} />
             <span>Perfil WA</span>
           </button>
           <button 
-            className={`chat-action-card ${editedLead.isAgentActive ? 'active' : ''}`} 
+            className={`wa-action-btn ${editedLead.isAgentActive ? 'active' : ''}`} 
             onClick={() => {
               const newValue = !editedLead.isAgentActive;
               handleChange("isAgentActive", newValue);
@@ -192,7 +195,7 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
             }}
           >
             <Bot size={18} />
-            <span>IA: {editedLead.isAgentActive ? 'LIGADO' : 'DESLIGADO'}</span>
+            <span>IA: {editedLead.isAgentActive ? 'ON' : 'OFF'}</span>
           </button>
         </div>
       </div>

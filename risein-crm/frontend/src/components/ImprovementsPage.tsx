@@ -22,14 +22,14 @@ interface Improvement {
 
 const COLUMNS: { key: Status; label: string; icon: React.ReactNode; color: string; next?: Status; prev?: Status }[] = [
   { key: "Pendente",   label: "Solicitada", icon: <AlertCircle size={14} />,  color: "#f59e0b", next: "Ajustando" },
-  { key: "Ajustando",  label: "Pendente",   icon: <Clock size={14} />,         color: "#4c96ff", prev: "Pendente",  next: "Finalizado" },
-  { key: "Finalizado", label: "Concluído",  icon: <CheckCircle2 size={14} />, color: "#10b981", prev: "Ajustando" },
+  { key: "Ajustando",  label: "Pendente",   icon: <Clock size={14} />,         color: "#34b7f1", prev: "Pendente",  next: "Finalizado" },
+  { key: "Finalizado", label: "Concluído",  icon: <CheckCircle2 size={14} />, color: "#00a884", prev: "Ajustando" },
 ];
 
 const STATUS_MAP: Record<Status, { label: string; color: string }> = {
   Pendente:   { label: "Solicitada", color: "#f59e0b" },
-  Ajustando:  { label: "Pendente",   color: "#4c96ff" },
-  Finalizado: { label: "Concluído",  color: "#10b981" },
+  Ajustando:  { label: "Pendente",   color: "#34b7f1" },
+  Finalizado: { label: "Concluído",  color: "#00a884" },
 };
 
 const API = "";

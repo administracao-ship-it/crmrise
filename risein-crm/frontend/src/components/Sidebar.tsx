@@ -82,7 +82,11 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
     return (
         <aside className="sidebar">
-            <div className="sidebar-logo">RI</div>
+            <div className="sidebar-logo">
+                <div className="w-8 h-8 bg-wa-green rounded-full flex items-center justify-center">
+                    <Zap size={18} fill="#00a884" color="#0b141a" />
+                </div>
+            </div>
             <nav className="sidebar-nav">
                 {navItems.map((item) => (
                     <Link
@@ -96,9 +100,8 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                         }}
                         className={`sidebar-item ${activeTab === item.label ? "active" : ""}`}
                         title={item.label}
-                        style={{ cursor: "pointer" }}
                     >
-                        <item.icon size={20} />
+                        <item.icon size={22} strokeWidth={activeTab === item.label ? 2.5 : 2} />
                         <span className="sidebar-label">{item.label}</span>
                     </Link>
                 ))}
@@ -106,29 +109,28 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             <div className="sidebar-footer">
                 <div
                     className="sidebar-item"
-                    title={isLight ? "Ativar Modo Escuro" : "Ativar Modo Claro"}
+                    title={isLight ? "Modo Escuro" : "Modo Claro"}
                     onClick={toggleTheme}
-                    style={{ cursor: "pointer", color: isLight ? "var(--accent-orange)" : "var(--accent-blue)" }}
+                    style={{ color: isLight ? "var(--accent-orange)" : "var(--accent-blue)" }}
                 >
-                    {isLight ? <Moon size={20} /> : <Sun size={20} />}
+                    {isLight ? <Moon size={22} /> : <Sun size={22} />}
                     <span className="sidebar-label">{isLight ? "Modo Escuro" : "Modo Claro"}</span>
                 </div>
                 <div
                     className={`sidebar-item ${activeTab === "Settings" ? "active" : ""}`}
                     title="Configurações"
                     onClick={() => onTabChange("Settings")}
-                    style={{ cursor: "pointer" }}
                 >
-                    <Settings size={20} />
+                    <Settings size={22} />
                     <span className="sidebar-label">Configurações</span>
                 </div>
                 <div
                     className="sidebar-item"
                     title="Sair"
                     onClick={handleLogout}
-                    style={{ cursor: "pointer", color: "var(--accent-red)" }}
+                    style={{ color: "#ea0038" }}
                 >
-                    <LogOut size={20} />
+                    <LogOut size={22} />
                     <span className="sidebar-label">Sair</span>
                 </div>
             </div>

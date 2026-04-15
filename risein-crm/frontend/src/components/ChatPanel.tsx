@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Send, Paperclip, FileIcon, Smile, Mic, Check, CheckCheck, Trash2, Play, Square, Loader2, AlertCircle, Clock } from "lucide-react";
+import { X, Send, Paperclip, FileIcon, Smile, Mic, Check, CheckCheck, Trash2, Play, Square, Loader2, AlertCircle, Clock, MoreVertical, Search, Phone, Video } from "lucide-react";
 import { fetchMessages, sendMessage as apiSendMessage, API_URL } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import type { Lead, Message } from "@/lib/api";
@@ -67,7 +67,7 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
             .catch(err => {
                 console.error("Failed to fetch messages:", err);
                 if (err.message?.includes("Lead not found")) {
-                    setSendError("Este contato não foi encontrado no servidor. Por favor, atualize a lista (F5).");
+                    setSendError("Contato não encontrado no servidor.");
                 }
             });
 
@@ -109,7 +109,9 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
     }, [lead]);
 
     useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (scrollRef.current) {
+            scrollRef.current.scrollIntoView({ behavior: "smooth" });
+        }
     }, [messages]);
 
     const handleSend = async () => {
@@ -129,24 +131,16 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
 
         setSending(true);
         setSendError(null);
-        
-        // Optimistic update
         setMessages(prev => [...prev, tempMsg]);
         setInput("");
 
         try {
             const msg = await apiSendMessage(lead.id, content);
-            setMessages((prev) => {
-                // Replace temp message with real one from server
-                return prev.map(m => m.id === tempId ? msg : m);
-            });
+            setMessages((prev) => prev.map(m => m.id === tempId ? msg : m));
         } catch (err: any) {
-            console.error("Failed to send message:", err);
-            setSendError(err.message || "Falha ao enviar mensagem");
-            // Highlight the failed message or keep the text in input if preferred.
-            // For now, let's keep the message in list but mark as error or return to input.
-            setInput(content); // Return text to input for retry
-            setMessages(prev => prev.filter(m => m.id !== tempId)); // Remove temp message
+            setSendError(err.message || "Falha ao enviar");
+            setInput(content);
+            setMessages(prev => prev.filter(m => m.id !== tempId));
         } finally {
             setSending(false);
         }
@@ -155,19 +149,7 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
     const startRecording = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            
-            let mimeType = 'audio/ogg; codecs=opus';
-            if (!MediaRecorder.isTypeSupported(mimeType)) {
-                mimeType = 'audio/webm; codecs=opus';
-            }
-            if (!MediaRecorder.isTypeSupported(mimeType)) {
-                mimeType = 'audio/webm';
-            }
-            if (!MediaRecorder.isTypeSupported(mimeType)) {
-                mimeType = ''; // Let the browser decide if all fail
-            }
-
-            const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+            const recorder = new MediaRecorder(stream);
             const chunks: Blob[] = [];
 
             recorder.ondataavailable = (e) => {
@@ -175,13 +157,7 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
             };
 
             recorder.onstop = () => {
-                const mimeType = recorder.mimeType;
-                const blob = new Blob(chunks, { type: mimeType });
-                
-                if (blob.size < 100) {
-                    console.warn("Recording too small, might be silent or failed.");
-                }
-                
+                const blob = new Blob(chunks, { type: 'audio/webm' });
                 setRecordedBlob(blob);
                 setRecordedUrl(URL.createObjectURL(blob));
                 setIsRecording(false);
@@ -193,34 +169,26 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
             setIsRecording(true);
             setRecordingTime(0);
         } catch (err) {
-            console.error("Microphone access denied:", err);
-            toast.error("Permissão de microfone negada ou erro ao acessar.");
+            toast.error("Erro ao acessar microfone");
         }
     };
 
     const stopRecording = () => {
-        if (mediaRecorder && mediaRecorder.state !== "inactive") {
-            mediaRecorder.stop();
-        }
+        if (mediaRecorder?.state !== "inactive") mediaRecorder?.stop();
         setIsRecording(false);
     };
 
     useEffect(() => {
         let interval: any;
         if (isRecording) {
-            interval = setInterval(() => {
-                setRecordingTime(prev => prev + 1);
-            }, 1000);
-        } else {
-            setRecordingTime(0);
+            interval = setInterval(() => setRecordingTime(prev => prev + 1), 1000);
         }
         return () => clearInterval(interval);
     }, [isRecording]);
 
-    const formatDuration = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    const formatDuration = (s: number) => {
+        const m = Math.floor(s / 60);
+        return `${m}:${(s % 60).toString().padStart(2, '0')}`;
     };
 
     const discardRecording = () => {
@@ -231,28 +199,17 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
 
     const handleAudioSend = async () => {
         if (!recordedBlob || !lead) return;
-        
-        if (recordedBlob.size < 500) {
-            toast.error("O áudio parece estar vazio ou é muito curto. Tente gravar novamente.");
-            return;
-        }
-
-        const extension = recordedBlob.type.includes('ogg') ? 'ogg' : 'webm';
-        const file = new File([recordedBlob], `recording.${extension}`, { type: recordedBlob.type });
+        const file = new File([recordedBlob], "recording.webm", { type: recordedBlob.type });
         const formData = new FormData();
         formData.append("file", file);
         
         setUploading(true);
         try {
             const msg = await apiSendMessage(lead.id, formData);
-            setMessages((prev) => {
-                if (prev.find((m) => m.id === msg.id)) return prev;
-                return [...prev, msg];
-            });
+            setMessages(prev => [...prev, msg]);
             discardRecording();
         } catch (err) {
-            console.error("Failed to send recording:", err);
-            toast.error("Falha ao enviar áudio. Verifique sua conexão ou se o WhatsApp está pronto.");
+            toast.error("Falha ao enviar áudio");
         } finally {
             setUploading(false);
         }
@@ -261,249 +218,163 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !lead) return;
-
         setUploading(true);
         const formData = new FormData();
         formData.append("file", file);
-
         try {
             const msg = await apiSendMessage(lead.id, formData);
-            setMessages((prev) => {
-                if (prev.find((m) => m.id === msg.id)) return prev;
-                return [...prev, msg];
-            });
+            setMessages(prev => [...prev, msg]);
         } catch (err) {
-            console.error("Failed to upload file:", err);
-            toast.error("Falha ao enviar arquivo.");
+            toast.error("Falha ao enviar arquivo");
         } finally {
             setUploading(false);
-            if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
-    const triggerFileSelect = () => {
-        fileInputRef.current?.click();
-    };
+    if (!lead) return <div className="chat-panel-empty">Selecione um contato para começar</div>;
 
     return (
-        <div className={`chat-panel ${lead ? "open" : ""} ${isFullScreen ? "full-screen" : ""}`}>
-            {lead && (
-                <>
-                    <div className="chat-header">
-                        <div className="chat-contact">
-                            <div className="chat-contact-avatar">
-                                {lead.avatarUrl ? (
+        <div className="chat-panel h-full flex flex-col">
+            {/* WhatsApp Styled Header */}
+            <div className="chat-header h-[59px] bg-[#202c33] px-4 py-2 flex items-center justify-between border-b border-[#222d34]">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#6a7175] flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {lead.avatarUrl ? (
+                            <img src={lead.avatarUrl} alt={lead.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <span className="text-white font-bold">{getInitials(lead.name)}</span>
+                        )}
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-[#e9edef] font-semibold text-[15px] leading-tight">
+                            {formatDisplayName(lead.name)}
+                        </span>
+                        <span className="text-[#8696a0] text-[12px] leading-tight">
+                            {lead.phone}
+                        </span>
+                    </div>
+                </div>
+                <div className="flex items-center gap-5 text-[#aebac1]">
+                    <Search size={20} className="cursor-pointer hover:text-white" />
+                    <MoreVertical size={20} className="cursor-pointer hover:text-white" />
+                    {onClose && (
+                        <X size={20} className="ml-2 cursor-pointer hover:text-white" onClick={onClose} />
+                    )}
+                </div>
+            </div>
+
+            {/* Chat Messages Scrolling Area */}
+            <div className="flex-1 relative overflow-hidden bg-[#0b141a]">
+                <div className="chat-messages-bg opacity-[0.06] absolute inset-0 pointer-events-none" 
+                     style={{ backgroundImage: "url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')" }}>
+                </div>
+                
+                <div className="chat-messages-content h-full overflow-y-auto relative z-1 p-5 flex flex-col gap-2">
+                    {messages.map((msg) => (
+                        <div key={msg.id} className={`wa-bubble-wrapper ${msg.isFromMe ? 'sent' : 'received'}`}>
+                            <div className={`wa-bubble ${msg.isFromMe ? 'sent' : 'received'}`}>
+                                {msg.type === "audio" && msg.mediaUrl ? (
+                                    <audio controls className="max-w-full">
+                                        <source src={`${API_URL}${msg.mediaUrl}`} type={msg.mimeType || "audio/ogg"} />
+                                    </audio>
+                                ) : msg.type === "image" && msg.mediaUrl ? (
                                     <img 
-                                        src={lead.avatarUrl} 
-                                        alt={formatDisplayName(lead.name)} 
-                                        style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
-                                        referrerPolicy="no-referrer"
+                                        src={`${API_URL}${msg.mediaUrl}`} 
+                                        className="rounded-lg max-w-full cursor-pointer mb-1" 
+                                        onClick={() => window.open(`${API_URL}${msg.mediaUrl}`, '_blank')}
                                     />
+                                ) : msg.mediaUrl ? (
+                                    <a href={`${API_URL}${msg.mediaUrl}`} target="_blank" className="flex items-center gap-2 p-2 bg-black/10 rounded mb-1">
+                                        <FileIcon size={20} />
+                                        <span className="text-sm truncate">{msg.content || "Arquivo"}</span>
+                                    </a>
                                 ) : (
-                                    getInitials(formatDisplayName(lead.name))
+                                    <span className="text-[14.2px] whitespace-pre-wrap">{msg.content}</span>
                                 )}
-                            </div>
-                            <div>
-                                <div className="chat-contact-name">{formatDisplayName(lead.name)}</div>
-                                <div className="chat-contact-phone">{formatDisplayName(lead.phone)}</div>
-                            </div>
-                        </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            {!isFullScreen && (
-                                <button
-                                    onClick={onClose}
-                                    style={{
-                                        background: "rgba(255, 255, 255, 0.05)",
-                                        border: "1px solid var(--border-color)",
-                                        borderRadius: "var(--radius-sm)",
-                                        color: "var(--text-secondary)",
-                                        cursor: "pointer",
-                                        width: "32px",
-                                        height: "32px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        transition: "all 0.2s"
-                                    }}
-                                    className="hover:bg-red-500 hover:text-white"
-                                >
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="chat-messages">
-                        {messages.length === 0 ? (
-                            <div className="chat-view-empty">
-                                <span>Comece uma conversa agora</span>
-                            </div>
-                        ) : (
-                            messages.map((msg) => {
-                                const hasContent = msg.content || msg.mediaUrl;
-                                if (!hasContent) return null;
-
-                                return (
-                                    <div key={msg.id} className={`message-wrapper ${msg.isFromMe ? "sent" : "received"}`}>
-                                        <div className={`message-bubble ${msg.type === 'image' ? 'has-image' : ''}`}>
-                                            {msg.type === "audio" && msg.mediaUrl ? (
-                                                <audio
-                                                    controls
-                                                    className="chat-audio-player"
-                                                >
-                                                    <source
-                                                        src={`${API_URL}${msg.mediaUrl}`}
-                                                        type={msg.mimeType || "audio/ogg"}
-                                                    />
-                                                </audio>
-                                            ) : msg.type === "image" && msg.mediaUrl ? (
-                                                <div className="chat-image-container">
-                                                    <img 
-                                                        src={`${API_URL}${msg.mediaUrl}`} 
-                                                        alt="Imagem" 
-                                                        className="chat-image"
-                                                        onClick={() => window.open(`${API_URL}${msg.mediaUrl}`, '_blank')}
-                                                    />
-                                                </div>
-                                            ) : msg.mediaUrl ? (
-                                                <div className="chat-file-container">
-                                                    <a 
-                                                        href={`${API_URL}${msg.mediaUrl}`} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                        className="chat-file-link"
-                                                    >
-                                                        <FileIcon size={20} />
-                                                        <span>{msg.content || "Arquivo"}</span>
-                                                    </a>
-                                                </div>
-                                            ) : (
-                                                msg.content
-                                            )}
-                                            <div className="message-time">
-                                                {formatTime(msg.timestamp)}
-                                                {msg.isFromMe && (
-                                                    <span style={{ marginLeft: '4px', display: 'inline-flex', alignItems: 'center' }}>
-                                                        {msg.status === "READ" ? (
-                                                            <CheckCheck size={12} color="#34b7f1" />
-                                                        ) : msg.status === "DELIVERED" ? (
-                                                            <CheckCheck size={12} />
-                                                        ) : msg.status === "PENDING" ? (
-                                                            <Clock size={10} className="animate-pulse" />
-                                                        ) : (
-                                                            <Check size={12} />
-                                                        )}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                        <div ref={scrollRef} />
-                    </div>
-
-                    <div className="chat-input-area">
-                        <div className="chat-input-wrapper">
-                        {showEmojis && (
-                            <div className="emoji-picker-mini">
-                                {emojis.map(e => (
-                                    <button key={e} onClick={() => addEmoji(e)} className="emoji-btn">
-                                        {e}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            style={{ display: "none" }}
-                            accept="image/*,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,audio/*"
-                        />
-                        <div className="chat-input-actions-left">
-                            <button
-                                className="chat-attach-btn"
-                                onClick={() => setShowEmojis(!showEmojis)}
-                                title="Emojis"
-                            >
-                                <Smile size={20} />
-                            </button>
-                            <button
-                                className="chat-attach-btn"
-                                onClick={triggerFileSelect}
-                                disabled={uploading}
-                                title="Anexar arquivo"
-                            >
-                                <Paperclip size={20} />
-                            </button>
-                        </div>
-
-                        {isRecording ? (
-                            <div className="chat-recording-indicator" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div className="recording-dot"></div>
-                                <span>Gravando {formatDuration(recordingTime)}</span>
-                                <button onClick={stopRecording} className="stop-btn">
-                                    <Square size={12} fill="currentColor" /> Parar
-                                </button>
-                            </div>
-                        ) : recordedUrl ? (
-                            <div className="chat-audio-review" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <audio src={recordedUrl} controls className="mini-audio-preview" style={{ flex: 1 }} />
-                                <button onClick={discardRecording} className="discard-btn" title="Excluir">
-                                    <Trash2 size={18} />
-                                </button>
-                                <button onClick={handleAudioSend} className="send-recorded-btn" disabled={uploading}>
-                                    <Send size={18} />
-                                </button>
-                            </div>
-                        ) : (
-                                <div style={{ flex: 1, position: 'relative' }}>
-                                    <input
-                                        type="text"
-                                        className={`chat-input-field ${sendError ? 'border-red-500' : ''}`}
-                                        placeholder={sending ? "Enviando..." : "Pressione Enter para enviar..."}
-                                        value={input}
-                                        onChange={(e) => {
-                                            setInput(e.target.value);
-                                            if (sendError) setSendError(null);
-                                        }}
-                                        disabled={sending}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter" && !e.shiftKey) {
-                                                e.preventDefault();
-                                                handleSend();
-                                            }
-                                        }}
-                                    />
-                                    {sendError && (
-                                        <div className="absolute -top-8 left-0 text-red-500 text-[10px] flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded">
-                                            <AlertCircle size={10} /> {sendError}
-                                        </div>
+                                
+                                <div className="wa-bubble-time">
+                                    {formatTime(msg.timestamp)}
+                                    {msg.isFromMe && (
+                                        <span className={`wa-bubble-status ${msg.status === 'READ' ? 'read' : ''}`}>
+                                            {msg.status === 'READ' ? <CheckCheck size={14} /> : 
+                                             msg.status === 'DELIVERED' ? <CheckCheck size={14} /> : 
+                                             msg.status === 'PENDING' ? <Clock size={12} /> : 
+                                             <Check size={14} />}
+                                        </span>
                                     )}
                                 </div>
-                        )}
-                        
-                        <div className="chat-input-actions-right">
-                            {(input.trim() || uploading) && !isRecording && !recordedUrl ? (
-                                <button className="chat-send-btn" onClick={handleSend} disabled={sending || !input.trim()}>
-                                    {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                                </button>
-                            ) : !isRecording && !recordedUrl ? (
-                                <button 
-                                    onClick={startRecording} 
-                                    className="chat-mic-btn"
-                                    title="Gravar áudio"
-                                >
-                                    <Mic size={20} />
-                                </button>
-                            ) : null}
+                            </div>
                         </div>
-                      </div>
-                    </div>
-                </>
-            )}
+                    ))}
+                    <div ref={scrollRef} />
+                </div>
+            </div>
+
+            {/* WhatsApp Styled Input Area */}
+            <div className="chat-input-area bg-[#202c33] px-4 py-2 flex items-center gap-3">
+                <div className="flex items-center gap-2 text-[#aebac1]">
+                    <button onClick={() => setShowEmojis(!showEmojis)} className="hover:text-white transition">
+                        <Smile size={24} />
+                    </button>
+                    <button onClick={() => fileInputRef.current?.click()} className="hover:text-white transition">
+                        <Paperclip size={24} className={uploading ? "animate-pulse" : ""} />
+                    </button>
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} hidden />
+                </div>
+
+                <div className="flex-1 relative">
+                    {showEmojis && (
+                        <div className="absolute bottom-full left-0 bg-[#233138] p-3 rounded-lg grid grid-cols-5 gap-2 mb-2 shadow-xl z-50 border border-white/5">
+                            {emojis.map(e => (
+                                <button key={e} onClick={() => addEmoji(e)} className="text-xl hover:scale-125 transition">{e}</button>
+                            ))}
+                        </div>
+                    )}
+
+                    {isRecording ? (
+                        <div className="bg-[#2a3942] rounded-full px-4 h-10 flex items-center justify-between text-white">
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                                <span className="text-sm">{formatDuration(recordingTime)}</span>
+                            </div>
+                            <button onClick={stopRecording} className="text-red-500 font-bold text-xs uppercase hover:bg-white/5 px-2 py-1 rounded">Parar</button>
+                        </div>
+                    ) : recordedUrl ? (
+                        <div className="bg-[#2a3942] rounded-full px-2 h-10 flex items-center gap-2 text-white">
+                            <audio src={recordedUrl} controls className="h-8 flex-1" />
+                            <button onClick={discardRecording} className="p-2 hover:bg-white/5 rounded-full"><Trash2 size={18} className="text-[#8696a0]" /></button>
+                            <button onClick={handleAudioSend} className="p-2 bg-[#00a884] rounded-full"><Send size={18} /></button>
+                        </div>
+                    ) : (
+                        <input
+                            className="w-full bg-[#2a3942] text-[#e9edef] rounded-lg px-4 py-2.5 text-[15px] focus:outline-none placeholder-[#8696a0]"
+                            placeholder="Mensagem"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                        />
+                    )}
+                </div>
+
+                <div className="text-[#aebac1]">
+                    {input.trim() || uploading || recordedUrl ? (
+                        <button 
+                            onClick={handleSend} 
+                            disabled={sending || !input.trim()} 
+                            className="w-10 h-10 bg-[#00a884] rounded-full flex items-center justify-center text-white"
+                        >
+                            {sending ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={startRecording} 
+                            className="w-10 h-10 flex items-center justify-center hover:bg-white/5 rounded-full transition"
+                        >
+                            <Mic size={24} />
+                        </button>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

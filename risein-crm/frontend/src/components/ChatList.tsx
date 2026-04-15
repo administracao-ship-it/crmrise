@@ -49,84 +49,67 @@ export default function ChatList({
   };
 
   return (
-    <div className="chat-list-container">
-      <div className="chat-list-search">
-        <Search size={16} />
-        <input 
-          type="text" 
-          placeholder="Buscar conversas..." 
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
+    <div className="chat-list-container wa-chat-list">
+      <div className="chat-list-search-wa">
+        <div className="search-input-wrapper-wa">
+          <Search size={16} className="search-icon-wa" />
+          <input 
+            type="text" 
+            placeholder="Pesquisar ou começar uma nova conversa" 
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+        </div>
       </div>
       
-      <div className="chat-list-scroll">
+      <div className="chat-list-scroll wa-scroll">
         {leads.length === 0 ? (
           <div className="chat-list-empty">Nenhum contato encontrado</div>
         ) : (
           leads.map((lead) => (
             <div 
               key={lead.id}
-              className={`chat-list-item ${selectedLeadId === lead.id ? 'active' : ''}`}
+              className={`wa-chat-item ${selectedLeadId === lead.id ? 'active' : ''}`}
               onClick={() => onSelectLead(lead)}
-              style={{ borderLeft: selectedLeadId === lead.id ? '4px solid #3b82f6' : '4px solid transparent' }}
             >
-              <div className="chat-avatar-container">
-                <div 
-                  className="chat-avatar" 
-                  style={{ 
-                    width: '40px', 
-                    height: '40px', 
-                    fontSize: '15px', 
-                    fontWeight: 600,
-                    overflow: 'hidden',
-                    position: 'relative'
-                  }}
-                >
+              <div className="wa-avatar-container">
+                <div className="wa-avatar">
                    {lead.avatarUrl ? (
                      <img 
                        src={lead.avatarUrl} 
                        alt={lead.name}
                        className="w-full h-full object-cover"
-                       onError={(e) => {
-                         // Fallback elegant logic
-                         (e.target as HTMLImageElement).style.display = 'none';
-                         const parent = (e.target as HTMLImageElement).parentElement;
-                         if (parent) {
-                           const fallback = document.createElement('span');
-                           fallback.innerText = lead.name.charAt(0).toUpperCase();
-                           parent.appendChild(fallback);
-                         }
-                       }}
                      />
                    ) : (
-                     <span className="uppercase">{lead.name.charAt(0)}</span>
+                     <div className="w-full h-full bg-[#6a7175] flex items-center justify-center text-white text-lg font-medium">
+                        {lead.name.charAt(0).toUpperCase()}
+                     </div>
                    )}
                    
                    {lead.isAgentActive && (
-                     <div className="ai-badge-mini" title="IA Ativa">
+                     <div className="wa-ai-badge" title="IA Ativa">
                        <Bot size={10} />
                      </div>
                    )}
                 </div>
               </div>
               
-              <div className="chat-item-info">
-                <div className="chat-item-header">
-                  <span className="chat-item-name">{lead.name}</span>
-                  <span className="chat-item-time">
+              <div className="wa-item-content">
+                <div className="wa-item-header">
+                  <span className="wa-item-name">{lead.name}</span>
+                  <span className="wa-item-time">
                     {formatChatTime(lead.messages && lead.messages.length > 0 ? lead.messages[0].timestamp : lead.createdAt)}
                   </span>
                 </div>
-                <div className="chat-item-footer">
-                  <p className="chat-item-last-msg">
+                <div className="wa-item-footer">
+                  <p className="wa-item-last-msg">
                     {lead.messages && lead.messages.length > 0 
                       ? lead.messages[0].content 
                       : "Nenhuma mensagem ainda"}
                   </p>
-                  <div className="chat-item-actions">
+                  <div className="wa-item-actions">
                     <button 
-                      className="chat-delete-btn"
+                      className="wa-delete-btn"
                       onClick={(e) => handleDelete(e, lead)}
                       title="Excluir Lead"
                     >
