@@ -27,6 +27,7 @@ import SettingsPage from "@/components/SettingsPage";
 import DisparosPage from "@/components/DisparosPage";
 import AiMetricsPage from "@/components/AiMetricsPage";
 import DashboardPage from "@/components/DashboardPage";
+import ImprovementsPage from "@/components/ImprovementsPage";
 import ChatDetails from "@/components/ChatDetails";
 import { 
   fetchStages, 
@@ -585,6 +586,8 @@ export default function HomePage() {
           />
         ) : activeTab === "Métricas" ? (
           <AiMetricsPage />
+        ) : activeTab === "Melhorias" ? (
+          <ImprovementsPage />
         ) : null}
       </main>
 

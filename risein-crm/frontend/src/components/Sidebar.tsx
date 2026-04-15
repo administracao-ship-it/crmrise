@@ -36,6 +36,7 @@ const navItems = [
     { icon: UserMinus, label: "Não Leads", href: "/" },
     { icon: Send, label: "Disparos", href: "/" },
     { icon: BarChart3, label: "Métricas", href: "/" },
+    { icon: Lightbulb, label: "Melhorias", href: "/" },
     { icon: Zap, label: "Automação", href: "/automation" },
 ];
 

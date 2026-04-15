@@ -15,6 +15,7 @@ const automationService = require("./services/automationService");
 const automationRoutes = require("./routes/automation");
 const tagRoutes = require("./routes/tags");
 const metricsRoutes = require("./routes/metrics");
+const improvementsRoutes = require("./routes/improvements");
 
 const prisma = new PrismaClient({
     datasourceUrl: process.env.DATABASE_URL
@@ -56,6 +57,7 @@ app.use("/api/config", configRoutes);
 app.use("/api/automation", automationRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/metrics", metricsRoutes);
+app.use("/api/improvements", improvementsRoutes);
 
 app.use((err, _req, res, _next) => {
     console.error("[ERROR]", err.message);
