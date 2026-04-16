@@ -2122,13 +2122,9 @@ body {
 
 .chat-col-view {
   flex: 1;
-  background: var(--bg-primary); /* Use dark bg by default to match ChatPanel */
+  background: #0b141a;
   border-right: 1px solid var(--border-color);
-  position: relative; /* Ensure children can position absolutely if needed */
-}
-
-:root.dark-theme .chat-col-view {
-  background: #0f172a; /* Darker but distinctive for chat */
+  position: relative;
 }
 
 .chat-col-details {
@@ -2136,6 +2132,41 @@ body {
   border-left: 1px solid var(--border-color);
   background: var(--bg-secondary);
 }
+
+/* Chat empty state */
+.chat-view-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #0b141a;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 32px;
+}
+
+.chat-empty-illustration {
+  font-size: 48px;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+
+.chat-view-empty h2 {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.chat-view-empty p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  max-width: 300px;
+  line-height: 1.5;
+}
+
 
 /* Chat List Styles */
 .chat-list-search {
