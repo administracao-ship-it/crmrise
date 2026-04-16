@@ -76,7 +76,7 @@ export default function LeadTable({ leads, onLeadClick }: LeadTableProps) {
               <td>
                 <div className="lead-title-cell">
                   <div className="dot" />
-                  <span className="lead-title-text">{lead.title || `Lead #${lead.id.slice(0, 5)}`}</span>
+                  <span className="lead-title-text">{lead.title || lead.name}</span>
                 </div>
               </td>
               <td>
