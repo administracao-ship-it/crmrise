@@ -18,6 +18,7 @@ export default function ChatPanel({ lead, isFullScreen, onClose }: ChatPanelProp
     const [newMessage, setNewMessage] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -62,12 +63,12 @@ export default function ChatPanel({ lead, isFullScreen, onClose }: ChatPanelProp
             setMessages(prev => prev.map(m => m.id === messageId ? { ...m, status } : m));
         };
 
-        socket.on("new_message", messageHandler);
+        socket.on("message:received", messageHandler);
         socket.on("message:sent", messageHandler);
         socket.on("message:status", statusHandler);
 
         return () => {
-            socket.off("new_message", messageHandler);
+            socket.off("message:received", messageHandler);
             socket.off("message:sent", messageHandler);
             socket.off("message:status", statusHandler);
         };
@@ -111,6 +112,41 @@ export default function ChatPanel({ lead, isFullScreen, onClose }: ChatPanelProp
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
+        }
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Clear input so same file can be selected again
+        e.target.value = "";
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // Optimistic UI for file
+        const optimisticId = `opt-file-${Date.now()}`;
+        const optimisticMsg: Message = {
+            id: optimisticId,
+            content: "",
+            isFromMe: true,
+            leadId: lead.id,
+            timestamp: new Date().toISOString(),
+            status: "sending",
+            type: file.type.startsWith("image/") ? "image" : "document",
+            mediaUrl: URL.createObjectURL(file), // Temporary local URL
+            mimeType: file.type
+        };
+        setMessages(prev => [...prev, optimisticMsg]);
+
+        try {
+            const result = await apiSendMessage(lead.id, formData);
+            setMessages(prev => prev.map(m => m.id === optimisticId ? result : m));
+        } catch (err) {
+            console.error("Error sending file:", err);
+            setMessages(prev => prev.filter(m => m.id !== optimisticId));
+            toast.error("Erro ao enviar arquivo.");
         }
     };
 
@@ -327,7 +363,18 @@ export default function ChatPanel({ lead, isFullScreen, onClose }: ChatPanelProp
                     flexShrink: 0,
                 }}
             >
-                <button type="button" style={{ background: "none", border: "none", color: "#8696a0", cursor: "pointer", padding: 4 }}>
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    style={{ display: "none" }} 
+                    onChange={handleFileChange}
+                    accept="image/*,application/pdf"
+                />
+                <button 
+                    type="button" 
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{ background: "none", border: "none", color: "#8696a0", cursor: "pointer", padding: 4 }}
+                >
                     <Paperclip size={22} />
                 </button>
                 <input
