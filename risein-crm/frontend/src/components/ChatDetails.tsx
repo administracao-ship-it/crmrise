@@ -309,16 +309,6 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
           </div>
       </div>
 
-      <div className="chat-details-footer-fixed">
-        {nextStage ? (
-            <button className="btn-primary-glow" disabled={saving} onClick={() => handleMoveToFunnel(nextStage.name)}>
-              {saving ? "AVANÇANDO..." : `AVANÇAR PARA: ${nextStage.name.toUpperCase()}`}
-              {!saving && <ArrowRight size={16} />}
-            </button>
-        ) : (
-            <div className="max-stage-reached">🚀 Lead em estágio final</div>
-        )}
-      </div>
     </div>
   );
 }

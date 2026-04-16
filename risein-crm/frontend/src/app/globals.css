@@ -2122,8 +2122,9 @@ body {
 
 .chat-col-view {
   flex: 1;
-  background: #f4f7f9; /* Social Light Grey Background */
+  background: var(--bg-primary); /* Use dark bg by default to match ChatPanel */
   border-right: 1px solid var(--border-color);
+  position: relative; /* Ensure children can position absolutely if needed */
 }
 
 :root.dark-theme .chat-col-view {
@@ -2738,6 +2739,7 @@ body {
     padding: 24px;
     background: linear-gradient(to top, var(--bg-secondary) 80%, transparent);
     backdrop-filter: blur(10px);
+    z-index: 10;
 }
 
 .btn-primary-glow {
@@ -4545,6 +4547,7 @@ body {
   overflow-y: auto;
   min-width: 320px;
   max-width: 380px;
+  position: relative; /* Added to contain the absolute footer */
 }
 
 .chat-details-header {

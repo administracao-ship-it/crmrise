@@ -598,19 +598,6 @@ export default function HomePage() {
           </button>
           <div className="kanban-modal-content" onClick={(e) => e.stopPropagation()}>
             <ChatDetails lead={showDetailsLead} stages={stages} />
-            <div className="p-4 bg-gray-900 border-t border-white/10 flex justify-center">
-              <button 
-                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium py-2 px-4 rounded-lg transition-colors"
-                onClick={() => {
-                  const leadToForward = showDetailsLead;
-                  setShowDetailsLead(null);
-                  handleLeadClick(leadToForward);
-                }}
-              >
-                <MessageCircle size={18} />
-                Abrir conversa no Chat
-              </button>
-            </div>
           </div>
         </div>
       )}

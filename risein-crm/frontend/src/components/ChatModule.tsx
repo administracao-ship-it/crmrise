@@ -19,9 +19,10 @@ export default function ChatModule({ stages, selectedLead: externalLead, onSelec
   const selectedLead = externalLead !== undefined ? externalLead : internalSelectedLead;
   const setSelectedLead = externalOnSelect !== undefined ? externalOnSelect : setInternalSelectedLead;
 
-  const allLeads = stages.flatMap(s => s.leads);
+  // Flatten leads from all stages for the chat list
+  const allLeads = Array.isArray(stages) ? stages.flatMap(s => s.leads || []) : [];
   
-  // Sorting logical: Leads with more recent messages context first
+  // Sorting logic: Leads with more recent messages context first (newest on top)
   const sortedLeads = [...allLeads].sort((a, b) => {
     const timeA = a.messages && a.messages.length > 0 
       ? new Date(a.messages[0].timestamp).getTime() 
@@ -33,15 +34,15 @@ export default function ChatModule({ stages, selectedLead: externalLead, onSelec
   });
 
   const filteredLeads = sortedLeads.filter(l => 
-    l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.phone.includes(searchQuery)
+    l.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    l.phone?.includes(searchQuery)
   );
 
   return (
     <div className="chat-module-wrapper">
       <div className="chat-module-columns">
         {/* Coluna 1: Lista de Contatos */}
-        <div className="chat-col chat-col-list">
+        <div className="chat-col chat-col-list flex-shrink-0">
           <ChatList 
             leads={filteredLeads}
             selectedLeadId={selectedLead?.id}
@@ -52,7 +53,7 @@ export default function ChatModule({ stages, selectedLead: externalLead, onSelec
         </div>
 
         {/* Coluna 2: Conversa Ativa */}
-        <div className="chat-col chat-col-view">
+        <div className="chat-col chat-col-view flex-1 min-w-0 bg-[#0b141a] relative overflow-hidden">
           {selectedLead ? (
             <ChatPanel 
               lead={selectedLead} 
@@ -69,7 +70,7 @@ export default function ChatModule({ stages, selectedLead: externalLead, onSelec
         </div>
 
         {/* Coluna 3: Detalhes do Lead */}
-        <div className="chat-col chat-col-details">
+        <div className="chat-col chat-col-details relative flex-shrink-0">
           <ChatDetails lead={selectedLead} stages={stages} />
         </div>
       </div>
