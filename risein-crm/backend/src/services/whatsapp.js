@@ -13,6 +13,11 @@ let statusHeartbeat = null;
 let watchdogTimer = null;
 let globalIo = null;
 
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 function stopWatchdog() {
     if (watchdogTimer) {
         clearTimeout(watchdogTimer);
@@ -325,13 +330,28 @@ async function initWhatsApp(io, prisma) {
 
             let mediaData = {};
             if (msg.hasMedia) {
-                // Determine media type without downloading
-                mediaData = {
-                    type: msg.type || "unknown", // image, audio, video, etc
-                    mediaUrl: null, // To be downloaded on demand
-                    mimeType: null  // To be populated during on-demand download
-                };
-                console.log(`📎 Message has media (Type: ${mediaData.type}). Skipping automatic download.`);
+                try {
+                    const media = await msg.downloadMedia();
+                    if (media) {
+                        const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${media.mimetype.split("/")[1] || "bin"}`;
+                        const filePath = path.join(uploadsDir, filename);
+                        fs.writeFileSync(filePath, media.data, "base64");
+                        
+                        mediaData = {
+                            type: msg.type || "unknown",
+                            mediaUrl: `/uploads/${filename}`,
+                            mimeType: media.mimetype
+                        };
+                        console.log(`📎 Media downloaded and saved: ${filename} (${msg.type})`);
+                    }
+                } catch (mediaErr) {
+                    console.error("❌ Failed to download media:", mediaErr.message);
+                    mediaData = {
+                        type: msg.type || "unknown",
+                        mediaUrl: null,
+                        mimeType: null
+                    };
+                }
             }
 
             const message = await prisma.message.create({
@@ -346,6 +366,7 @@ async function initWhatsApp(io, prisma) {
             });
 
             io.emit("message:received", { ...message, lead });
+
 
             // --- AI Activation / Trigger Logic ---
             const config = await prisma.globalConfig.findUnique({ where: { id: "singleton" } });
