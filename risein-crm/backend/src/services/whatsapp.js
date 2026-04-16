@@ -27,7 +27,7 @@ function startWatchdog(io, prisma) {
             console.error("🚨 Watchdog triggered: WhatsApp stuck in initialization/waiting for QR. Restarting...");
             await initWhatsApp(io, prisma);
         }
-    }, 180000); // 3 minutes timeout for QR/Init
+    }, 300000); // 5 minutes timeout for QR/Init (increased for slow VPS)
 }
 
 function cleanSingletonLock(dir) {
@@ -101,15 +101,16 @@ async function initWhatsApp(io, prisma) {
                     "--disable-site-isolation-trials",
                     "--disable-web-security",
                     "--font-render-hinting=none",
-                    "--disable-blink-features=AutomationControlled"
+                    "--disable-blink-features=AutomationControlled",
+                    "--aggressive-cache-discard",
+                    "--disable-cache",
+                    "--disable-application-cache",
+                    "--disable-offline-load-stale-cache",
+                    "--no-pings"
                 ],
                 handleSIGINT: false,
                 handleSIGTERM: false,
                 handleSIGHUP: false
-            },
-            webVersionCache: {
-                type: 'remote',
-                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html'
             }
         });
         console.log("🛠️ WhatsApp Client created. Calling initialize()...");
@@ -173,7 +174,14 @@ async function initWhatsApp(io, prisma) {
 
     whatsappClient.on("disconnected", (reason) => {
         whatsappStatus = "disconnected";
-        console.log("🔌 WhatsApp disconnected:", reason);
+        console.log(`🔌 WhatsApp disconnected: ${reason || "No reason provided"}`);
+        // Log more details if possible
+        if (reason === "NAVIGATION") {
+            console.warn("⚠️ Disconnection caused by navigation (possibly session conflict or page reload)");
+        } else if (reason === "LOGOUT") {
+            console.error("❌ User logged out from mobile device.");
+        }
+        
         io.emit("whatsapp:disconnected", reason);
         io.emit("whatsapp:status", { status: "disconnected", reason });
     });
