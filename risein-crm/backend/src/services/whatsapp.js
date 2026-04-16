@@ -133,10 +133,12 @@ async function initWhatsApp(io, prisma) {
                 scale: 8
             });
             currentQR = qrImage;
+            io.emit("whatsapp:status", { status: "waiting_qr", qr: qrImage });
             io.emit("whatsapp:qr", qrImage);
         } catch (err) {
             console.error("Failed to generate QR image:", err);
             currentQR = qr;
+            io.emit("whatsapp:status", { status: "waiting_qr", qr });
             io.emit("whatsapp:qr", qr); 
         }
     });
@@ -159,6 +161,7 @@ async function initWhatsApp(io, prisma) {
         whatsappStatus = "authenticated";
         console.log("🔐 WhatsApp authentication successful.");
         io.emit("whatsapp:authenticated");
+        io.emit("whatsapp:status", { status: "authenticated" });
     });
 
     whatsappClient.on("auth_failure", (msg) => {
@@ -172,6 +175,7 @@ async function initWhatsApp(io, prisma) {
         whatsappStatus = "disconnected";
         console.log("🔌 WhatsApp disconnected:", reason);
         io.emit("whatsapp:disconnected", reason);
+        io.emit("whatsapp:status", { status: "disconnected", reason });
     });
 
     whatsappClient.on("message_ack", async (msg, ack) => {
