@@ -146,31 +146,57 @@ router.post("/:leadId", upload.single("file"), async (req, res, next) => {
             };
         }
 
-        const whatsappId = await sendMessage(lead.phone, content || "", mediaPath);
-
-        let messageData = {
-            content: content || null,
-            isFromMe: true,
-            leadId: lead.id,
-            ...mediaData
-        };
+        // Save message to DB immediately (before WhatsApp attempt)
+        let whatsappId = null;
+        let whatsappError = null;
 
         const message = await req.prisma.message.create({
             data: {
-                ...messageData,
-                whatsappId
+                content: content || null,
+                isFromMe: true,
+                leadId: lead.id,
+                status: "sending",
+                ...mediaData,
             },
         });
 
-        req.io.emit("message:sent", { ...message, lead });
-        res.status(201).json(message);
+        // Attempt to send via WhatsApp
+        try {
+            whatsappId = await sendMessage(lead.phone, content || "", mediaPath);
+            // Update with actual WhatsApp ID and mark as sent
+            await req.prisma.message.update({
+                where: { id: message.id },
+                data: { whatsappId, status: "sent" },
+            });
+        } catch (waErr) {
+            whatsappError = waErr.message;
+            console.error(`[WARN] WhatsApp delivery failed for lead ${lead.id}:`, waErr.message);
+            // Update status to reflect failed delivery
+            await req.prisma.message.update({
+                where: { id: message.id },
+                data: { status: "failed" },
+            }).catch(() => {}); // non-blocking
+        }
+
+        const finalMessage = { ...message, whatsappId, status: whatsappError ? "failed" : "sent" };
+        req.io.emit("message:sent", { ...finalMessage, lead });
+
+        if (whatsappError) {
+            return res.status(202).json({
+                ...finalMessage,
+                warning: `Mensagem salva, mas WhatsApp offline: ${whatsappError}`,
+            });
+        }
+
+        res.status(201).json(finalMessage);
     } catch (err) {
-        console.error(`[ERROR] Failed to send message to lead ${req.params.leadId}:`, err);
+        console.error(`[ERROR] Failed to process message for lead ${req.params.leadId}:`, err);
         res.status(500).json({ error: "Failed to send message", details: err.message });
     }
 });
 
 router.get("/whatsapp/bulk/history", async (req, res, next) => {
+
     try {
         const jobs = await req.prisma.bulkJob.findMany({
             orderBy: { createdAt: "desc" },

@@ -5,6 +5,8 @@ import { Send, Paperclip, X } from "lucide-react";
 import { fetchMessages, sendMessage as apiSendMessage } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import type { Lead, Message } from "@/lib/api";
+import toast from "react-hot-toast";
+
 
 interface ChatPanelProps {
     lead: Lead;
@@ -40,29 +42,62 @@ export default function ChatPanel({ lead, isFullScreen, onClose }: ChatPanelProp
         scrollToBottom();
     }, [messages]);
 
-    // Real-time socket listener
+    // Real-time socket listener — listen for incoming messages
     useEffect(() => {
         const socket = getSocket();
-        const handler = (msg: Message) => {
-            if (msg.leadId === lead?.id) {
-                setMessages(prev => [msg, ...prev]);
+        const handler = (msg: Message & { lead?: Lead }) => {
+            const msgLeadId = msg.leadId || msg.lead?.id;
+            if (msgLeadId === lead?.id) {
+                setMessages(prev => {
+                    // Avoid duplicate if optimistic message already added
+                    if (prev.some(m => m.id === msg.id)) return prev;
+                    return [...prev, msg];
+                });
             }
         };
         socket.on("new_message", handler);
-        return () => { socket.off("new_message", handler); };
+        socket.on("message:sent", handler);
+        return () => {
+            socket.off("new_message", handler);
+            socket.off("message:sent", handler);
+        };
     }, [lead?.id]);
+
 
     const handleSend = async (e?: React.FormEvent) => {
         e?.preventDefault();
         const content = newMessage.trim();
         if (!content) return;
         setNewMessage("");
+
+        // Optimistic UI: add message immediately
+        const optimisticId = `opt-${Date.now()}`;
+        const optimisticMsg: Message = {
+            id: optimisticId,
+            content,
+            isFromMe: true,
+            leadId: lead.id,
+            timestamp: new Date().toISOString(),
+            status: "sending",
+            type: "text",
+        };
+        setMessages(prev => [...prev, optimisticMsg]);
+
         try {
-            await apiSendMessage(lead.id, content);
-        } catch (err) {
+            const result = await apiSendMessage(lead.id, content) as Message & { warning?: string };
+            // Replace optimistic msg with real one from server
+            setMessages(prev => prev.map(m => m.id === optimisticId ? { ...result } : m));
+            if (result.warning) {
+                toast.error(`⚠️ WhatsApp offline: mensagem salva mas não enviada.`, { duration: 5000 });
+            }
+        } catch (err: unknown) {
             console.error("Error sending message:", err);
+            // Remove optimistic message and show error
+            setMessages(prev => prev.filter(m => m.id !== optimisticId));
+            toast.error("Erro ao enviar mensagem. Verifique a conexão.");
         }
     };
+
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" && !e.shiftKey) {
