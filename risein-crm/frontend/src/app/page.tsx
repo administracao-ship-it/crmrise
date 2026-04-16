@@ -18,7 +18,7 @@ import { Bot, MessageCircle, X } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
 import KanbanColumn from "@/components/KanbanColumn";
-import ChatPanel from "@/components/ChatPanel";
+
 import ChatModule from "@/components/ChatModule";
 import NewLeadModal from "@/components/NewLeadModal";
 import WhatsAppModal from "@/components/WhatsAppModal";
@@ -129,6 +129,13 @@ export default function HomePage() {
     loadData();
     syncWhatsAppStatus();
   }, [loadData, syncWhatsAppStatus]);
+
+  const handleTabChange = (tab: string) => {
+    if (tab !== "Chats") {
+      setSelectedLead(null);
+    }
+    setActiveTab(tab);
+  };
 
   const handleLeadClick = (lead: Lead) => {
     setSelectedLead(lead);
@@ -495,7 +502,7 @@ export default function HomePage() {
 
   return (
     <>
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
       <Header
         totalLeads={totalLeads}
         totalValue={totalValue}
@@ -600,10 +607,6 @@ export default function HomePage() {
             <ChatDetails lead={showDetailsLead} stages={stages} />
           </div>
         </div>
-      )}
-
-      {selectedLead && activeTab !== "Chats" && (
-        <ChatPanel lead={selectedLead} onClose={() => setSelectedLead(null)} />
       )}
 
       {showNewLead && (
