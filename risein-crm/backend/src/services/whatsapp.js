@@ -270,6 +270,11 @@ async function initWhatsApp(io, prisma) {
 
     whatsappClient.on("message", async (msg) => {
         try {
+            if (msg.from === "status@broadcast" || msg.from.includes("@g.us")) {
+                console.log(`🚫 Ignoring message from group or status: ${msg.from}`);
+                return;
+            }
+
             const contact = await msg.getContact();
             const phone = msg.from.replace("@c.us", "");
             const contactName = contact.pushname || contact.name || phone;
@@ -308,23 +313,13 @@ async function initWhatsApp(io, prisma) {
 
             let mediaData = {};
             if (msg.hasMedia) {
-                try {
-                    const media = await msg.downloadMedia();
-                    if (media) {
-                        const fileName = `${Date.now()}_${msg.id.id}.${media.mimetype.split("/")[1].split(";")[0]}`;
-                        const filePath = path.join(__dirname, "..", "..", "uploads", fileName);
-                        fs.writeFileSync(filePath, media.data, { encoding: "base64" });
-                        
-                        mediaData = {
-                            type: media.mimetype.split("/")[0],
-                            mediaUrl: `/uploads/${fileName}`,
-                            mimeType: media.mimetype
-                        };
-                        console.log(`📂 Media saved: ${fileName} (Type: ${mediaData.type})`);
-                    }
-                } catch (err) {
-                    console.error("❌ Failed to download media:", err.message);
-                }
+                // Determine media type without downloading
+                mediaData = {
+                    type: msg.type || "unknown", // image, audio, video, etc
+                    mediaUrl: null, // To be downloaded on demand
+                    mimeType: null  // To be populated during on-demand download
+                };
+                console.log(`📎 Message has media (Type: ${mediaData.type}). Skipping automatic download.`);
             }
 
             const message = await prisma.message.create({
@@ -638,6 +633,59 @@ async function getProfilePicUrl(phone) {
     }
 }
 
+async function syncMessageMedia(messageId, prisma, io) {
+    if (!whatsappClient || whatsappStatus !== "connected") {
+        throw new Error("WhatsApp is not connected");
+    }
+
+    const message = await prisma.message.findUnique({
+        where: { id: messageId },
+        include: { lead: true }
+    });
+
+    if (!message || !message.whatsappId) {
+        throw new Error("Message not found or has no WhatsApp ID");
+    }
+
+    console.log(`📡 Fetching media for message ${message.whatsappId}...`);
+    
+    try {
+        const msg = await whatsappClient.getMessageById(message.whatsappId);
+        if (!msg || !msg.hasMedia) {
+            throw new Error("WhatsApp message has no media");
+        }
+
+        const media = await msg.downloadMedia();
+        if (!media) {
+            throw new Error("Failed to download media from WhatsApp");
+        }
+
+        const fileName = `${Date.now()}_${message.whatsappId}.${media.mimetype.split("/")[1].split(";")[0]}`;
+        const filePath = path.join(__dirname, "..", "..", "uploads", fileName);
+        fs.writeFileSync(filePath, media.data, { encoding: "base64" });
+
+        const mediaUrl = `/uploads/${fileName}`;
+        const updatedMessage = await prisma.message.update({
+            where: { id: messageId },
+            data: { 
+                mediaUrl,
+                mimeType: media.mimetype,
+                type: media.mimetype.split("/")[0]
+            }
+        });
+
+        if (io) {
+            io.emit("message:received", { ...updatedMessage, lead: message.lead });
+        }
+
+        console.log(`✅ Media synced successfully: ${fileName}`);
+        return updatedMessage;
+    } catch (err) {
+        console.error("❌ Error during manual media sync:", err.message);
+        throw err;
+    }
+}
+
 module.exports = { 
     initWhatsApp, 
     sendMessage, 
@@ -645,5 +693,6 @@ module.exports = {
     getWhatsAppDebug, 
     disconnectWhatsApp, 
     resetWhatsAppSession,
-    getProfilePicUrl 
+    getProfilePicUrl,
+    syncMessageMedia
 };

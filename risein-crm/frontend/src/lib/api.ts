@@ -119,6 +119,14 @@ export async function sendMessage(
     return res.json();
 }
 
+export async function syncMessageMedia(messageId: string): Promise<Message> {
+    const res = await fetch(`${API_URL}/api/messages/${messageId}/sync-media`, {
+        method: "POST",
+    });
+    if (!res.ok) throw new Error("Failed to sync message media");
+    return res.json();
+}
+
 export async function getWhatsAppStatus(): Promise<{
     status: string;
     qr: string | null;

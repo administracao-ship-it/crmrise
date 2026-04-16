@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { X, Send, Paperclip, FileIcon, Smile, Mic, Check, CheckCheck, Trash2, Play, Square, Loader2, AlertCircle, Clock, MoreVertical, Search, Phone, Video } from "lucide-react";
-import { fetchMessages, sendMessage as apiSendMessage, API_URL } from "@/lib/api";
+import { fetchMessages, sendMessage as apiSendMessage, syncMessageMedia, API_URL } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import type { Lead, Message } from "@/lib/api";
 import toast from "react-hot-toast";
@@ -40,6 +40,7 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
     const [input, setInput] = useState("");
     const [sending, setSending] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [syncingMedia, setSyncingMedia] = useState<Record<string, boolean>>({});
     const [sendError, setSendError] = useState<string | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
@@ -231,6 +232,20 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
         }
     };
 
+    const handleDownloadMedia = async (msgId: string) => {
+        if (syncingMedia[msgId]) return;
+        
+        setSyncingMedia(prev => ({ ...prev, [msgId]: true }));
+        try {
+            await syncMessageMedia(msgId);
+            // The UI will update via Socket.io automatically as syncMessageMedia emits message:received
+        } catch (err) {
+            toast.error("Erro ao baixar arquivo");
+        } finally {
+            setSyncingMedia(prev => ({ ...prev, [msgId]: false }));
+        }
+    };
+
     if (!lead) return <div className="chat-panel-empty">Selecione um contato para começar</div>;
 
     return (
@@ -273,21 +288,81 @@ export default function ChatPanel({ lead, onClose, isFullScreen = false }: ChatP
                     {messages.map((msg) => (
                         <div key={msg.id} className={`wa-bubble-wrapper ${msg.isFromMe ? 'sent' : 'received'}`}>
                             <div className={`wa-bubble ${msg.isFromMe ? 'sent' : 'received'}`}>
-                                {msg.type === "audio" && msg.mediaUrl ? (
-                                    <audio controls className="max-w-full">
-                                        <source src={`${API_URL}${msg.mediaUrl}`} type={msg.mimeType || "audio/ogg"} />
-                                    </audio>
-                                ) : msg.type === "image" && msg.mediaUrl ? (
-                                    <img 
-                                        src={`${API_URL}${msg.mediaUrl}`} 
-                                        className="rounded-lg max-w-full cursor-pointer mb-1" 
-                                        onClick={() => window.open(`${API_URL}${msg.mediaUrl}`, '_blank')}
-                                    />
-                                ) : msg.mediaUrl ? (
-                                    <a href={`${API_URL}${msg.mediaUrl}`} target="_blank" className="flex items-center gap-2 p-2 bg-black/10 rounded mb-1">
-                                        <FileIcon size={20} />
-                                        <span className="text-sm truncate">{msg.content || "Arquivo"}</span>
-                                    </a>
+                                {msg.type === "audio" || msg.type === "ptt" ? (
+                                    !msg.mediaUrl ? (
+                                        <div className="flex items-center gap-3 p-2 bg-black/10 rounded-lg min-w-[200px]">
+                                            <div onClick={() => handleDownloadMedia(msg.id)} className="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center cursor-pointer hover:bg-[#008f70] transition">
+                                                {syncingMedia[msg.id] ? <Loader2 size={18} className="animate-spin text-white" /> : <Play size={18} className="text-white fill-current ml-0.5" />}
+                                            </div>
+                                            <div className="flex-1 flex flex-col justify-center">
+                                                <span className="text-xs text-[#8696a0] font-medium uppercase">Áudio do WhatsApp</span>
+                                                <button onClick={() => handleDownloadMedia(msg.id)} disabled={syncingMedia[msg.id]} className="text-[13px] text-[#00a884] font-semibold text-left hover:underline">
+                                                    Baixar para ouvir
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <audio controls className="max-w-full">
+                                            <source src={`${API_URL}${msg.mediaUrl}`} type={msg.mimeType || "audio/ogg"} />
+                                        </audio>
+                                    )
+                                ) : msg.type === "image" ? (
+                                    !msg.mediaUrl ? (
+                                        <div 
+                                            onClick={() => handleDownloadMedia(msg.id)}
+                                            className="wa-image-placeholder relative rounded-lg bg-[#2a3942] w-[280px] h-[200px] flex flex-col items-center justify-center cursor-pointer hover:bg-[#32444f] transition group overflow-hidden"
+                                        >
+                                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition" />
+                                            <div className="z-10 bg-black/40 p-3 rounded-full mb-3 group-hover:scale-110 transition">
+                                                {syncingMedia[msg.id] ? <Loader2 size={24} className="animate-spin text-white" /> : <FileIcon size={24} className="text-white" />}
+                                            </div>
+                                            <span className="z-10 text-white font-medium text-sm">Baixar Foto</span>
+                                            <span className="z-10 text-white/60 text-xs mt-1 uppercase">{msg.type}</span>
+                                        </div>
+                                    ) : (
+                                        <img 
+                                            src={`${API_URL}${msg.mediaUrl}`} 
+                                            className="rounded-lg max-w-full cursor-pointer mb-1 w-[280px] object-cover" 
+                                            onClick={() => window.open(`${API_URL}${msg.mediaUrl}`, '_blank')}
+                                        />
+                                    )
+                                ) : msg.type === "video" ? (
+                                    !msg.mediaUrl ? (
+                                        <div 
+                                            onClick={() => handleDownloadMedia(msg.id)}
+                                            className="wa-video-placeholder relative rounded-lg bg-[#2a3942] w-[280px] h-[200px] flex flex-col items-center justify-center cursor-pointer hover:bg-[#32444f] transition group"
+                                        >
+                                            <div className="bg-black/40 p-3 rounded-full mb-2">
+                                                {syncingMedia[msg.id] ? <Loader2 size={24} className="animate-spin text-white" /> : <Video size={24} className="text-white" />}
+                                            </div>
+                                            <span className="text-white font-medium text-sm">Baixar Vídeo</span>
+                                        </div>
+                                    ) : (
+                                        <video controls className="rounded-lg max-w-full w-[280px]">
+                                            <source src={`${API_URL}${msg.mediaUrl}`} type={msg.mimeType} />
+                                        </video>
+                                    )
+                                ) : msg.type !== "chat" && msg.type !== "text" ? (
+                                    // Other media types (document, etc)
+                                    !msg.mediaUrl ? (
+                                        <div 
+                                            onClick={() => handleDownloadMedia(msg.id)}
+                                            className="flex items-center gap-3 p-3 bg-black/10 rounded-lg min-w-[200px] cursor-pointer hover:bg-black/20 transition group"
+                                        >
+                                            <div className="w-10 h-10 rounded-lg bg-[#3d4d56] flex items-center justify-center">
+                                                {syncingMedia[msg.id] ? <Loader2 size={20} className="animate-spin text-white" /> : <FileIcon size={20} className="text-white" />}
+                                            </div>
+                                            <div className="flex-1 flex flex-col">
+                                                <span className="text-sm font-medium text-[#e9edef]">{msg.content || "Arquivo"}</span>
+                                                <span className="text-xs text-[#00a884] font-bold uppercase mt-0.5">Clique para baixar • {msg.type}</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <a href={`${API_URL}${msg.mediaUrl}`} target="_blank" className="flex items-center gap-2 p-2 bg-black/10 rounded mb-1">
+                                            <FileIcon size={20} />
+                                            <span className="text-sm truncate">{msg.content || "Arquivo"}</span>
+                                        </a>
+                                    )
                                 ) : (
                                     <span className="text-[14.2px] whitespace-pre-wrap">{msg.content}</span>
                                 )}

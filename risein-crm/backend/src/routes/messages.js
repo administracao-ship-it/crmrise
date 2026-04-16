@@ -2,7 +2,14 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-const { sendMessage, getWhatsAppStatus, getWhatsAppDebug, initWhatsApp, resetWhatsAppSession } = require("../services/whatsapp");
+const { 
+    sendMessage, 
+    getWhatsAppStatus, 
+    getWhatsAppDebug, 
+    initWhatsApp, 
+    resetWhatsAppSession, 
+    syncMessageMedia 
+} = require("../services/whatsapp");
 
 // Multer configuration
 const storage = multer.diskStorage({
@@ -51,6 +58,19 @@ router.post("/whatsapp/reset", async (req, res) => {
     try {
         await resetWhatsAppSession();
         res.json({ message: "WhatsApp session reset and disconnected" });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * MANUAL MEDIA SYNC
+ * Downloads media for a specific message on demand.
+ */
+router.post("/:messageId/sync-media", async (req, res) => {
+    try {
+        const message = await syncMessageMedia(req.params.messageId, req.prisma, req.io);
+        res.json(message);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -135,43 +155,18 @@ router.post("/:leadId", upload.single("file"), async (req, res, next) => {
             ...mediaData
         };
 
-        let message;
-        try {
-            // Try with whatsappId first
-            message = await req.prisma.message.create({
-                data: {
-                    ...messageData,
-                    whatsappId
-                },
-            });
-        } catch (prismaErr) {
-            // Fallback: If whatsappId is unknown, try without it
-            if (prismaErr.message.includes("Unknown argument `whatsappId`")) {
-                console.warn("[PRISMA] whatsappId field not recognized by current client. Saving message without it. Run 'npx prisma generate' to fix.");
-                message = await req.prisma.message.create({
-                    data: messageData,
-                });
-            } else {
-                throw prismaErr;
-            }
-        }
+        const message = await req.prisma.message.create({
+            data: {
+                ...messageData,
+                whatsappId
+            },
+        });
 
         req.io.emit("message:sent", { ...message, lead });
         res.status(201).json(message);
     } catch (err) {
         console.error(`[ERROR] Failed to send message to lead ${req.params.leadId}:`, err);
-        // Deep inspection of the error object
-        let details = "Unknown error";
-        if (err && typeof err === 'object') {
-            details = err.message || JSON.stringify(err);
-        } else if (typeof err === 'string') {
-            details = err;
-        }
-        res.status(500).json({ 
-            error: "Failed to send message", 
-            details: details,
-            type: typeof err
-        });
+        res.status(500).json({ error: "Failed to send message", details: err.message });
     }
 });
 
@@ -210,7 +205,6 @@ router.post("/whatsapp/bulk", async (req, res) => {
             return res.status(400).json({ error: "Contatos ou mensagem inválidos" });
         }
 
-        // 1. Create BulkJob record
         const bulkJob = await req.prisma.bulkJob.create({
             data: {
                 message,
@@ -220,16 +214,13 @@ router.post("/whatsapp/bulk", async (req, res) => {
             }
         });
 
-        // Return immediately so the UI isn't blocked
         res.json({ success: true, jobId: bulkJob.id, message: "Disparos iniciados" });
 
-        // Run background process
         (async () => {
             const defaultStage = await req.prisma.stage.findFirst({ orderBy: { order: "asc" } });
             let successes = 0;
             let errors = 0;
             
-            // Resolve media path if exists
             let absoluteMediaPath = null;
             if (mediaUrl) {
                 absoluteMediaPath = path.join(__dirname, "../../", mediaUrl);
@@ -241,7 +232,6 @@ router.post("/whatsapp/bulk", async (req, res) => {
                 const personalizedMessage = message.replace(/{nome}/gi, contact.name);
 
                 try {
-                    // 1. Find or Create Lead
                     let lead = await req.prisma.lead.findUnique({ where: { phone } });
                     if (!lead) {
                         lead = await req.prisma.lead.create({
@@ -255,10 +245,8 @@ router.post("/whatsapp/bulk", async (req, res) => {
                         req.io.emit("lead:created", lead);
                     }
 
-                    // 2. Send Message (with media if provided)
                     const whatsappId = await sendMessage(phone, personalizedMessage, absoluteMediaPath);
 
-                    // 3. Save Message to DB
                     const newMessage = await req.prisma.message.create({
                         data: {
                             content: personalizedMessage,
@@ -267,7 +255,7 @@ router.post("/whatsapp/bulk", async (req, res) => {
                             whatsappId,
                             status: "SENT",
                             mediaUrl: mediaUrl || null,
-                            type: mediaUrl ? "image" : "text" // Simplified: assume image for now or detect from mime
+                            type: mediaUrl ? "image" : "text"
                         }
                     });
 
@@ -281,7 +269,6 @@ router.post("/whatsapp/bulk", async (req, res) => {
                     req.io.emit("bulk:progress", { index: i + 1, total: contacts.length, contact, status: "error", error: err.message, jobId: bulkJob.id });
                 }
 
-                // Update Progress in DB every 5 messages or at the end
                 if (i % 5 === 0 || i === contacts.length - 1) {
                     await req.prisma.bulkJob.update({
                         where: { id: bulkJob.id },
@@ -293,14 +280,12 @@ router.post("/whatsapp/bulk", async (req, res) => {
                     });
                 }
 
-                // 4. Anti-blocking delay
                 if (i < contacts.length - 1) {
                     const delay = Math.floor(Math.random() * (delayMax - delayMin + 1) + delayMin) * 1000;
                     await new Promise(resolve => setTimeout(resolve, delay));
                 }
             }
             
-            // Final update
             await req.prisma.bulkJob.update({
                 where: { id: bulkJob.id },
                 data: {
