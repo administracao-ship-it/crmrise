@@ -394,13 +394,14 @@ body {
 }
 
 /* Lead Card WhatsApp Style */
+/* Lead Card Component - Compact & Optimized */
 .lead-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
   cursor: grab;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   position: relative;
   overflow: hidden;
@@ -409,51 +410,233 @@ body {
 
 .lead-card:hover {
   background: var(--bg-card-hover);
+  border-color: var(--accent-blue);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: var(--premium-shadow);
+}
+
+.lead-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--accent-blue);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.lead-card:hover::after {
+  opacity: 1;
+}
+
+.lead-card:active {
+  cursor: grabbing;
+}
+
+.lead-card.dragging {
+  opacity: 0.5;
+  transform: scale(1.02);
+  border-color: var(--accent-blue);
 }
 
 .lead-card-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 4px;
 }
 
 .lead-card-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 800;
   color: white;
   flex-shrink: 0;
-  border: 2px solid var(--border-color);
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border: 1px solid var(--border-color);
   overflow: hidden;
 }
 
 .lead-card-info {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .lead-name {
   display: block;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
 .lead-phone {
-  margin-bottom: 0;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.lead-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.lead-value {
+  font-size: 11px;
+  color: var(--accent-green-light);
+  font-weight: 600;
+}
+
+.lead-value.no-value {
+  color: var(--accent-red);
+  opacity: 0.8;
+}
+
+.lead-date {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.lead-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 4px;
+}
+
+.lead-card-tag-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  border: 1px solid transparent;
+}
+
+.lead-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.lead-card:hover .lead-actions {
+  opacity: 1;
+}
+
+.lead-action-btn {
+  background: transparent;
+  border: none;
+  padding: 2px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.lead-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.lead-action-btn.delete:hover {
+  color: var(--accent-red);
+  background: rgba(234, 0, 56, 0.1);
+}
+
+/* Quick Actions - Compact & Hover Only */
+.lead-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-color);
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lead-card:hover .lead-quick-actions {
+  max-height: 40px;
+  opacity: 1;
+  margin-top: 8px;
+}
+
+.quick-action {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.quick-action:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  transform: scale(1.1);
+}
+
+.quick-action.vendidos:hover { color: var(--accent-green); border-color: rgba(37, 211, 102, 0.3); }
+.quick-action.perdidos:hover { color: var(--accent-red); border-color: rgba(234, 0, 56, 0.3); }
+.quick-action.nao-leads:hover { color: var(--text-secondary); border-color: var(--border-color); }
+.quick-action.details { margin-left: auto; color: var(--accent-blue); }
+.quick-action.details:hover { background: var(--accent-blue); color: white; }
+
+.quick-action-divider {
+  width: 1px;
+  height: 12px;
+  background: var(--border-color);
+  margin: 0 2px;
+}
+
+.lead-last-msg-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-primary);
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.lead-last-msg-bar span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Funnel Name Edit Styles */
@@ -694,10 +877,10 @@ body {
 .kanban-column-body {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   min-height: 200px;
 }
 
@@ -714,190 +897,7 @@ body {
 }
 
 /* Lead Card */
-.lead-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 16px;
-  cursor: grab;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-  position: relative;
-  overflow: hidden;
-}
-.lead-card:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--accent-blue);
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: var(--premium-shadow);
-}
-.lead-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 2px;
-  height: 100%;
-  background: var(--accent-blue);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.lead-card:hover::after {
-  opacity: 1;
-}
-.lead-card:active {
-  cursor: grabbing;
-}
-.lead-card.dragging {
-  opacity: 0.5;
-  transform: scale(1.02);
-  border-color: var(--accent-blue);
-}
-
-.lead-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.lead-card-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
-  color: white;
-  flex-shrink: 0;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-}
-
-.lead-card-info {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.lead-card-info .lead-name {
-  display: block;
-  margin-bottom: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.lead-card-info .lead-phone {
-  margin-bottom: 0;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.lead-card-info .lead-phone::before {
-  display: none;
-}
-
-.lead-value-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0;
-}
-
-.lead-last-msg-bar {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: var(--text-muted);
-  background: var(--bg-tertiary);
-  padding: 5px 8px;
-  border-radius: 4px;
-  margin-top: 8px;
-  border: 1px solid var(--border-color);
-  overflow: hidden;
-}
-
-.lead-last-msg-bar span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.lead-name {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.2;
-  letter-spacing: -0.2px;
-}
-
-.lead-date {
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  margin-left: 8px;
-}
-
-.lead-value {
-  font-size: 12px;
-  color: var(--accent-green-light);
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-.lead-value.no-value {
-  color: var(--accent-red);
-}
-
-.lead-phone {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.lead-phone::before {
-  content: '📞';
-  font-size: 10px;
-  opacity: 0.5;
-}
-
-.lead-tags {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-
-.lead-tag {
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(45, 106, 223, 0.15);
-  color: var(--accent-blue-light);
-  font-weight: 500;
-}
-
-.lead-card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 6px;
-  margin-bottom: 2px;
-}
-
-.lead-card-tag-badge {
-  font-size: 9px;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
+/* Consolidated with Lead Card Component section above */
   letter-spacing: 0.3px;
   border: 1px solid transparent;
   display: inline-block;
@@ -3034,68 +3034,7 @@ body {
 }
 
 .lead-quick-actions {
-    margin-top: 12px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.quick-action {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.03);
-    color: rgba(255, 255, 255, 0.4);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
-}
-
-.quick-action:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: white;
-}
-
-.quick-action.vendidos:hover {
-    color: #10b981;
-    border-color: rgba(16, 185, 129, 0.3);
-    background: rgba(16, 185, 129, 0.1);
-}
-
-.quick-action.perdidos:hover {
-    color: #ef4444;
-    border-color: rgba(239, 68, 68, 0.3);
-    background: rgba(239, 68, 68, 0.1);
-}
-
-.quick-action.nao-leads:hover {
-    color: #94a3b8;
-    border-color: rgba(148, 163, 184, 0.3);
-    background: rgba(148, 163, 184, 0.1);
-}
-
-.quick-action.details {
-    margin-left: auto;
-    color: var(--accent-blue);
-    background: rgba(0, 102, 255, 0.05);
-}
-
-.quick-action.details:hover {
-    background: var(--accent-blue);
-    color: white;
-}
-
-.quick-action-divider {
-    width: 1px;
-    height: 16px;
-    background: rgba(255, 255, 255, 0.1);
-    margin-left: 4px;
-}
+/* Consolidated with Lead Card Component section above */
 
 /* Funnel Management Grid */
 .funnel-mgmt-grid {

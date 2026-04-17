@@ -147,7 +147,7 @@ function LeadCard({ lead, onClick, onShowDetails, onQuickMove, onEdit, onDelete 
                         onClick={(e) => { e.stopPropagation(); onDelete(lead); }}
                         title="Remover lead"
                     >
-                        <Trash2 size={12} />
+                        <Trash2 size={10} />
                     </button>
                 </div>
             </div>
@@ -165,21 +165,21 @@ function LeadCard({ lead, onClick, onShowDetails, onQuickMove, onEdit, onDelete 
                     title="Venda Realizada"
                     onClick={(e) => { e.stopPropagation(); onQuickMove(lead.id, "Vendidos"); }}
                 >
-                    <CheckCircle size={14} />
+                    <CheckCircle size={13} />
                 </button>
                 <button 
                     className="quick-action perdidos" 
                     title="Lead Perdido"
                     onClick={(e) => { e.stopPropagation(); onQuickMove(lead.id, "Perdidos"); }}
                 >
-                    <XCircle size={14} />
+                    <XCircle size={13} />
                 </button>
                 <button 
                     className="quick-action nao-leads" 
                     title="Não Lead"
                     onClick={(e) => { e.stopPropagation(); onQuickMove(lead.id, "Não Leads"); }}
                 >
-                    <UserMinus size={14} />
+                    <UserMinus size={13} />
                 </button>
                 <div className="quick-action-divider" />
                 <button 
@@ -187,7 +187,7 @@ function LeadCard({ lead, onClick, onShowDetails, onQuickMove, onEdit, onDelete 
                     title="Ver Detalhes (CRM)"
                     onClick={(e) => { e.stopPropagation(); onShowDetails(lead); }}
                 >
-                    <Info size={14} />
+                    <Info size={13} />
                 </button>
             </div>
 
