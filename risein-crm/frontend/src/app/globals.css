@@ -4802,6 +4802,241 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* ============================================
+   PREMIUM CRM SIDEBAR STYLES (BITRIX STYLE)
+   ============================================ */
+
+.wa-details-header-v2 {
+    padding: 16px 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.wa-details-back-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+
+.wa-details-back-row span {
+    font-weight: 600;
+}
+
+.wa-stage-progress-container {
+    margin-top: 12px;
+}
+
+.wa-stage-name-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+    margin-bottom: 6px;
+}
+
+.wa-stage-progress-bar {
+    display: flex;
+    gap: 3px;
+    height: 4px;
+}
+
+.wa-stage-segment {
+    flex: 1;
+    height: 100%;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+}
+
+.wa-stage-segment.completed {
+    background: var(--accent-blue);
+}
+
+.wa-stage-segment.active {
+    background: var(--accent-blue);
+    box-shadow: 0 0 8px var(--accent-blue);
+}
+
+.wa-details-tabs {
+    display: flex;
+    gap: 20px;
+    padding: 0 20px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.wa-details-tab-btn {
+    padding: 12px 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+.wa-details-tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.wa-details-tab-btn.active {
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--accent-blue);
+}
+
+.wa-details-content-v2 {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background: var(--bg-primary);
+}
+
+.wa-section-header {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 24px 0 16px 0;
+    letter-spacing: 1px;
+}
+
+.wa-section-header:first-child {
+    margin-top: 0;
+}
+
+.wa-field-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.wa-field-label {
+    width: 140px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding-top: 4px;
+}
+
+.wa-field-value {
+    flex: 1;
+}
+
+.wa-field-value input, 
+.wa-field-value select, 
+.wa-field-value textarea {
+    width: 100%;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    color: var(--text-primary);
+    transition: all 0.2s;
+}
+
+.wa-field-value input:hover, 
+.wa-field-value select:hover, 
+.wa-field-value textarea:hover {
+    background: rgba(255,255,255,0.03);
+    border-color: var(--border-color);
+}
+
+.wa-field-value input:focus, 
+.wa-field-value select:focus, 
+.wa-field-value textarea:focus {
+    background: var(--bg-secondary);
+    border-color: var(--accent-blue);
+    outline: none;
+}
+
+.wa-field-value .placeholder-text {
+    color: var(--text-muted);
+    font-style: italic;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 13px;
+}
+
+.wa-field-value select {
+    appearance: none;
+    cursor: pointer;
+}
+
+.wa-contact-card-mini {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.wa-contact-avatar-mini {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wa-contact-info-mini h5 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.wa-wa-badge-mini {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: #25D366;
+    background: rgba(37, 211, 102, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.wa-details-actions-v2 {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.wa-add-btn-v2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px dashed var(--border-color);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.wa-add-btn-v2:hover {
+    background: var(--bg-tertiary);
+    border-color: var(--accent-blue);
+    color: var(--text-primary);
+}
+
+
 
 
 

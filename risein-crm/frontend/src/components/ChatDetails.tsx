@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { 
   User, Phone, DollarSign, Calendar, MapPin, 
   ExternalLink, ShieldCheck, Home, Target, ArrowRight, Bot, RefreshCw,
-  Tags, X, Plus
+  Tags, X, Plus, ChevronLeft, MoreHorizontal, Instagram, MessageSquare, Briefcase, Mail, Info, Check
 } from "lucide-react";
 import { 
   type Lead, type Stage, type Tag, updateLead, refreshLeadAvatar, 
@@ -17,13 +17,36 @@ interface ChatDetailsProps {
   stages: Stage[];
 }
 
+type TabType = "Principal" | "Estatísticas" | "Mídia" | "Products" | "Configurações" | "Histórico";
+
 export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
   const [editedLead, setEditedLead] = useState<Partial<Lead>>({});
   const [saving, setSaving] = useState(false);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [showTagSelector, setShowTagSelector] = useState(false);
-  const [newTagName, setNewTagName] = useState("");
-  const [newTagColor, setNewTagColor] = useState("#3B82F6");
+  const [activeTab, setActiveTab] = useState<TabType>("Principal");
+
+  // Virtual fields state for UI completeness
+  const [virtualFields, setVirtualFields] = useState({
+    responsible: "Lidiane",
+    forecast: "",
+    origin: "Rise | Thiago | Meta",
+    instagram: "",
+    designer: "",
+    campaign: "",
+    notes: "",
+    service: "",
+    intent_env: "",
+    intent_value: "",
+    search_prime: "",
+    presentation: "",
+    agency: "",
+    rise_no: "",
+    company: "",
+    email_work: "",
+    position: "",
+    user_terms: false
+  });
 
   useEffect(() => {
     if (lead) {
@@ -43,7 +66,8 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
   );
 
   const currentStage = stages.find(s => s.id === lead.stageId);
-  const nextStage = currentStage ? stages.find(s => s.order === currentStage.order + 1) : null;
+  const activeStages = stages.filter(s => !["vendidos", "perdidos", "não leads"].includes(s.name.toLowerCase()));
+  const currentStageIndex = activeStages.findIndex(s => s.id === lead.stageId);
 
   const handleChange = (field: keyof Lead, value: any) => {
     setEditedLead(prev => ({ ...prev, [field]: value }));
@@ -63,252 +87,201 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
     }
   };
 
-  const handleCreateTag = async () => {
-    if (!newTagName.trim()) return;
-    setSaving(true);
-    try {
-      // Create new tag in DB
-      const { createTag, addTagToLead } = await import("@/lib/api");
-      const createdTag = await createTag({ name: newTagName, color: newTagColor });
-      await addTagToLead(lead.id, createdTag.id);
-      
-      toast.success("Etiqueta criada e adicionada");
-      setNewTagName("");
-      setShowTagSelector(false);
-      
-      // Refresh tags and lead
-      const updatedTags = await fetchTags();
-      setAllTags(updatedTags);
-      window.location.reload();
-    } catch (err) {
-      toast.error("Erro ao criar etiqueta");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleAddExistingTag = async (tag: Tag) => {
-    if (!lead) return;
-    try {
-      await addTagToLead(lead.id, tag.id);
-      toast.success(`Tag ${tag.name} adicionada`);
-      setShowTagSelector(false);
-      window.location.reload();
-    } catch (err) {
-      toast.error("Erro ao adicionar tag");
-    }
-  };
-
-  const handleMoveToFunnel = async (targetName: string) => {
-    if (!lead) return;
-    setSaving(true);
-    try {
-      const targetStage = stages.find(s => s.name.toLowerCase().includes(targetName.toLowerCase()));
-      if (!targetStage) {
-        toast.error(`Estágio ${targetName} não encontrado`);
-        return;
-      }
-      await updateLead(lead.id, { stageId: targetStage.id });
-      toast.success(`Movido para ${targetStage.name}`);
-      window.location.reload();
-    } catch (err) {
-      toast.error("Erro ao mover lead");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleResetToActiveFunnel = async () => {
-     // User wants to go back to "before being archived". 
-     // For now, if unknown, we'll go to the first stage of the active list
-     const activeStages = stages.filter(s => 
-        !["vendidos", "perdidos", "não leads"].includes(s.name.toLowerCase())
-     );
-     const firstStage = activeStages[0];
-     if (firstStage) {
-        await handleMoveToFunnel(firstStage.name);
-     }
-  };
+  const renderField = (label: string, value: any, onChange: (val: any) => void, onBlur?: () => void, type: string = "text", options?: string[]) => (
+    <div className="wa-field-row">
+      <div className="wa-field-label">{label}</div>
+      <div className="wa-field-value">
+        {options ? (
+          <select value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur}>
+            <option value="">Selecione</option>
+            {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+        ) : type === "date" ? (
+          <div className="flex items-center gap-2">
+             <input type="date" value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} />
+          </div>
+        ) : (
+          <input 
+            type={type} 
+            value={value === undefined || value === null ? "" : value} 
+            onChange={(e) => onChange(e.target.value)} 
+            onBlur={onBlur}
+            placeholder="..."
+          />
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="chat-details-container wa-contact-info">
-      <div className="chat-details-header">
-        <div 
-          className="chat-details-avatar-editable circle-shadow" 
-          style={{ width: '120px', height: '120px', borderRadius: '50%', overflow: 'hidden', margin: '0 auto 20px' }}
-        >
-          {lead.avatarUrl ? (
-            <img src={lead.avatarUrl} alt={lead.name} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-[#6a7175] flex items-center justify-center text-4xl font-bold text-white">
-               {lead.name.charAt(0).toUpperCase()}
-            </div>
-          )}
-          
-          <button 
-            className="avatar-refresh-btn-wa" 
-            onClick={async () => {
-              setSaving(true);
-              try {
-                await refreshLeadAvatar(lead.id);
-                toast.success("Dados atualizados");
-                window.location.reload();
-              } catch (err) {
-                toast.error("Erro ao sincronizar");
-              } finally {
-                setSaving(false);
-              }
-            }}
-          >
-            <RefreshCw size={14} className={saving ? "animate-spin" : ""} />
-          </button>
+    <div className="wa-contact-info">
+      {/* Header Bitrix Style */}
+      <div className="wa-details-header-v2">
+        <div className="wa-details-back-row">
+          <ChevronLeft size={18} />
+          <span>Lead #{lead.id.slice(-8).toUpperCase()}</span>
+          <MoreHorizontal size={18} className="ml-auto opacity-50" />
         </div>
-        
-        <input 
-          className="wa-contact-name-input"
-          value={editedLead.name || ""}
-          onChange={(e) => handleChange("name", e.target.value)}
-          onBlur={() => handleBlur("name")}
-        />
-        
-        <p className="wa-contact-phone-sub">{lead.phone}</p>
 
-        <div className="lead-status-row">
-            <span className="wa-badge">ID: {lead.id.slice(-6)}</span>
-            <span className="wa-badge" style={{ color: 'var(--accent-wa)', borderColor: 'var(--accent-wa)' }}>{currentStage?.name}</span>
-        </div>
-        
-        <div className="wa-details-actions">
-          <button className="wa-action-btn" onClick={() => window.open(`https://wa.me/${lead.phone.replace(/\D/g, '')}`, '_blank')}>
-            <ExternalLink size={18} />
-            <span>Perfil WA</span>
-          </button>
-          <button 
-            className={`wa-action-btn ${editedLead.isAgentActive ? 'active' : ''}`} 
-            onClick={() => {
-              const newValue = !editedLead.isAgentActive;
-              handleChange("isAgentActive", newValue);
-              setSaving(true);
-              updateLead(lead.id, { isAgentActive: newValue })
-                .then(() => toast.success(`IA ${newValue ? 'ON' : 'OFF'}`))
-                .finally(() => setSaving(false));
-            }}
-          >
-            <Bot size={18} />
-            <span>IA: {editedLead.isAgentActive ? 'ON' : 'OFF'}</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="chat-details-content-scroll">
-          <div className="chat-details-section">
-            <h4 className="section-title">Dados Comerciais</h4>
-            <div className="compact-grid">
-              <div className="detail-item-v2 full-width">
-                <label><Phone size={12} /> Telefone</label>
-                <input value={editedLead.phone || ""} onChange={(e) => handleChange("phone", e.target.value)} onBlur={() => handleBlur("phone")} />
-              </div>
-              <div className="detail-item-v2 full-width">
-                <label><DollarSign size={12} /> Valor estimado</label>
-                <input type="number" value={editedLead.value || 0} onChange={(e) => handleChange("value", parseFloat(e.target.value))} onBlur={() => handleBlur("value")} />
-              </div>
-              <div className="detail-item-v2">
-                <label><MapPin size={12} /> Localização</label>
-                <input value={editedLead.city || ""} onChange={(e) => handleChange("city", e.target.value)} onBlur={() => handleBlur("city")} />
-              </div>
-              <div className="detail-item-v2">
-                <label><Home size={12} /> Ambiente</label>
-                <input value={editedLead.title || ""} onChange={(e) => handleChange("title", e.target.value)} onBlur={() => handleBlur("title")} />
-              </div>
-            </div>
-          </div>
-
-          <div className="chat-details-section">
-            <h4 className="section-title">Qualificação</h4>
-            <div className="detail-item-v2 full-width">
-              <label><Target size={12} /> Nível de Qualificação</label>
-              <input value={editedLead.phase || ""} onChange={(e) => handleChange("phase", e.target.value)} onBlur={() => handleBlur("phase")} placeholder="Ex: Chumbo Quente, Frio..." />
-            </div>
-          </div>
-
-          <div className="chat-details-section">
-            <h4 className="section-title"><Tags size={16} /> ETIQUETAS</h4>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {lead.tags?.map(tag => (
-                <span key={tag.id} className="tag-pill" style={{ backgroundColor: `${tag.color}22`, color: tag.color, borderColor: tag.color }}>
-                  {tag.name}
-                  <button onClick={() => removeTagFromLead(lead.id, tag.id).then(() => window.location.reload())} className="ml-1 hover:opacity-70"><X size={10} /></button>
+        <div className="flex flex-wrap gap-1 mb-3">
+            {lead.tags?.map(tag => (
+                <span key={tag.id} className="tag-pill" style={{ backgroundColor: `${tag.color}22`, color: tag.color, borderColor: tag.color, fontSize: '10px', padding: '2px 8px' }}>
+                    #{tag.name}
                 </span>
-              ))}
-              <button className="tag-pill-add" onClick={() => setShowTagSelector(!showTagSelector)}><Plus size={12} /> Adicionar etiqueta</button>
-            </div>
+            ))}
+            <button className="tag-pill-add" onClick={() => setShowTagSelector(true)} style={{ fontSize: '10px' }}>+</button>
+        </div>
 
-            {showTagSelector && (
-              <div className="tag-selector-popup glass-panel p-3">
-                <div className="mb-3 border-b border-white/10 pb-3">
-                  <p className="text-xs text-secondary mb-2 uppercase font-bold">Nova Etiqueta</p>
-                  <div className="tag-creation-box flex items-center gap-2 mt-2">
-                    <input 
-                       className="tag-input-field flex-1" 
-                       placeholder="Nova etiqueta..." 
-                       value={newTagName}
-                       onChange={(e) => setNewTagName(e.target.value)}
-                       autoFocus
-                    />
-                    <input 
-                      type="color" 
-                      className="tag-color-picker" 
-                      value={newTagColor}
-                      onChange={(e) => setNewTagColor(e.target.value)}
-                    />
-                    <button className="tag-save-btn" onClick={handleCreateTag} disabled={!newTagName.trim()}><Plus size={14} /></button>
-                  </div>
+        <div className="wa-stage-progress-container">
+            <div className="wa-stage-name-row">
+                <span>Funil de vendas</span>
+                <div className="flex items-center gap-2">
+                    <span className="opacity-80">{currentStage?.name}</span>
+                    <span className="opacity-40 text-[9px]">(1 day)</span>
+                    <ChevronLeft className="rotate-180" size={12} />
                 </div>
-                
-                <div className="max-h-32 overflow-y-auto">
-                   <p className="text-xs text-secondary mb-2 uppercase font-bold">Existentes</p>
-                   <div className="grid grid-cols-2 gap-2">
-                    {allTags
-                      .filter(t => !lead.tags?.some(lt => lt.id === t.id))
-                      .map(tag => (
-                        <button key={tag.id} className="tag-select-item" style={{ borderColor: tag.color }} onClick={() => handleAddExistingTag(tag)}>
-                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }}></span>
-                          {tag.name}
-                        </button>
-                      ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="chat-details-section">
-            <h4 className="section-title">Mover Funil</h4>
-            <div className="funnel-mgmt-grid">
-               <button className="funnel-btn active" onClick={handleResetToActiveFunnel}>
-                  <Home size={14} /> Funil
-               </button>
-               <button className="funnel-btn won" onClick={() => handleMoveToFunnel("Vendidos")}>
-                  <ShieldCheck size={14} /> Vendido
-               </button>
-               <button className="funnel-btn lost" onClick={() => handleMoveToFunnel("Perdidos")}>
-                  <X size={14} /> Perdido
-               </button>
-               <button className="funnel-btn ghost" onClick={() => handleMoveToFunnel("Não Leads")}>
-                  <Bot size={14} /> Não Lead
-               </button>
             </div>
-          </div>
-
-          <div className="chat-details-section">
-            <h4 className="section-title">Histórico</h4>
-            <div className="history-pill">
-              <Calendar size={12} />
-              <span>Entrou no funil em {new Date(lead.createdAt).toLocaleDateString('pt-BR')}</span>
+            <div className="wa-stage-progress-bar">
+                {activeStages.map((s, i) => (
+                    <div 
+                        key={s.id} 
+                        className={`wa-stage-segment ${i < currentStageIndex ? 'completed' : i === currentStageIndex ? 'active' : ''}`}
+                    />
+                ))}
             </div>
-          </div>
+        </div>
       </div>
 
+      {/* Tabs */}
+      <div className="wa-details-tabs">
+        {(["Principal", "Estatísticas", "Mídia", "Products", "Configurações", "Histórico"] as TabType[]).map(tab => (
+          <button 
+            key={tab} 
+            className={`wa-details-tab-btn ${activeTab === tab ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="wa-details-content-v2 wa-scroll">
+        {activeTab === "Principal" && (
+          <>
+            <div className="wa-section">
+              {renderField("Usuário responsável", virtualFields.responsible, (v) => setVirtualFields(prev => ({...prev, responsible: v})))}
+              {renderField("Venda", editedLead.value, (v) => handleChange("value", parseFloat(v)), () => handleBlur("value"), "number")}
+              {renderField("Forecast", virtualFields.forecast, (v) => setVirtualFields(prev => ({...prev, forecast: v})), undefined, "date")}
+              {renderField("Origem do Lead", virtualFields.origin, (v) => setVirtualFields(prev => ({...prev, origin: v})), undefined, "text", ["Rise | Thiago | Meta", "Indicação", "Google", "Outro"])}
+              {renderField("Instagram", virtualFields.instagram, (v) => setVirtualFields(prev => ({...prev, instagram: v})))}
+              {renderField("Projetista Responsável", virtualFields.designer, (v) => setVirtualFields(prev => ({...prev, designer: v})), undefined, "text", ["Lidiane", "Carlos", "Ana"])}
+              {renderField("Campanha", virtualFields.campaign, (v) => setVirtualFields(prev => ({...prev, campaign: v})))}
+              {renderField("Anotações", virtualFields.notes, (v) => setVirtualFields(prev => ({...prev, notes: v})))}
+              {renderField("Atendimento", virtualFields.service, (v) => setVirtualFields(prev => ({...prev, service: v})))}
+              {renderField("Que ambiente deseja plane", editedLead.title, (v) => handleChange("title", v), () => handleBlur("title"))}
+              {renderField("Quanto pretende investir?", virtualFields.intent_value, (v) => setVirtualFields(prev => ({...prev, intent_value: v})))}
+              {renderField("O que você busca no prime", virtualFields.search_prime, (v) => setVirtualFields(prev => ({...prev, search_prime: v})), undefined, "text", ["Qualidade", "Preço", "Prazo"])}
+              {renderField("Apresentação", virtualFields.presentation, (v) => setVirtualFields(prev => ({...prev, presentation: v})), undefined, "date")}
+              {renderField("Agência", virtualFields.agency, (v) => setVirtualFields(prev => ({...prev, agency: v})), undefined, "text", ["Agência A", "Agência B"])}
+              {renderField("Nº RISE", virtualFields.rise_no, (v) => setVirtualFields(prev => ({...prev, rise_no: v})))}
+            </div>
+
+            <div className="wa-section-header">CONTATO</div>
+            
+            <div className="wa-contact-card-mini">
+               <div className="wa-contact-avatar-mini">
+                  {lead.avatarUrl ? <img src={lead.avatarUrl} alt={lead.name} className="w-full h-full object-cover" /> : <User size={20} />}
+               </div>
+               <div className="wa-contact-info-mini">
+                  <h5>{editedLead.name}</h5>
+                  <div className="wa-wa-badge-mini">
+                     <Check size={10} /> WhatsApp Business
+                  </div>
+               </div>
+            </div>
+
+            <div className="wa-section">
+                {renderField("Empresa", virtualFields.company, (v) => setVirtualFields(prev => ({...prev, company: v})))}
+                <div className="wa-field-row">
+                    <div className="wa-field-label">Tel comercial</div>
+                    <div className="wa-field-value flex items-center gap-2">
+                        <Plus size={12} className="opacity-50" />
+                        <span className="text-accent-blue underline cursor-pointer" onClick={() => window.open(`https://wa.me/${lead.phone.replace(/\D/g, '')}`, '_blank')}>
+                            {editedLead.phone}
+                        </span>
+                    </div>
+                </div>
+                {renderField("E-mail comercial", virtualFields.email_work, (v) => setVirtualFields(prev => ({...prev, email_work: v})))}
+                {renderField("Posição", virtualFields.position, (v) => setVirtualFields(prev => ({...prev, position: v})))}
+                <div className="wa-field-row">
+                    <div className="wa-field-label">User terms</div>
+                    <div className="wa-field-value">
+                        <div 
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer ${virtualFields.user_terms ? 'bg-accent-blue border-accent-blue' : 'border-white/20'}`}
+                          onClick={() => setVirtualFields(prev => ({...prev, user_terms: !prev.user_terms}))}
+                        >
+                            {virtualFields.user_terms && <Check size={12} color="white" />}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="wa-details-actions-v2">
+                <button className="wa-add-btn-v2"><Plus size={14} /> Adicionar contato</button>
+            </div>
+            <div className="wa-details-actions-v2" style={{ marginTop: '8px' }}>
+                <button className="wa-add-btn-v2"><Plus size={14} /> Adicionar empresa</button>
+            </div>
+          </>
+        )}
+
+        {activeTab === "Mídia" && (
+            <div className="p-4 text-center opacity-50">
+                <p>Nenhuma mídia encontrada</p>
+            </div>
+        )}
+
+        {activeTab === "Histórico" && (
+            <div className="p-4">
+                <div className="history-pill mb-3">
+                    <Calendar size={12} />
+                    <span>Entrou no funil em {new Date(lead.createdAt).toLocaleDateString('pt-BR')}</span>
+                </div>
+                <div className="history-pill">
+                    <RefreshCw size={12} />
+                    <span>Última atualização: {new Date(lead.updatedAt).toLocaleDateString('pt-BR')}</span>
+                </div>
+            </div>
+        )}
+
+        {activeTab === "Configurações" && (
+            <div className="p-4">
+                <button 
+                    className={`wa-action-btn w-full mb-3 ${editedLead.isAgentActive ? 'active' : ''}`} 
+                    onClick={() => {
+                    const newValue = !editedLead.isAgentActive;
+                    handleChange("isAgentActive", newValue);
+                    setSaving(true);
+                    updateLead(lead.id, { isAgentActive: newValue })
+                        .then(() => toast.success(`IA ${newValue ? 'ON' : 'OFF'}`))
+                        .finally(() => setSaving(false));
+                    }}
+                >
+                    <Bot size={18} />
+                    <span>Inteligência Artificial: {editedLead.isAgentActive ? 'LIGADA' : 'DESLIGADA'}</span>
+                </button>
+            </div>
+        )}
+      </div>
+
+      {/* Floating Saver if saving */}
+      {saving && (
+        <div className="absolute top-4 right-4 animate-spin">
+          <RefreshCw size={16} color="var(--accent-blue)" />
+        </div>
+      )}
     </div>
   );
 }
+

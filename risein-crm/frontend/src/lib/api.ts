@@ -25,6 +25,7 @@ export interface Lead {
     order?: number;
     userId?: string;
     createdAt: string;
+    updatedAt: string;
     tags?: Tag[];
     stage?: Stage;
     messages?: Message[];
