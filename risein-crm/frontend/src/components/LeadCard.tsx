@@ -193,7 +193,7 @@ function LeadCard({ lead, onClick, onShowDetails, onQuickMove, onEdit, onDelete 
 
             {lastMessage && (
                 <div className="lead-last-msg-bar">
-                    <MessageCircle size={10} />
+                    <MessageCircle size={12} />
                     <span>{lastMessage.content}</span>
                 </div>
             )}

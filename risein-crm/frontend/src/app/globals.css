@@ -399,7 +399,7 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  padding: 6px 10px;
+  padding: 6px 10px 8px 10px;
   cursor: grab;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
@@ -626,17 +626,20 @@ body {
   font-size: 10px;
   color: var(--text-muted);
   background: var(--bg-primary);
-  padding: 4px 8px;
+  padding: 3px 6px;
   border-radius: 4px;
-  margin-top: 4px;
+  margin-top: 6px;
   border: 1px solid var(--border-color);
   overflow: hidden;
+  min-height: 20px;
 }
 
 .lead-last-msg-bar span {
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 1.4;
 }
 
 /* Funnel Name Edit Styles */
