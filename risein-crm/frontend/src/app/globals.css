@@ -399,7 +399,7 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  padding: 6px 10px 8px 10px;
+  padding: 6px 10px 10px 10px;
   cursor: grab;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
@@ -626,12 +626,12 @@ body {
   font-size: 10px;
   color: var(--text-muted);
   background: var(--bg-primary);
-  padding: 3px 6px;
-  border-radius: 4px;
-  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-top: 8px;
   border: 1px solid var(--border-color);
   overflow: hidden;
-  min-height: 20px;
+  min-height: 24px;
 }
 
 .lead-last-msg-bar span {
@@ -640,6 +640,8 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   line-height: 1.4;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 /* Funnel Name Edit Styles */
@@ -901,11 +903,7 @@ body {
 
 /* Lead Card */
 /* Consolidated with Lead Card Component section above */
-  letter-spacing: 0.3px;
-  border: 1px solid transparent;
-  display: inline-block;
-  line-height: normal;
-}
+
 
 .lead-footer {
   display: flex;
@@ -3038,6 +3036,7 @@ body {
 
 .lead-quick-actions {
 /* Consolidated with Lead Card Component section above */
+}
 
 /* Funnel Management Grid */
 .funnel-mgmt-grid {
