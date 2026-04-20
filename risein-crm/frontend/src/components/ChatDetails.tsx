@@ -204,11 +204,11 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
           <div className="chat-details-section">
             <h4 className="section-title">Dados Comerciais</h4>
             <div className="compact-grid">
-              <div className="detail-item-v2">
+              <div className="detail-item-v2 full-width">
                 <label><Phone size={12} /> Telefone</label>
                 <input value={editedLead.phone || ""} onChange={(e) => handleChange("phone", e.target.value)} onBlur={() => handleBlur("phone")} />
               </div>
-              <div className="detail-item-v2">
+              <div className="detail-item-v2 full-width">
                 <label><DollarSign size={12} /> Valor estimado</label>
                 <input type="number" value={editedLead.value || 0} onChange={(e) => handleChange("value", parseFloat(e.target.value))} onBlur={() => handleBlur("value")} />
               </div>

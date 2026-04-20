@@ -2729,9 +2729,9 @@ body {
 }
 
 .detail-item-v2 label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -2741,8 +2741,8 @@ body {
     background: rgba(0,0,0,0.2);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 10px 14px;
+    font-size: 14px;
     color: var(--text-primary);
     width: 100%;
 }
@@ -4517,8 +4517,8 @@ body {
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
-  min-width: 320px;
-  max-width: 380px;
+  min-width: 340px;
+  max-width: 420px;
   position: relative; /* Added to contain the absolute footer */
 }
 
