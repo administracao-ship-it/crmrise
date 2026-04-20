@@ -94,6 +94,14 @@ export async function refreshLeadAvatar(id: string): Promise<Lead> {
     return res.json();
 }
 
+export async function syncAllAvatars(): Promise<{ message: string, count: number }> {
+    const res = await fetch(`${API_URL}/api/leads/sync-avatars`, {
+        method: "POST",
+    });
+    if (!res.ok) throw new Error("Failed to start bulk avatar sync");
+    return res.json();
+}
+
 export async function fetchMessages(leadId: string): Promise<Message[]> {
     const res = await fetch(`${API_URL}/api/messages/${leadId}`);
     if (!res.ok) throw new Error("Failed to fetch messages");

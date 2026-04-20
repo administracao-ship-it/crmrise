@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Save, Bot, MessageCircle, Sliders, Tags, Loader2, RefreshCw, Key, Power, Pencil, Trash2 } from "lucide-react";
-import { fetchTags, createTag, deleteTag } from "@/lib/api";
+import { fetchTags, createTag, deleteTag, syncAllAvatars } from "@/lib/api";
+import toast from "react-hot-toast";
 
 export default function SettingsPage({
     funnelName,
@@ -24,6 +25,7 @@ export default function SettingsPage({
     const [localTakeover, setLocalTakeover] = useState(humanTakeoverMessage || "Olá, tudo bem?");
     const [localTriggers, setLocalTriggers] = useState<string[]>([]);
     const [newTrigger, setNewTrigger] = useState("");
+    const [syncing, setSyncing] = useState(false);
 
     const [tags, setTags] = useState<any[]>([]);
     const [loadingTags, setLoadingTags] = useState(false);
@@ -73,6 +75,18 @@ export default function SettingsPage({
 
     const handleSaveAI = () => {
         onUpdateOpenAi(localApiKey, localPrompt);
+    };
+
+    const handleSyncAllAvatars = async () => {
+        setSyncing(true);
+        try {
+            const res = await syncAllAvatars();
+            toast.success(res.message);
+        } catch (e) {
+            toast.error("Erro ao iniciar sincronização");
+        } finally {
+            setSyncing(false);
+        }
     };
 
     const whatsappText = 
@@ -138,6 +152,20 @@ export default function SettingsPage({
                         }}
                     >
                         <Tags size={16} /> Kanban & Etiquetas
+                    </button>
+
+                    <button 
+                        onClick={() => setActiveSection("manutencao")}
+                        style={{
+                            display: "flex", alignItems: "center", gap: "10px",
+                            padding: "12px", borderRadius: "8px", border: "none",
+                            background: activeSection === "manutencao" ? "var(--bg-hover)" : "transparent",
+                            color: activeSection === "manutencao" ? "var(--text-primary)" : "var(--text-secondary)",
+                            fontWeight: activeSection === "manutencao" ? 600 : 500,
+                            cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.2s"
+                        }}
+                    >
+                        <RefreshCw size={16} /> Manutenção
                     </button>
                 </div>
             </div>
@@ -451,6 +479,41 @@ export default function SettingsPage({
                                 </div>
                             </div>
 
+                        </div>
+                    )}
+
+                    {activeSection === "manutencao" && (
+                        <div className="fade-in">
+                            <h3 style={{ fontSize: "1.5rem", marginBottom: "8px" }}>Manutenção do Sistema</h3>
+                            <p style={{ color: "var(--text-secondary)", marginBottom: "32px", fontSize: "0.9rem" }}>
+                                Execute tarefas de limpeza e sincronização de dados.
+                            </p>
+
+                            <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "24px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                                        <div style={{ background: "rgba(59, 130, 246, 0.1)", padding: "12px", borderRadius: "10px", color: "var(--accent-blue)" }}>
+                                            <RefreshCw size={24} className={syncing ? "animate-spin" : ""} />
+                                        </div>
+                                        <div>
+                                            <h4 style={{ fontSize: "1.1rem", marginBottom: "4px", fontWeight: 600 }}>Sincronizar Fotos de Perfil</h4>
+                                            <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", margin: 0, maxWidth: "400px" }}>
+                                                Busca as fotos de perfil do WhatsApp para todos os leads que ainda não possuem imagem. 
+                                                Este processo roda em segundo plano para não travar o sistema.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={handleSyncAllAvatars} 
+                                        disabled={syncing}
+                                        className="btn-primary" 
+                                        style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                                    >
+                                        {syncing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+                                        {syncing ? "Sincronizando..." : "Iniciar Sincronização"}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
 

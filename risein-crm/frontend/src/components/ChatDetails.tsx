@@ -113,6 +113,19 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
     </div>
   );
 
+  const handleRefreshAvatar = async () => {
+    if (!lead) return;
+    setSaving(true);
+    try {
+      await refreshLeadAvatar(lead.id);
+      toast.success("Foto atualizada!");
+    } catch (err) {
+      toast.error("Erro ao atualizar foto");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="wa-contact-info">
       {/* Header Bitrix Style */}
@@ -120,7 +133,14 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
         <div className="wa-details-back-row">
           <ChevronLeft size={18} />
           <span>Lead #{lead.id.slice(-8).toUpperCase()}</span>
-          <MoreHorizontal size={18} className="ml-auto opacity-50" />
+          <div className="ml-auto flex items-center gap-3 opacity-60">
+            <RefreshCw 
+              size={16} 
+              className="cursor-pointer hover:text-accent-blue transition-colors" 
+              onClick={handleRefreshAvatar} 
+            />
+            <MoreHorizontal size={18} className="cursor-pointer" />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-1 mb-3">

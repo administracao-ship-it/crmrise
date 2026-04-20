@@ -134,4 +134,45 @@ router.post("/:id/avatar", async (req, res, next) => {
     }
 });
 
+router.post("/sync-avatars", async (req, res, next) => {
+    try {
+        const leads = await req.prisma.lead.findMany({
+            where: {
+                OR: [
+                    { avatarUrl: null },
+                    { avatarUrl: "" }
+                ]
+            }
+        });
+
+        if (leads.length === 0) return res.json({ message: "No leads need avatar sync", count: 0 });
+
+        // Process in background to avoid timeout
+        setImmediate(async () => {
+            console.log(`📸 Starting background avatar sync for ${leads.length} leads...`);
+            for (const lead of leads) {
+                try {
+                    const avatarUrl = await whatsappService.getProfilePicUrl(lead.phone);
+                    if (avatarUrl) {
+                        const updated = await req.prisma.lead.update({
+                            where: { id: lead.id },
+                            data: { avatarUrl }
+                        });
+                        req.io.emit("lead:updated", updated);
+                    }
+                    // Wait a bit between calls to avoid WhatsApp rate limits
+                    await new Promise(r => setTimeout(r, 1000));
+                } catch (e) {
+                    console.warn(`Failed to sync avatar for ${lead.name}:`, e.message);
+                }
+            }
+            console.log("✅ Background avatar sync completed.");
+        });
+
+        res.json({ message: `Sync started in background for ${leads.length} leads`, count: leads.length });
+    } catch (err) {
+        next(err);
+    }
+});
+
 module.exports = router;

@@ -657,7 +657,18 @@ async function getProfilePicUrl(phone) {
     }
 
     try {
-        const chatId = phone.includes('@') ? phone : `${phone}@c.us`;
+        let chatId = phone.includes('@') ? phone : `${phone}@c.us`;
+        
+        // Resolve correct ID (handles the extra '9' issue in Brazil)
+        try {
+            const numberId = await whatsappClient.getNumberId(phone);
+            if (numberId && numberId._serialized) {
+                chatId = numberId._serialized;
+            }
+        } catch (idErr) {
+            console.warn(`⚠️ getNumberId failed for ${phone} during avatar fetch:`, idErr.message);
+        }
+
         const url = await whatsappClient.getProfilePicUrl(chatId);
         return url;
     } catch (err) {
