@@ -64,6 +64,7 @@ export default function HomePage() {
   const [systemPrompt, setSystemPrompt] = useState("");
   const [humanTakeoverMessage, setHumanTakeoverMessage] = useState("Olá, tudo bem?");
   const [aiTriggerMessages, setAiTriggerMessages] = useState("[]");
+  const [isAiActive, setIsAiActive] = useState(true);
 
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [defaultStageId, setDefaultStageId] = useState<string | null>(null);
@@ -107,6 +108,7 @@ export default function HomePage() {
       if (configData.systemPrompt) setSystemPrompt(configData.systemPrompt);
       if (configData.humanTakeoverMessage) setHumanTakeoverMessage(configData.humanTakeoverMessage);
       if (configData.aiTriggerMessages) setAiTriggerMessages(configData.aiTriggerMessages);
+      if (configData.isAiActive !== undefined) setIsAiActive(configData.isAiActive);
     } catch (err) {
       console.error("Failed to load initial data:", err);
     } finally {
@@ -450,6 +452,19 @@ export default function HomePage() {
     }
   };
 
+  const handleAiToggle = async () => {
+    try {
+      const newValue = !isAiActive;
+      setIsAiActive(newValue);
+      await updateConfig({ isAiActive: newValue });
+      toast.success(`IA ${newValue ? 'ativada' : 'desativada'} globalmente`);
+    } catch (err) {
+      console.error("Failed to toggle AI:", err);
+      toast.error("Erro ao alternar IA");
+      setIsAiActive(isAiActive); // Revert on failure
+    }
+  };
+
   const handleLogout = () => {
     document.cookie = "auth-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     window.location.href = "/login";
@@ -516,6 +531,8 @@ export default function HomePage() {
         funnelName={funnelName}
         onUpdateFunnelName={handleUpdateFunnelName}
         onLogout={handleLogout}
+        isAiActive={isAiActive}
+        onAiToggle={handleAiToggle}
       />
 
       <main className="main-content">

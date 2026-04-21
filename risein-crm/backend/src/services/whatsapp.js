@@ -394,7 +394,7 @@ async function initWhatsApp(io, prisma) {
             }
 
             // Native OpenAI Agent Integration
-            if (lead.isAgentActive) {
+            if (lead.isAgentActive && config?.isAiActive) {
                 if (config && config.openAiApiKey) {
                     try {
                         console.log(`🤖 Processando IA para o lead ${lead.name}...`);

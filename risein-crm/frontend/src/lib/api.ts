@@ -197,6 +197,7 @@ export async function fetchConfig(): Promise<{
     systemPrompt?: string;
     humanTakeoverMessage?: string;
     aiTriggerMessages?: string;
+    isAiActive?: boolean;
 }> {
     const res = await fetch(`${API_URL}/api/config`);
     if (!res.ok) throw new Error("Failed to fetch config");
@@ -209,12 +210,14 @@ export async function updateConfig(data: {
     systemPrompt?: string;
     humanTakeoverMessage?: string;
     aiTriggerMessages?: string;
+    isAiActive?: boolean;
 }): Promise<{ 
     funnelName?: string; 
     openAiApiKey?: string; 
     systemPrompt?: string;
     humanTakeoverMessage?: string;
     aiTriggerMessages?: string;
+    isAiActive?: boolean;
 }> {
     const res = await fetch(`${API_URL}/api/config`, {
         method: "PATCH",

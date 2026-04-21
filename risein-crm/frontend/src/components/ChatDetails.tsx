@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { 
   type Lead, type Stage, type Tag, updateLead, refreshLeadAvatar, 
-  fetchTags, addTagToLead, removeTagFromLead 
+  fetchTags, addTagToLead, removeTagFromLead, createTag 
 } from "@/lib/api";
 import toast from "react-hot-toast";
 

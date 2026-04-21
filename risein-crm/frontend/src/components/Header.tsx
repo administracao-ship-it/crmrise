@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Plus, Wifi, WifiOff, Pencil, Check, X, LogOut } from "lucide-react";
+import { Search, Plus, Wifi, WifiOff, Pencil, Check, X, LogOut, Bot, BotOff } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 interface HeaderProps {
@@ -16,6 +16,8 @@ interface HeaderProps {
     funnelName: string;
     onUpdateFunnelName: (name: string) => void;
     onLogout: () => void;
+    isAiActive: boolean;
+    onAiToggle: () => void;
 }
 
 export default function Header({
@@ -31,6 +33,8 @@ export default function Header({
     funnelName,
     onUpdateFunnelName,
     onLogout,
+    isAiActive,
+    onAiToggle,
 }: HeaderProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(funnelName);
@@ -134,6 +138,14 @@ export default function Header({
                     <Plus size={14} />
                     + NOVO LEAD
                 </button>
+
+                <div 
+                    className={`ai-status-icon ${isAiActive ? 'active' : 'inactive'}`}
+                    onClick={onAiToggle}
+                    title={isAiActive ? "Desativar IA Global" : "Ativar IA Global"}
+                >
+                    {isAiActive ? <Bot size={14} /> : <BotOff size={14} />}
+                </div>
 
                 <div
                     className={`whatsapp-status-icon ${whatsappStatus === 'connected' || whatsappStatus === 'authenticated' ? 'connected' : whatsappStatus === 'waiting_qr' || whatsappStatus === 'initializing' || whatsappStatus === 'loading' ? 'waiting' : 'disconnected'}`}

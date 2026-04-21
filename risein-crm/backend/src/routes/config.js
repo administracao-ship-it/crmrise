@@ -24,7 +24,7 @@ router.get("/", async (req, res, next) => {
 // PATCH /api/config
 router.patch("/", async (req, res, next) => {
     try {
-        const { funnelName, openAiApiKey, systemPrompt, humanTakeoverMessage, aiTriggerMessages } = req.body;
+        const { funnelName, openAiApiKey, systemPrompt, humanTakeoverMessage, aiTriggerMessages, isAiActive } = req.body;
         
         const updateData = {};
         if (funnelName !== undefined) updateData.funnelName = funnelName;
@@ -32,6 +32,7 @@ router.patch("/", async (req, res, next) => {
         if (systemPrompt !== undefined) updateData.systemPrompt = systemPrompt;
         if (humanTakeoverMessage !== undefined) updateData.humanTakeoverMessage = humanTakeoverMessage;
         if (aiTriggerMessages !== undefined) updateData.aiTriggerMessages = aiTriggerMessages;
+        if (isAiActive !== undefined) updateData.isAiActive = isAiActive;
 
         const config = await req.prisma.globalConfig.upsert({
             where: { id: "singleton" },

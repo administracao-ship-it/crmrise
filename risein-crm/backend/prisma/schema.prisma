@@ -110,6 +110,7 @@ model GlobalConfig {
   systemPrompt         String?  @default("")
   humanTakeoverMessage String?  @default("Olá, tudo bem?")
   aiTriggerMessages    String?  @default("[]")
+  isAiActive           Boolean  @default(true)
   updatedAt            DateTime @updatedAt
 }
 
