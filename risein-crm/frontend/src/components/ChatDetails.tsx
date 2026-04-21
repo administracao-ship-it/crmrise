@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   User, Phone, DollarSign, Calendar, MapPin, 
   ExternalLink, ShieldCheck, Home, Target, ArrowRight, Bot, RefreshCw,
@@ -24,7 +24,11 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
   const [saving, setSaving] = useState(false);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [showTagSelector, setShowTagSelector] = useState(false);
+  const [tagSearch, setTagSearch] = useState("");
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState("#3b82f6");
   const [activeTab, setActiveTab] = useState<TabType>("Principal");
+  const tagSelectorRef = useRef<HTMLDivElement>(null);
 
   // Virtual fields state for UI completeness
   const [virtualFields, setVirtualFields] = useState({
@@ -57,6 +61,22 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
   useEffect(() => {
     fetchTags().then(setAllTags).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (tagSelectorRef.current && !tagSelectorRef.current.contains(event.target as Node)) {
+        setShowTagSelector(false);
+      }
+    }
+    if (showTagSelector) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showTagSelector]);
 
   if (!lead) return (
     <div className="chat-details-empty">
@@ -126,6 +146,46 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
     }
   };
 
+  const handleToggleTag = async (tagId: string) => {
+    if (!lead) return;
+    const isAssigned = lead.tags?.some(t => t.id === tagId);
+    
+    setSaving(true);
+    try {
+      const updatedLead = isAssigned 
+        ? await removeTagFromLead(lead.id, tagId)
+        : await addTagToLead(lead.id, tagId);
+      
+      setEditedLead(updatedLead);
+      toast.success(isAssigned ? "Tag removida" : "Tag adicionada");
+    } catch (err) {
+      toast.error("Erro ao atualizar tag");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCreateAndAddTag = async () => {
+    if (!lead || !newTagName.trim()) return;
+    
+    setSaving(true);
+    try {
+      const newTag = await createTag({ name: newTagName, color: newTagColor });
+      setAllTags(prev => [...prev, newTag]);
+      
+      const updatedLead = await addTagToLead(lead.id, newTag.id);
+      setEditedLead(updatedLead);
+      
+      setNewTagName("");
+      setShowTagSelector(false);
+      toast.success("Tag criada e adicionada!");
+    } catch (err) {
+      toast.error("Erro ao criar tag");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="wa-contact-info">
       {/* Header Bitrix Style */}
@@ -143,13 +203,94 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1 mb-3">
-            {lead.tags?.map(tag => (
-                <span key={tag.id} className="tag-pill" style={{ backgroundColor: `${tag.color}22`, color: tag.color, borderColor: tag.color, fontSize: '10px', padding: '2px 8px' }}>
+        <div className="flex flex-wrap gap-1 mb-3 relative">
+            {editedLead.tags?.map(tag => (
+                <span 
+                    key={tag.id} 
+                    className="tag-pill cursor-pointer hover:opacity-80 transition-all flex items-center gap-1" 
+                    style={{ 
+                        backgroundColor: `${tag.color || '#3b82f6'}22`, 
+                        color: tag.color || '#3b82f6', 
+                        borderColor: tag.color || '#3b82f6', 
+                        fontSize: '10px', 
+                        padding: '2px 8px' 
+                    }}
+                    onClick={() => handleToggleTag(tag.id)}
+                    title="Clique para remover"
+                >
                     #{tag.name}
+                    <X size={10} />
                 </span>
             ))}
-            <button className="tag-pill-add" onClick={() => setShowTagSelector(true)} style={{ fontSize: '10px' }}>+</button>
+            <button className="tag-pill-add" onClick={() => setShowTagSelector(!showTagSelector)} style={{ fontSize: '10px' }}>
+                {showTagSelector ? <X size={12} /> : <Plus size={12} />}
+            </button>
+
+            {showTagSelector && (
+                <div 
+                  ref={tagSelectorRef}
+                  className="tag-selector-popup glass-panel shadow-glow absolute top-full left-0 z-50 mt-2 w-64 p-3 bg-bg-card border border-border-color rounded-xl animate-fade-in"
+                >
+                    <div className="flex items-center gap-2 mb-3 bg-black/20 rounded-lg p-2 border border-white/5">
+                        <Target size={14} className="text-accent-blue" />
+                        <input 
+                            type="text" 
+                            className="bg-transparent border-none text-xs w-full focus:outline-none" 
+                            placeholder="Buscar ou criar tag..." 
+                            value={tagSearch}
+                            onChange={(e) => {
+                                setTagSearch(e.target.value);
+                                if (!showTagSelector) setShowTagSelector(true);
+                            }}
+                        />
+                    </div>
+
+                    <div className="max-height-[150px] overflow-y-auto mb-3 flex flex-col gap-1">
+                        {allTags
+                            .filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase()))
+                            .map(tag => {
+                                const isSelected = editedLead.tags?.some(t => t.id === tag.id);
+                                return (
+                                    <button 
+                                        key={tag.id}
+                                        className={`tag-select-item ${isSelected ? 'bg-accent-blue/10 border-accent-blue/20' : ''}`}
+                                        onClick={() => handleToggleTag(tag.id)}
+                                    >
+                                        <div 
+                                            className="w-2 h-2 rounded-full" 
+                                            style={{ backgroundColor: tag.color || '#3b82f6' }}
+                                        />
+                                        <span className="flex-1">{tag.name}</span>
+                                        {isSelected && <Check size={12} className="text-accent-blue" />}
+                                    </button>
+                                );
+                            })}
+                    </div>
+
+                    {tagSearch && !allTags.some(t => t.name.toLowerCase() === tagSearch.toLowerCase()) && (
+                        <div className="border-t border-white/5 pt-3 mt-2">
+                            <div className="text-[10px] uppercase font-bold text-muted mb-2">Criar nova tag</div>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="color" 
+                                    className="tag-color-picker" 
+                                    value={newTagColor}
+                                    onChange={(e) => setNewTagColor(e.target.value)}
+                                />
+                                <button 
+                                    className="flex-1 py-2 bg-accent-blue text-white rounded-lg text-xs font-bold hover:bg-accent-blue/80 transition-colors"
+                                    onClick={() => {
+                                        setNewTagName(tagSearch);
+                                        handleCreateAndAddTag();
+                                    }}
+                                >
+                                    Criar "#{tagSearch}"
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
 
         <div className="wa-stage-progress-container">
