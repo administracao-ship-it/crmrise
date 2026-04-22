@@ -149,7 +149,6 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
 
   const handleToggleTag = async (tagId: string) => {
     if (!lead) return;
-    // Fix: check editedLead instead of lead to avoid stale state bugs
     const isAssigned = editedLead.tags?.some(t => t.id === tagId);
     
     setSaving(true);
@@ -163,6 +162,21 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
       toast.success(isAssigned ? "Tag removida" : "Tag adicionada");
     } catch (err) {
       toast.error("Erro ao atualizar tag");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRemoveTag = async (tagId: string) => {
+    if (!lead) return;
+    setSaving(true);
+    try {
+      const updatedLead = await removeTagFromLead(lead.id, tagId);
+      setEditedLead(updatedLead);
+      if (onUpdateLead) onUpdateLead(updatedLead);
+      toast.success("Tag removida");
+    } catch (err) {
+      toast.error("Erro ao remover tag");
     } finally {
       setSaving(false);
     }
@@ -261,7 +275,7 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
                     }}
                     onClick={(e) => {
                         e.stopPropagation();
-                        handleToggleTag(tag.id);
+                        handleRemoveTag(tag.id);
                     }}
                     title="Clique para remover"
                 >
@@ -305,22 +319,24 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
                     
                     {tagSearch.trim() && allTags.filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase())).length > 0 && (
                         <div className="absolute top-full left-0 mt-1 bg-[#202c33] border border-[#2a3942] rounded shadow-lg z-50 min-w-[120px] max-h-[120px] overflow-y-auto">
-                            {allTags.filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase())).map(t => (
-                                <div 
-                                    key={t.id} 
-                                    className="px-2 py-1.5 text-[10px] text-[#e9edef] hover:bg-[#2a3942] cursor-pointer flex items-center gap-1.5"
-                                    onClick={() => {
-                                        if (!editedLead.tags?.some(existing => existing.id === t.id)) {
+                            {allTags.filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase())).map(t => {
+                                const isSelected = editedLead.tags?.some(existing => existing.id === t.id);
+                                return (
+                                    <div 
+                                        key={t.id} 
+                                        className={`px-2 py-1.5 text-[10px] text-[#e9edef] hover:bg-[#2a3942] cursor-pointer flex items-center gap-1.5 ${isSelected ? 'bg-[#2a3942]/50' : ''}`}
+                                        onClick={() => {
                                             handleToggleTag(t.id);
-                                        }
-                                        setShowTagSelector(false);
-                                        setTagSearch("");
-                                    }}
-                                >
-                                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: t.color || '#3b82f6' }} />
-                                    <span className="truncate">{t.name}</span>
-                                </div>
-                            ))}
+                                            setShowTagSelector(false);
+                                            setTagSearch("");
+                                        }}
+                                    >
+                                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: t.color || '#3b82f6' }} />
+                                        <span className="truncate flex-1">{t.name}</span>
+                                        {isSelected && <Check size={10} className="text-accent-blue" />}
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
