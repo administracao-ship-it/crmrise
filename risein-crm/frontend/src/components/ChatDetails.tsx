@@ -165,18 +165,19 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
     }
   };
 
-  const handleCreateAndAddTag = async () => {
-    if (!lead || !newTagName.trim()) return;
+  const handleCreateAndAddTag = async (tagNameToCreate: string = newTagName) => {
+    if (!lead || !tagNameToCreate.trim()) return;
     
     setSaving(true);
     try {
-      const newTag = await createTag({ name: newTagName, color: newTagColor });
+      const newTag = await createTag({ name: tagNameToCreate, color: newTagColor });
       setAllTags(prev => [...prev, newTag]);
       
       const updatedLead = await addTagToLead(lead.id, newTag.id);
       setEditedLead(updatedLead);
       
       setNewTagName("");
+      setTagSearch("");
       setShowTagSelector(false);
       toast.success("Tag criada e adicionada!");
     } catch (err) {
@@ -320,7 +321,7 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
                                     className="flex-1 py-2 bg-accent-blue text-white rounded-lg text-xs font-bold hover:bg-accent-blue/80 transition-colors"
                                     onClick={() => {
                                         setNewTagName(tagSearch);
-                                        handleCreateAndAddTag();
+                                        handleCreateAndAddTag(tagSearch);
                                     }}
                                 >
                                     Criar "#{tagSearch}"
