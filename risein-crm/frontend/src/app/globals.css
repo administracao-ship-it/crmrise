@@ -869,8 +869,17 @@ body {
   margin-left: var(--sidebar-width);
   margin-top: var(--header-height);
   height: calc(100vh - var(--header-height));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Kanban needs horizontal scroll — wrap it */
+.kanban-scroll-wrapper {
+  flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
+  height: 100%;
 }
 
 /* Kanban Board */
@@ -2138,12 +2147,14 @@ body {
   width: 100%;
   background: var(--bg-primary);
   display: flex;
+  overflow: hidden;
 }
 
 .chat-module-columns {
   display: flex;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
 .chat-col {
@@ -2151,25 +2162,76 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 .chat-col-list {
-  width: 320px;
+  width: 280px;
+  min-width: 220px;
+  max-width: 280px;
+  flex-shrink: 0;
   border-right: 1px solid var(--border-color);
   background: var(--bg-secondary);
 }
 
 .chat-col-view {
   flex: 1;
+  min-width: 0;
   background: #0b141a;
   border-right: 1px solid var(--border-color);
   position: relative;
+  overflow: hidden;
 }
 
 .chat-col-details {
-  width: 300px;
+  width: 280px;
+  min-width: 240px;
+  max-width: 280px;
+  flex-shrink: 0;
   border-left: 1px solid var(--border-color);
   background: var(--bg-secondary);
+  overflow: hidden;
+}
+
+/* AI Toggle Button in Chat Header */
+.chat-ai-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+  color: #8696a0;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.chat-ai-toggle-btn:hover {
+  border-color: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.1);
+}
+
+.chat-ai-toggle-btn.active {
+  background: rgba(0, 168, 132, 0.15);
+  border-color: rgba(0, 168, 132, 0.4);
+  color: #00a884;
+}
+
+.chat-ai-toggle-btn.active:hover {
+  background: rgba(0, 168, 132, 0.25);
+}
+
+.chat-ai-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
 }
 
 /* Chat empty state */

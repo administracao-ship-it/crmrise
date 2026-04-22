@@ -58,7 +58,11 @@ export default function ChatModule({ stages, selectedLead: externalLead, onSelec
             <ChatPanel 
               lead={selectedLead} 
               isFullScreen={true}
-              onClose={() => setSelectedLead(null)} 
+              onClose={() => setSelectedLead(null)}
+              onLeadUpdate={(updatedLead) => {
+                // Sync updated lead state (e.g. isAgentActive) back to selection
+                setSelectedLead(updatedLead);
+              }}
             />
           ) : (
             <div className="chat-view-empty">

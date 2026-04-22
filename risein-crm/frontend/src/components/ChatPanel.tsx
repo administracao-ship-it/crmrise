@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, Paperclip, X, Check, CheckCheck, FileText, Download } from "lucide-react";
-import { fetchMessages, sendMessage as apiSendMessage } from "@/lib/api";
+import { Send, Paperclip, X, Check, CheckCheck, FileText, Download, Bot } from "lucide-react";
+import { fetchMessages, sendMessage as apiSendMessage, updateLead } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import type { Lead, Message } from "@/lib/api";
 import toast from "react-hot-toast";
@@ -11,14 +11,22 @@ interface ChatPanelProps {
     lead: Lead;
     isFullScreen?: boolean;
     onClose?: () => void;
+    onLeadUpdate?: (updatedLead: Lead) => void;
 }
 
-export default function ChatPanel({ lead, isFullScreen, onClose }: ChatPanelProps) {
+export default function ChatPanel({ lead, isFullScreen, onClose, onLeadUpdate }: ChatPanelProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState("");
     const [isLoading, setIsLoading] = useState(true);
+    const [isAgentActive, setIsAgentActive] = useState(lead.isAgentActive ?? false);
+    const [togglingAI, setTogglingAI] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Sync AI state when lead changes
+    useEffect(() => {
+        setIsAgentActive(lead.isAgentActive ?? false);
+    }, [lead.id, lead.isAgentActive]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -73,6 +81,23 @@ export default function ChatPanel({ lead, isFullScreen, onClose }: ChatPanelProp
             socket.off("message:status", statusHandler);
         };
     }, [lead?.id]);
+
+    const handleToggleAI = async () => {
+        if (togglingAI) return;
+        setTogglingAI(true);
+        const newValue = !isAgentActive;
+        setIsAgentActive(newValue);
+        try {
+            const updated = await updateLead(lead.id, { isAgentActive: newValue });
+            toast.success(`IA ${newValue ? '🟢 Ativada' : '🔴 Desativada'}`);
+            if (onLeadUpdate) onLeadUpdate(updated);
+        } catch {
+            setIsAgentActive(!newValue); // revert
+            toast.error("Erro ao alternar IA");
+        } finally {
+            setTogglingAI(false);
+        }
+    };
 
     const handleSend = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -254,7 +279,7 @@ export default function ChatPanel({ lead, isFullScreen, onClose }: ChatPanelProp
                 borderBottom: "1px solid #222d34",
                 zIndex: 10,
             }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
                     <div style={{
                         width: 40, height: 40, borderRadius: "50%", background: "#6b7280",
                         display: "flex", alignItems: "center", justifyContent: "center",
@@ -266,19 +291,34 @@ export default function ChatPanel({ lead, isFullScreen, onClose }: ChatPanelProp
                             : (lead.name?.charAt(0)?.toUpperCase() || "U")
                         }
                     </div>
-                    <div>
-                        <div style={{ color: "#e9edef", fontWeight: 500, fontSize: 15, lineHeight: 1.3 }}>{lead.name}</div>
+                    <div style={{ minWidth: 0 }}>
+                        <div style={{ color: "#e9edef", fontWeight: 500, fontSize: 15, lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{lead.name}</div>
                         <div style={{ color: "#8696a0", fontSize: 12 }}>{lead.phone}</div>
                     </div>
                 </div>
-                {onClose && isFullScreen !== true && (
+
+                {/* Right side: AI toggle + close */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                     <button
-                        onClick={onClose}
-                        style={{ background: "none", border: "none", color: "#8696a0", cursor: "pointer", padding: 4 }}
+                        className={`chat-ai-toggle-btn ${isAgentActive ? 'active' : ''}`}
+                        onClick={handleToggleAI}
+                        disabled={togglingAI}
+                        title={isAgentActive ? 'IA Ativa - clique para desativar' : 'IA Inativa - clique para ativar'}
                     >
-                        <X size={20} />
+                        <Bot size={13} />
+                        <span className="chat-ai-dot" />
+                        <span>{isAgentActive ? 'IA ON' : 'IA OFF'}</span>
                     </button>
-                )}
+
+                    {onClose && isFullScreen !== true && (
+                        <button
+                            onClick={onClose}
+                            style={{ background: "none", border: "none", color: "#8696a0", cursor: "pointer", padding: 4 }}
+                        >
+                            <X size={20} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Messages area */}

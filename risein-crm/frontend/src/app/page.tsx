@@ -537,55 +537,61 @@ export default function HomePage() {
 
       <main className="main-content">
         {activeTab === "Dashboard" ? (
-          <DashboardPage stages={stages} />
+          <div style={{ flex: 1, overflow: "auto" }}>
+            <DashboardPage stages={stages} />
+          </div>
         ) : activeTab === "Leads" || activeTab === "Vendidos" || activeTab === "Perdidos" || activeTab === "Não Leads" ? (
           viewMode === "kanban" ? (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={pointerWithin}
-              measuring={{
-                droppable: {
-                  strategy: MeasuringStrategy.Always,
-                },
-              }}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-            >
-              <div className="kanban-board">
-                {filteredStages.map((stage) => (
-                    <KanbanColumn
-                      key={stage.id}
-                      id={stage.id}
-                      title={stage.name}
-                      leads={stage.leads}
-                      onLeadClick={handleLeadClick}
-                      onShowDetails={handleShowDetails}
-                      onQuickMove={handleQuickMove}
-                      onEditStage={(s) => { setEditingStage(s); setEditStageValue(s.name); }}
-                      onEditLead={(l) => { setEditingLead(l); setEditLeadValue(l.name); }}
-                      onDeleteLead={handleDeleteLead}
-                      onAddLead={handleAddLeadClick}
-                    />
-                ))}
-              </div>
-              <DragOverlay>
-                {activeDragId ? (
-                  <div className="lead-card" style={{ opacity: 0.9, transform: "rotate(3deg)", pointerEvents: 'none' }}>
-                    <div className="lead-name">
-                      {stages
-                        .flatMap((s) => s.leads)
-                        .find((l) => l.id === activeDragId)?.name || ""}
+            <div className="kanban-scroll-wrapper">
+              <DndContext
+                sensors={sensors}
+                collisionDetection={pointerWithin}
+                measuring={{
+                  droppable: {
+                    strategy: MeasuringStrategy.Always,
+                  },
+                }}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+              >
+                <div className="kanban-board">
+                  {filteredStages.map((stage) => (
+                      <KanbanColumn
+                        key={stage.id}
+                        id={stage.id}
+                        title={stage.name}
+                        leads={stage.leads}
+                        onLeadClick={handleLeadClick}
+                        onShowDetails={handleShowDetails}
+                        onQuickMove={handleQuickMove}
+                        onEditStage={(s) => { setEditingStage(s); setEditStageValue(s.name); }}
+                        onEditLead={(l) => { setEditingLead(l); setEditLeadValue(l.name); }}
+                        onDeleteLead={handleDeleteLead}
+                        onAddLead={handleAddLeadClick}
+                      />
+                  ))}
+                </div>
+                <DragOverlay>
+                  {activeDragId ? (
+                    <div className="lead-card" style={{ opacity: 0.9, transform: "rotate(3deg)", pointerEvents: 'none' }}>
+                      <div className="lead-name">
+                        {stages
+                          .flatMap((s) => s.leads)
+                          .find((l) => l.id === activeDragId)?.name || ""}
+                      </div>
                     </div>
-                  </div>
-                ) : null}
-              </DragOverlay>
-            </DndContext>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            </div>
           ) : (
-            <LeadTable 
-              leads={filteredStages.flatMap(s => s.leads)} 
-              onLeadClick={handleLeadClick} 
-            />
+            <div className="kanban-scroll-wrapper">
+              <LeadTable 
+                leads={filteredStages.flatMap(s => s.leads)} 
+                onLeadClick={handleLeadClick} 
+              />
+            </div>
           )
         ) : activeTab === "Chats" ? (
           <ChatModule 
@@ -594,24 +600,32 @@ export default function HomePage() {
             onSelectLead={setSelectedLead}
           />
         ) : activeTab === "Disparos" ? (
-          <DisparosPage />
+          <div style={{ flex: 1, overflow: "auto" }}>
+            <DisparosPage />
+          </div>
         ) : activeTab === "Settings" ? (
-          <SettingsPage 
-            funnelName={funnelName}
-            onUpdateFunnelName={handleUpdateFunnelName}
-            openAiApiKey={openAiApiKey}
-            systemPrompt={systemPrompt}
-            humanTakeoverMessage={humanTakeoverMessage}
-            aiTriggerMessages={aiTriggerMessages}
-            onUpdateOpenAi={handleUpdateConfig}
-            whatsappStatus={whatsappStatus}
-            onOpenWhatsAppModal={() => setShowWhatsAppModal(true)}
-            stages={stages}
-          />
+          <div style={{ flex: 1, overflow: "auto" }}>
+            <SettingsPage 
+              funnelName={funnelName}
+              onUpdateFunnelName={handleUpdateFunnelName}
+              openAiApiKey={openAiApiKey}
+              systemPrompt={systemPrompt}
+              humanTakeoverMessage={humanTakeoverMessage}
+              aiTriggerMessages={aiTriggerMessages}
+              onUpdateOpenAi={handleUpdateConfig}
+              whatsappStatus={whatsappStatus}
+              onOpenWhatsAppModal={() => setShowWhatsAppModal(true)}
+              stages={stages}
+            />
+          </div>
         ) : activeTab === "Métricas" ? (
-          <AiMetricsPage />
+          <div style={{ flex: 1, overflow: "auto" }}>
+            <AiMetricsPage />
+          </div>
         ) : activeTab === "Melhorias" ? (
-          <ImprovementsPage />
+          <div style={{ flex: 1, overflow: "auto" }}>
+            <ImprovementsPage />
+          </div>
         ) : null}
       </main>
 
