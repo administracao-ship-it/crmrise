@@ -144,6 +144,18 @@ export default function HomePage() {
     setActiveTab("Chats");
   };
 
+  const handleLeadUpdate = (updatedLead: Lead) => {
+    // 1. Update selectedLead if it's the one that changed
+    if (selectedLead?.id === updatedLead.id) {
+      setSelectedLead(updatedLead);
+    }
+    // 2. Update lead inside the stages array to keep the whole app in sync
+    setStages(prev => prev.map(s => ({
+      ...s,
+      leads: s.leads.map(l => l.id === updatedLead.id ? { ...updatedLead, messages: l.messages || [] } : l)
+    })));
+  };
+
   const handleShowDetails = (lead: Lead) => {
     setShowDetailsLead(lead);
   };
@@ -598,6 +610,7 @@ export default function HomePage() {
             stages={stages} 
             selectedLead={selectedLead}
             onSelectLead={setSelectedLead}
+            onUpdateLead={handleLeadUpdate}
           />
         ) : activeTab === "Disparos" ? (
           <div style={{ height: "100%", overflow: "auto" }}>

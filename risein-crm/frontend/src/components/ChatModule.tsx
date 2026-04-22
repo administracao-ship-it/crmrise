@@ -10,9 +10,10 @@ interface ChatModuleProps {
   stages: Stage[];
   selectedLead?: Lead | null;
   onSelectLead?: (lead: Lead | null) => void;
+  onUpdateLead?: (lead: Lead) => void;
 }
 
-export default function ChatModule({ stages, selectedLead: externalLead, onSelectLead: externalOnSelect }: ChatModuleProps) {
+export default function ChatModule({ stages, selectedLead: externalLead, onSelectLead: externalOnSelect, onUpdateLead }: ChatModuleProps) {
   const [internalSelectedLead, setInternalSelectedLead] = useState<Lead | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -62,6 +63,7 @@ export default function ChatModule({ stages, selectedLead: externalLead, onSelec
               onLeadUpdate={(updatedLead) => {
                 // Sync updated lead state (e.g. isAgentActive) back to selection
                 setSelectedLead(updatedLead);
+                if (onUpdateLead) onUpdateLead(updatedLead);
               }}
             />
           ) : (
@@ -80,6 +82,7 @@ export default function ChatModule({ stages, selectedLead: externalLead, onSelec
             stages={stages} 
             onUpdateLead={(updated) => {
               if (setSelectedLead) setSelectedLead(updated);
+              if (onUpdateLead) onUpdateLead(updated);
             }}
           />
         </div>

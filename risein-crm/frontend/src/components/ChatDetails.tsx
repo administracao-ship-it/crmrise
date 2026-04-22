@@ -157,6 +157,7 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
         ? await removeTagFromLead(lead.id, tagId)
         : await addTagToLead(lead.id, tagId);
       
+      // Local update for immediate feedback
       setEditedLead(updatedLead);
       if (onUpdateLead) onUpdateLead(updatedLead);
       toast.success(isAssigned ? "Tag removida" : "Tag adicionada");
@@ -262,7 +263,8 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
         </div>
 
         <div className="flex flex-wrap gap-1 mb-3 relative">
-            {editedLead.tags?.map(tag => (
+            {/* Always use the latest tags from editedLead or lead prop */}
+            {(editedLead.tags || lead.tags || []).map(tag => (
                 <span 
                     key={tag.id} 
                     className="tag-pill cursor-pointer hover:opacity-80 transition-all flex items-center gap-1" 
@@ -320,15 +322,15 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
                     {tagSearch.trim() && allTags.filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase())).length > 0 && (
                         <div className="absolute top-full left-0 mt-1 bg-[#202c33] border border-[#2a3942] rounded shadow-lg z-50 min-w-[120px] max-h-[120px] overflow-y-auto">
                             {allTags.filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase())).map(t => {
-                                const isSelected = editedLead.tags?.some(existing => existing.id === t.id);
+                                const isSelected = (editedLead.tags || lead.tags || []).some(existing => existing.id === t.id);
                                 return (
                                     <div 
                                         key={t.id} 
                                         className={`px-2 py-1.5 text-[10px] text-[#e9edef] hover:bg-[#2a3942] cursor-pointer flex items-center gap-1.5 ${isSelected ? 'bg-[#2a3942]/50' : ''}`}
                                         onClick={() => {
                                             handleToggleTag(t.id);
-                                            setShowTagSelector(false);
                                             setTagSearch("");
+                                            setShowTagSelector(false);
                                         }}
                                     >
                                         <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: t.color || '#3b82f6' }} />
