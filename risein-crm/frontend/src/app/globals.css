@@ -868,6 +868,7 @@ body {
 .main-content {
   margin-left: var(--sidebar-width);
   margin-top: var(--header-height);
+  width: calc(100vw - var(--sidebar-width));
   height: calc(100vh - var(--header-height));
   overflow: hidden;
   position: relative;
