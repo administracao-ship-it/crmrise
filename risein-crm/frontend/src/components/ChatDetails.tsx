@@ -266,79 +266,69 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
                     <X size={10} />
                 </span>
             ))}
-            <button className="tag-pill-add" onClick={() => setShowTagSelector(!showTagSelector)} style={{ fontSize: '10px' }}>
-                {showTagSelector ? <X size={12} /> : <Plus size={12} />}
-            </button>
-
-            {showTagSelector && (
-                <div 
-                  ref={tagSelectorRef}
-                  className="tag-selector-popup glass-panel shadow-glow absolute top-full left-0 z-50 mt-2 w-64 p-3 bg-bg-card border border-border-color rounded-xl animate-fade-in"
-                >
-                    <div className="flex items-center gap-2 mb-3 bg-black/20 rounded-lg p-2 border border-white/5">
-                        <Target size={14} className="text-accent-blue" />
-                        <input 
-                            type="text" 
-                            className="bg-transparent border-none text-xs w-full focus:outline-none" 
-                            placeholder="Buscar ou criar tag..." 
-                            value={tagSearch}
-                            onChange={(e) => {
-                                setTagSearch(e.target.value);
-                                if (!showTagSelector) setShowTagSelector(true);
-                            }}
-                        />
-                    </div>
-
-                    <div className="max-height-[150px] overflow-y-auto mb-3 flex flex-col gap-1">
-                        {allTags
-                            .filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase()))
-                            .map(tag => {
-                                const isSelected = editedLead.tags?.some(t => t.id === tag.id);
-                                return (
-                                    <button 
-                                        key={tag.id}
-                                        className={`tag-select-item ${isSelected ? 'bg-accent-blue/10 border-accent-blue/20' : ''}`}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleToggleTag(tag.id);
-                                        }}
-                                    >
-                                        <div 
-                                            className="w-2 h-2 rounded-full" 
-                                            style={{ backgroundColor: tag.color || '#3b82f6' }}
-                                        />
-                                        <span className="flex-1">{tag.name}</span>
-                                        {isSelected && <Check size={12} className="text-accent-blue" />}
-                                    </button>
-                                );
-                            })}
-                    </div>
-
-                    {tagSearch && !allTags.some(t => t.name.toLowerCase() === tagSearch.toLowerCase()) && (
-                        <div className="border-t border-white/5 pt-3 mt-2">
-                            <div className="text-[10px] uppercase font-bold text-muted mb-2">Criar nova tag</div>
-                            <div className="flex items-center gap-2">
-                                <input 
-                                    type="color" 
-                                    className="tag-color-picker" 
-                                    value={newTagColor}
-                                    onChange={(e) => setNewTagColor(e.target.value)}
-                                />
-                                <button 
-                                    className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors"
-                                    style={{ backgroundColor: '#0ea5e9', color: 'white' }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setNewTagName(tagSearch);
-                                        handleCreateAndAddTag(tagSearch);
+            {showTagSelector ? (
+                <div className="relative inline-block">
+                    <input 
+                        autoFocus
+                        type="text"
+                        value={tagSearch}
+                        onChange={e => setTagSearch(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                if (tagSearch.trim()) {
+                                    const existingTag = allTags.find(t => t.name.toLowerCase() === tagSearch.trim().toLowerCase());
+                                    if (existingTag) {
+                                        // Apenas adiciona se nao existir no lead
+                                        if (!editedLead.tags?.some(t => t.id === existingTag.id)) {
+                                            handleToggleTag(existingTag.id);
+                                        }
+                                        setShowTagSelector(false);
+                                        setTagSearch("");
+                                    } else {
+                                        handleCreateAndAddTag(tagSearch.trim());
+                                    }
+                                }
+                            } else if (e.key === 'Escape') {
+                                setShowTagSelector(false);
+                                setTagSearch("");
+                            }
+                        }}
+                        onBlur={() => setTimeout(() => { setShowTagSelector(false); setTagSearch(""); }, 200)}
+                        placeholder="Nome + Enter..."
+                        className="bg-[#202c33] border border-[#2a3942] text-[#e9edef] outline-none px-2 py-0.5 rounded shadow-sm"
+                        style={{ fontSize: '10px', width: '120px' }}
+                    />
+                    
+                    {tagSearch.trim() && allTags.filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase())).length > 0 && (
+                        <div className="absolute top-full left-0 mt-1 bg-[#202c33] border border-[#2a3942] rounded shadow-lg z-50 min-w-[120px] max-h-[120px] overflow-y-auto">
+                            {allTags.filter(t => t.name.toLowerCase().includes(tagSearch.toLowerCase())).map(t => (
+                                <div 
+                                    key={t.id} 
+                                    className="px-2 py-1.5 text-[10px] text-[#e9edef] hover:bg-[#2a3942] cursor-pointer flex items-center gap-1.5"
+                                    onClick={() => {
+                                        if (!editedLead.tags?.some(existing => existing.id === t.id)) {
+                                            handleToggleTag(t.id);
+                                        }
+                                        setShowTagSelector(false);
+                                        setTagSearch("");
                                     }}
                                 >
-                                    Criar "#{tagSearch}"
-                                </button>
-                            </div>
+                                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: t.color || '#3b82f6' }} />
+                                    <span className="truncate">{t.name}</span>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
+            ) : (
+                <button 
+                    className="tag-pill-add hover:bg-white/10 transition-colors flex items-center gap-1" 
+                    onClick={() => { setShowTagSelector(true); setTagSearch(""); }} 
+                    style={{ fontSize: '10px', padding: '2px 8px' }}
+                >
+                    <Plus size={10} /> Add Tag
+                </button>
             )}
         </div>
 
