@@ -17,7 +17,7 @@ interface ChatDetailsProps {
   stages: Stage[];
 }
 
-type TabType = "Principal" | "Estatísticas" | "Mídia" | "Products" | "Configurações" | "Histórico";
+type TabType = "Principal" | "Estatísticas" | "Mídia" | "Products" | "Configurações";
 
 export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
   const [editedLead, setEditedLead] = useState<Partial<Lead>>({});
@@ -148,7 +148,8 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
 
   const handleToggleTag = async (tagId: string) => {
     if (!lead) return;
-    const isAssigned = lead.tags?.some(t => t.id === tagId);
+    // Fix: check editedLead instead of lead to avoid stale state bugs
+    const isAssigned = editedLead.tags?.some(t => t.id === tagId);
     
     setSaving(true);
     try {
@@ -255,7 +256,10 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
                         fontSize: '10px', 
                         padding: '2px 8px' 
                     }}
-                    onClick={() => handleToggleTag(tag.id)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleTag(tag.id);
+                    }}
                     title="Clique para remover"
                 >
                     #{tag.name}
@@ -294,7 +298,10 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
                                     <button 
                                         key={tag.id}
                                         className={`tag-select-item ${isSelected ? 'bg-accent-blue/10 border-accent-blue/20' : ''}`}
-                                        onClick={() => handleToggleTag(tag.id)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleToggleTag(tag.id);
+                                        }}
                                     >
                                         <div 
                                             className="w-2 h-2 rounded-full" 
@@ -318,8 +325,10 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
                                     onChange={(e) => setNewTagColor(e.target.value)}
                                 />
                                 <button 
-                                    className="flex-1 py-2 bg-accent-blue text-white rounded-lg text-xs font-bold hover:bg-accent-blue/80 transition-colors"
-                                    onClick={() => {
+                                    className="flex-1 py-2 rounded-lg text-xs font-bold transition-colors"
+                                    style={{ backgroundColor: '#0ea5e9', color: 'white' }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
                                         setNewTagName(tagSearch);
                                         handleCreateAndAddTag(tagSearch);
                                     }}
@@ -355,7 +364,7 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
 
       {/* Tabs */}
       <div className="wa-details-tabs">
-        {(["Principal", "Estatísticas", "Mídia", "Products", "Configurações", "Histórico"] as TabType[]).map(tab => (
+        {(["Principal", "Estatísticas", "Mídia", "Products", "Configurações"] as TabType[]).map(tab => (
           <button 
             key={tab} 
             className={`wa-details-tab-btn ${activeTab === tab ? 'active' : ''}`}
