@@ -75,7 +75,13 @@ export default function ChatModule({ stages, selectedLead: externalLead, onSelec
 
         {/* Coluna 3: Detalhes do Lead */}
         <div className="chat-col chat-col-details relative flex-shrink-0">
-          <ChatDetails lead={selectedLead} stages={stages} />
+          <ChatDetails 
+            lead={selectedLead} 
+            stages={stages} 
+            onUpdateLead={(updated) => {
+              if (setSelectedLead) setSelectedLead(updated);
+            }}
+          />
         </div>
       </div>
     </div>

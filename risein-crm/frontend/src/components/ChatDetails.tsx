@@ -15,11 +15,12 @@ import toast from "react-hot-toast";
 interface ChatDetailsProps {
   lead: Lead | null;
   stages: Stage[];
+  onUpdateLead?: (lead: Lead) => void;
 }
 
 type TabType = "Principal" | "Estatísticas" | "Mídia" | "Products" | "Configurações";
 
-export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
+export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsProps) {
   const [editedLead, setEditedLead] = useState<Partial<Lead>>({});
   const [saving, setSaving] = useState(false);
   const [allTags, setAllTags] = useState<Tag[]>([]);
@@ -158,6 +159,7 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
         : await addTagToLead(lead.id, tagId);
       
       setEditedLead(updatedLead);
+      if (onUpdateLead) onUpdateLead(updatedLead);
       toast.success(isAssigned ? "Tag removida" : "Tag adicionada");
     } catch (err) {
       toast.error("Erro ao atualizar tag");
@@ -176,6 +178,7 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
       
       const updatedLead = await addTagToLead(lead.id, newTag.id);
       setEditedLead(updatedLead);
+      if (onUpdateLead) onUpdateLead(updatedLead);
       
       setNewTagName("");
       setTagSearch("");
