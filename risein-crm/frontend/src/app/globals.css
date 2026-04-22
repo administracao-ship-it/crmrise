@@ -2184,14 +2184,14 @@ body {
 }
 
 .chat-col-details {
-  width: 290px;
-  min-width: 250px;
-  max-width: 290px;
+  width: 360px;
+  min-width: 320px;
+  max-width: 400px;
   flex-shrink: 0;
   border-left: 1px solid var(--border-color);
   background: var(--bg-secondary);
   overflow: hidden;
-  padding-right: 16px; /* Empurra o conteudo mais pro meio */
+  padding-right: 8px; /* Breathing room */
 }
 
 /* AI Toggle Button in Chat Header */
