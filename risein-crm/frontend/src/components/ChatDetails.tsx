@@ -193,13 +193,52 @@ export default function ChatDetails({ lead, stages }: ChatDetailsProps) {
         <div className="wa-details-back-row">
           <ChevronLeft size={18} />
           <span>Lead #{lead.id.slice(-8).toUpperCase()}</span>
-          <div className="ml-auto flex items-center gap-3 opacity-60">
+          <div className="ml-auto flex items-center gap-2">
+            {/* AI Toggle Button */}
+            <button
+              onClick={() => {
+                const newValue = !editedLead.isAgentActive;
+                handleChange("isAgentActive", newValue);
+                setSaving(true);
+                updateLead(lead.id, { isAgentActive: newValue })
+                  .then(() => toast.success(`IA ${newValue ? '🟢 Ligada' : '🔴 Desligada'}`))
+                  .finally(() => setSaving(false));
+              }}
+              title={editedLead.isAgentActive ? 'IA Ativa — clique para desligar' : 'IA Inativa — clique para ligar'}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '4px 10px',
+                borderRadius: 20,
+                border: `1px solid ${editedLead.isAgentActive ? 'rgba(0,168,132,0.5)' : 'rgba(255,255,255,0.15)'}`,
+                background: editedLead.isAgentActive ? 'rgba(0,168,132,0.15)' : 'rgba(255,255,255,0.06)',
+                color: editedLead.isAgentActive ? '#00a884' : '#8696a0',
+                fontSize: 10,
+                fontWeight: 700,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                letterSpacing: '0.5px',
+                transition: 'all 0.2s',
+              }}
+            >
+              <Bot size={11} />
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  background: 'currentColor',
+                  flexShrink: 0,
+                }}
+              />
+              {editedLead.isAgentActive ? 'IA ON' : 'IA OFF'}
+            </button>
             <RefreshCw 
-              size={16} 
-              className="cursor-pointer hover:text-accent-blue transition-colors" 
+              size={15} 
+              style={{ opacity: 0.5, cursor: 'pointer' }}
               onClick={handleRefreshAvatar} 
             />
-            <MoreHorizontal size={18} className="cursor-pointer" />
           </div>
         </div>
 

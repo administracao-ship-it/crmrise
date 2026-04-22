@@ -537,7 +537,7 @@ export default function HomePage() {
 
       <main className="main-content">
         {activeTab === "Dashboard" ? (
-          <div style={{ flex: 1, overflow: "auto" }}>
+          <div style={{ height: "100%", overflow: "auto" }}>
             <DashboardPage stages={stages} />
           </div>
         ) : activeTab === "Leads" || activeTab === "Vendidos" || activeTab === "Perdidos" || activeTab === "Não Leads" ? (
@@ -600,11 +600,11 @@ export default function HomePage() {
             onSelectLead={setSelectedLead}
           />
         ) : activeTab === "Disparos" ? (
-          <div style={{ flex: 1, overflow: "auto" }}>
+          <div style={{ height: "100%", overflow: "auto" }}>
             <DisparosPage />
           </div>
         ) : activeTab === "Settings" ? (
-          <div style={{ flex: 1, overflow: "auto" }}>
+          <div style={{ height: "100%", overflow: "auto" }}>
             <SettingsPage 
               funnelName={funnelName}
               onUpdateFunnelName={handleUpdateFunnelName}
@@ -619,11 +619,11 @@ export default function HomePage() {
             />
           </div>
         ) : activeTab === "Métricas" ? (
-          <div style={{ flex: 1, overflow: "auto" }}>
+          <div style={{ height: "100%", overflow: "auto" }}>
             <AiMetricsPage />
           </div>
         ) : activeTab === "Melhorias" ? (
-          <div style={{ flex: 1, overflow: "auto" }}>
+          <div style={{ height: "100%", overflow: "auto" }}>
             <ImprovementsPage />
           </div>
         ) : null}

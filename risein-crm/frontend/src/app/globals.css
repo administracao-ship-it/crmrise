@@ -870,16 +870,15 @@ body {
   margin-top: var(--header-height);
   height: calc(100vh - var(--header-height));
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  position: relative;
 }
 
-/* Kanban needs horizontal scroll — wrap it */
+/* Kanban scroll wrapper */
 .kanban-scroll-wrapper {
-  flex: 1;
+  width: 100%;
+  height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  height: 100%;
 }
 
 /* Kanban Board */
@@ -4939,6 +4938,28 @@ body {
     text-transform: uppercase;
     color: var(--accent-blue);
     margin-bottom: 6px;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.wa-stage-name-row > span {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.wa-stage-name-row > div {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.wa-stage-name-row > div > span:first-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .wa-stage-progress-bar {
@@ -4965,12 +4986,13 @@ body {
 
 .wa-details-tabs {
     display: flex;
-    gap: 20px;
-    padding: 0 20px;
+    gap: 4px;
+    padding: 0 8px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     overflow-x: auto;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
 }
 
 .wa-details-tabs::-webkit-scrollbar {
@@ -4978,8 +5000,8 @@ body {
 }
 
 .wa-details-tab-btn {
-    padding: 12px 0;
-    font-size: 12px;
+    padding: 10px 6px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-muted);
     border-bottom: 2px solid transparent;
@@ -4987,6 +5009,8 @@ body {
     cursor: pointer;
     background: none;
     border: none;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .wa-details-tab-btn:hover {
