@@ -512,14 +512,31 @@ export default function HomePage() {
       baseStages = stages.filter(s => s.name.toLowerCase().includes("não lead"));
     }
 
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return baseStages;
+
+    // Helper to normalize string for comparison
+    const normalize = (str: string) => str?.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") || "";
+
+    const normalizedQuery = normalize(query);
+    const numericQuery = query.replace(/\D/g, "");
+
     return baseStages.map((stage) => ({
       ...stage,
-      leads: stage.leads.filter(
-        (lead) =>
-          !searchQuery ||
-          lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          lead.phone.includes(searchQuery)
-      ),
+      leads: stage.leads.filter((lead) => {
+        const nameMatch = normalize(lead.name).includes(normalizedQuery);
+        const titleMatch = normalize(lead.title || "").includes(normalizedQuery);
+        const cityMatch = normalize(lead.city || "").includes(normalizedQuery);
+        
+        // Phone match: check original string AND numeric-only comparison
+        const phoneStr = lead.phone || "";
+        const phoneMatch = phoneStr.includes(query) || 
+                          (numericQuery && phoneStr.replace(/\D/g, "").includes(numericQuery));
+
+        return nameMatch || titleMatch || cityMatch || phoneMatch;
+      }),
     }));
   }, [stages, searchQuery, activeTab]);
 
@@ -625,6 +642,8 @@ export default function HomePage() {
             selectedLead={selectedLead}
             onSelectLead={setSelectedLead}
             onUpdateLead={handleLeadUpdate}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
           />
         ) : activeTab === "Disparos" ? (
           <div style={{ height: "100%", overflow: "auto" }}>

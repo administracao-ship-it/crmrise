@@ -11,11 +11,23 @@ interface ChatModuleProps {
   selectedLead?: Lead | null;
   onSelectLead?: (lead: Lead | null) => void;
   onUpdateLead?: (lead: Lead) => void;
+  searchQuery?: string;
+  onSearchChange?: (q: string) => void;
 }
 
-export default function ChatModule({ stages, selectedLead: externalLead, onSelectLead: externalOnSelect, onUpdateLead }: ChatModuleProps) {
+export default function ChatModule({ 
+  stages, 
+  selectedLead: externalLead, 
+  onSelectLead: externalOnSelect, 
+  onUpdateLead,
+  searchQuery: externalSearchQuery = "",
+  onSearchChange: externalOnSearchChange
+}: ChatModuleProps) {
   const [internalSelectedLead, setInternalSelectedLead] = useState<Lead | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [internalSearchQuery, setInternalSearchQuery] = useState("");
+
+  const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
+  const onSearchChange = externalOnSearchChange !== undefined ? externalOnSearchChange : setInternalSearchQuery;
 
   const selectedLead = externalLead !== undefined ? externalLead : internalSelectedLead;
   const setSelectedLead = externalOnSelect !== undefined ? externalOnSelect : setInternalSelectedLead;
@@ -34,10 +46,27 @@ export default function ChatModule({ stages, selectedLead: externalLead, onSelec
     return timeB - timeA;
   });
 
-  const filteredLeads = sortedLeads.filter(l => 
-    l.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    l.phone?.includes(searchQuery)
-  );
+  const query = searchQuery.toLowerCase().trim();
+  
+  const filteredLeads = sortedLeads.filter(l => {
+    if (!query) return true;
+
+    const normalize = (str: string) => str?.toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") || "";
+
+    const normalizedQuery = normalize(query);
+    const numericQuery = query.replace(/\D/g, "");
+
+    const nameMatch = normalize(l.name).includes(normalizedQuery);
+    const titleMatch = normalize(l.title || "").includes(normalizedQuery);
+    
+    const phoneStr = l.phone || "";
+    const phoneMatch = phoneStr.includes(query) || 
+                      (numericQuery && phoneStr.replace(/\D/g, "").includes(numericQuery));
+
+    return nameMatch || titleMatch || phoneMatch;
+  });
 
   return (
     <div className="chat-module-wrapper">
@@ -49,7 +78,7 @@ export default function ChatModule({ stages, selectedLead: externalLead, onSelec
             selectedLeadId={selectedLead?.id}
             onSelectLead={setSelectedLead}
             searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
+            onSearchChange={onSearchChange}
           />
         </div>
 
