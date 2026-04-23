@@ -67,7 +67,11 @@ router.post("/", async (req, res, next) => {
 
 router.patch("/:id", async (req, res, next) => {
     try {
-        const { name, phone, value, stageId, userId, title, phase, city, closedAt, isAgentActive, tags } = req.body;
+        const { 
+            name, phone, value, stageId, userId, title, phase, city, closedAt, isAgentActive, tags,
+            responsible, forecast, origin, instagram, designer, campaign, notes, service,
+            intent_value, search_prime, presentation, agency, rise_no, company, email_work, position, user_terms
+        } = req.body;
         
         const updateData = {};
         if (name !== undefined) updateData.name = name;
@@ -80,7 +84,25 @@ router.patch("/:id", async (req, res, next) => {
         if (city !== undefined) updateData.city = city;
         if (closedAt !== undefined) updateData.closedAt = closedAt ? new Date(closedAt) : null;
         if (isAgentActive !== undefined) updateData.isAgentActive = Boolean(isAgentActive);
-        if (tags !== undefined) updateData.tags = tags;
+        
+        // New CRM fields
+        if (responsible !== undefined) updateData.responsible = responsible;
+        if (forecast !== undefined) updateData.forecast = forecast ? new Date(forecast) : null;
+        if (origin !== undefined) updateData.origin = origin;
+        if (instagram !== undefined) updateData.instagram = instagram;
+        if (designer !== undefined) updateData.designer = designer;
+        if (campaign !== undefined) updateData.campaign = campaign;
+        if (notes !== undefined) updateData.notes = notes;
+        if (service !== undefined) updateData.service = service;
+        if (intent_value !== undefined) updateData.intent_value = intent_value;
+        if (search_prime !== undefined) updateData.search_prime = search_prime;
+        if (presentation !== undefined) updateData.presentation = presentation ? new Date(presentation) : null;
+        if (agency !== undefined) updateData.agency = agency;
+        if (rise_no !== undefined) updateData.rise_no = rise_no;
+        if (company !== undefined) updateData.company = company;
+        if (email_work !== undefined) updateData.email_work = email_work;
+        if (position !== undefined) updateData.position = position;
+        if (user_terms !== undefined) updateData.user_terms = Boolean(user_terms);
 
         const lead = await req.prisma.lead.update({
             where: { id: req.params.id },

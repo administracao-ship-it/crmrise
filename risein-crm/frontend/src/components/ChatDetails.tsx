@@ -33,28 +33,6 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
   const [loadingMedia, setLoadingMedia] = useState(false);
   const tagSelectorRef = useRef<HTMLDivElement>(null);
 
-  // Virtual fields state for UI completeness
-  const [virtualFields, setVirtualFields] = useState({
-    responsible: "Lidiane",
-    forecast: "",
-    origin: "Rise | Thiago | Meta",
-    instagram: "",
-    designer: "",
-    campaign: "",
-    notes: "",
-    service: "",
-    intent_env: "",
-    intent_value: "",
-    search_prime: "",
-    presentation: "",
-    agency: "",
-    rise_no: "",
-    company: "",
-    email_work: "",
-    position: "",
-    user_terms: false
-  });
-
   // Sync local state when lead changes, but only if ID is different
   // to avoid overwriting local changes during same-contact updates
   useEffect(() => {
@@ -414,21 +392,21 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
         {activeTab === "Principal" && (
           <>
             <div className="wa-section">
-              {renderField("Usuário responsável", virtualFields.responsible, (v) => setVirtualFields(prev => ({...prev, responsible: v})))}
+              {renderField("Usuário responsável", editedLead.responsible, (v) => handleChange("responsible", v), () => handleBlur("responsible"))}
               {renderField("Venda", editedLead.value, (v) => handleChange("value", parseFloat(v)), () => handleBlur("value"), "number")}
-              {renderField("Forecast", virtualFields.forecast, (v) => setVirtualFields(prev => ({...prev, forecast: v})), undefined, "date")}
-              {renderField("Origem do Lead", virtualFields.origin, (v) => setVirtualFields(prev => ({...prev, origin: v})), undefined, "text", ["Rise | Thiago | Meta", "Indicação", "Google", "Outro"])}
-              {renderField("Instagram", virtualFields.instagram, (v) => setVirtualFields(prev => ({...prev, instagram: v})))}
-              {renderField("Projetista Responsável", virtualFields.designer, (v) => setVirtualFields(prev => ({...prev, designer: v})), undefined, "text", ["Lidiane", "Carlos", "Ana"])}
-              {renderField("Campanha", virtualFields.campaign, (v) => setVirtualFields(prev => ({...prev, campaign: v})))}
-              {renderField("Anotações", virtualFields.notes, (v) => setVirtualFields(prev => ({...prev, notes: v})))}
-              {renderField("Atendimento", virtualFields.service, (v) => setVirtualFields(prev => ({...prev, service: v})))}
+              {renderField("Forecast", editedLead.forecast ? new Date(editedLead.forecast).toISOString().split('T')[0] : "", (v) => handleChange("forecast", v), () => handleBlur("forecast"), "date")}
+              {renderField("Origem do Lead", editedLead.origin, (v) => handleChange("origin", v), () => handleBlur("origin"), "text", ["Rise | Thiago | Meta", "Indicação", "Google", "Outro"])}
+              {renderField("Instagram", editedLead.instagram, (v) => handleChange("instagram", v), () => handleBlur("instagram"))}
+              {renderField("Projetista Responsável", editedLead.designer, (v) => handleChange("designer", v), () => handleBlur("designer"), "text", ["Lidiane", "Carlos", "Ana"])}
+              {renderField("Campanha", editedLead.campaign, (v) => handleChange("campaign", v), () => handleBlur("campaign"))}
+              {renderField("Anotações", editedLead.notes, (v) => handleChange("notes", v), () => handleBlur("notes"))}
+              {renderField("Atendimento", editedLead.service, (v) => handleChange("service", v), () => handleBlur("service"))}
               {renderField("Que ambiente deseja plane", editedLead.title, (v) => handleChange("title", v), () => handleBlur("title"))}
-              {renderField("Quanto pretende investir?", virtualFields.intent_value, (v) => setVirtualFields(prev => ({...prev, intent_value: v})))}
-              {renderField("O que você busca no prime", virtualFields.search_prime, (v) => setVirtualFields(prev => ({...prev, search_prime: v})), undefined, "text", ["Qualidade", "Preço", "Prazo"])}
-              {renderField("Apresentação", virtualFields.presentation, (v) => setVirtualFields(prev => ({...prev, presentation: v})), undefined, "date")}
-              {renderField("Agência", virtualFields.agency, (v) => setVirtualFields(prev => ({...prev, agency: v})), undefined, "text", ["Agência A", "Agência B"])}
-              {renderField("Nº RISE", virtualFields.rise_no, (v) => setVirtualFields(prev => ({...prev, rise_no: v})))}
+              {renderField("Quanto pretende investir?", editedLead.intent_value, (v) => handleChange("intent_value", v), () => handleBlur("intent_value"))}
+              {renderField("O que você busca no prime", editedLead.search_prime, (v) => handleChange("search_prime", v), () => handleBlur("search_prime"), "text", ["Qualidade", "Preço", "Prazo"])}
+              {renderField("Apresentação", editedLead.presentation ? new Date(editedLead.presentation).toISOString().split('T')[0] : "", (v) => handleChange("presentation", v), () => handleBlur("presentation"), "date")}
+              {renderField("Agência", editedLead.agency, (v) => handleChange("agency", v), () => handleBlur("agency"), "text", ["Agência A", "Agência B"])}
+              {renderField("Nº RISE", editedLead.rise_no, (v) => handleChange("rise_no", v), () => handleBlur("rise_no"))}
             </div>
 
             <div className="wa-section-header">CONTATO</div>
@@ -446,7 +424,7 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
             </div>
 
             <div className="wa-section">
-                {renderField("Empresa", virtualFields.company, (v) => setVirtualFields(prev => ({...prev, company: v})))}
+                {renderField("Empresa", editedLead.company, (v) => handleChange("company", v), () => handleBlur("company"))}
                 <div className="wa-field-row">
                     <div className="wa-field-label">Tel comercial</div>
                     <div className="wa-field-value flex items-center gap-2">
@@ -456,16 +434,21 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
                         </span>
                     </div>
                 </div>
-                {renderField("E-mail comercial", virtualFields.email_work, (v) => setVirtualFields(prev => ({...prev, email_work: v})))}
-                {renderField("Posição", virtualFields.position, (v) => setVirtualFields(prev => ({...prev, position: v})))}
+                {renderField("E-mail comercial", editedLead.email_work, (v) => handleChange("email_work", v), () => handleBlur("email_work"))}
+                {renderField("Posição", editedLead.position, (v) => handleChange("position", v), () => handleBlur("position"))}
                 <div className="wa-field-row">
                     <div className="wa-field-label">User terms</div>
                     <div className="wa-field-value">
                         <div 
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer ${virtualFields.user_terms ? 'bg-accent-blue border-accent-blue' : 'border-white/20'}`}
-                          onClick={() => setVirtualFields(prev => ({...prev, user_terms: !prev.user_terms}))}
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center cursor-pointer ${editedLead.user_terms ? 'bg-accent-blue border-accent-blue' : 'border-white/20'}`}
+                          onClick={() => {
+                            const val = !editedLead.user_terms;
+                            handleChange("user_terms", val);
+                            setSaving(true);
+                            updateLead(lead.id, { user_terms: val }).finally(() => setSaving(false));
+                          }}
                         >
-                            {virtualFields.user_terms && <Check size={12} color="white" />}
+                            {editedLead.user_terms && <Check size={12} color="white" />}
                         </div>
                     </div>
                 </div>

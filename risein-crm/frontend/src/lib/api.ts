@@ -29,6 +29,23 @@ export interface Lead {
     tags?: Tag[];
     stage?: Stage;
     messages?: Message[];
+    responsible?: string;
+    forecast?: string;
+    origin?: string;
+    instagram?: string;
+    designer?: string;
+    campaign?: string;
+    notes?: string;
+    service?: string;
+    intent_value?: string;
+    search_prime?: string;
+    presentation?: string;
+    agency?: string;
+    rise_no?: string;
+    company?: string;
+    email_work?: string;
+    position?: string;
+    user_terms?: boolean;
 }
 
 export interface Message {

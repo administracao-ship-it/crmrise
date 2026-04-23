@@ -54,6 +54,25 @@ model Lead {
 
   aiServedAt DateTime?
 
+  // Extra fields for CRM completeness
+  responsible String?
+  forecast    DateTime?
+  origin      String?
+  instagram   String?
+  designer    String?
+  campaign    String?
+  notes       String?
+  service     String?
+  intent_value String?
+  search_prime String?
+  presentation DateTime?
+  agency      String?
+  rise_no     String?
+  company     String?
+  email_work  String?
+  position    String?
+  user_terms  Boolean @default(false)
+
   // Indexes for query performance
   @@index([stageId])
   @@index([userId])
