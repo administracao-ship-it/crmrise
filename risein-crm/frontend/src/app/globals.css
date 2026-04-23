@@ -4920,9 +4920,10 @@ body {
     align-items: center;
     gap: 8px;
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 13px;
     margin-bottom: 12px;
     cursor: pointer;
+    width: 100%;
 }
 
 .wa-details-back-row span {
@@ -4990,13 +4991,14 @@ body {
 
 .wa-details-tabs {
     display: flex;
-    gap: 4px;
-    padding: 0 8px;
+    gap: 2px;
+    padding: 0 4px;
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
+    width: 100%;
 }
 
 .wa-details-tabs::-webkit-scrollbar {
@@ -5004,9 +5006,9 @@ body {
 }
 
 .wa-details-tab-btn {
-    padding: 10px 6px;
-    font-size: 11px;
-    font-weight: 600;
+    padding: 10px 8px;
+    font-size: 10px;
+    font-weight: 700;
     color: var(--text-muted);
     border-bottom: 2px solid transparent;
     transition: all 0.2s;
@@ -5015,14 +5017,17 @@ body {
     border: none;
     white-space: nowrap;
     flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .wa-details-tab-btn:hover {
     color: var(--text-primary);
+    background: rgba(255,255,255,0.02);
 }
 
 .wa-details-tab-btn.active {
-    color: var(--text-primary);
+    color: var(--accent-blue);
     border-bottom: 2px solid var(--accent-blue);
 }
 
