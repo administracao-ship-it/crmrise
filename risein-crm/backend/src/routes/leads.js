@@ -103,6 +103,7 @@ router.patch("/:id", async (req, res, next) => {
         if (email_work !== undefined) updateData.email_work = email_work;
         if (position !== undefined) updateData.position = position;
         if (user_terms !== undefined) updateData.user_terms = Boolean(user_terms);
+        if (tags !== undefined) updateData.tags = tags;
 
         const lead = await req.prisma.lead.update({
             where: { id: req.params.id },
