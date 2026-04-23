@@ -18,7 +18,7 @@ interface ChatDetailsProps {
   onUpdateLead?: (lead: Lead) => void;
 }
 
-type TabType = "Principal" | "Estatísticas" | "Mídia" | "Products" | "Configurações";
+type TabType = "Principal" | "Estatísticas" | "Mídia" | "Histórico" | "Products" | "Configurações";
 
 export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsProps) {
   const [editedLead, setEditedLead] = useState<Partial<Lead>>({});
@@ -387,7 +387,7 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
 
       {/* Tabs */}
       <div className="wa-details-tabs">
-        {(["Principal", "Estatísticas", "Mídia", "Products", "Configurações"] as TabType[]).map(tab => (
+        {(["Principal", "Estatísticas", "Mídia", "Histórico", "Products", "Configurações"] as TabType[]).map(tab => (
           <button 
             key={tab} 
             className={`wa-details-tab-btn ${activeTab === tab ? 'active' : ''}`}
