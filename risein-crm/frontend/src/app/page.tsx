@@ -238,6 +238,9 @@ export default function HomePage() {
           leads: s.leads.map((l) => (l.id === lead.id ? { ...lead, messages: l.messages } : l)),
         }))
       );
+      // Sync active chat if it's the updated lead
+      setSelectedLead(prev => prev?.id === lead.id ? { ...lead, messages: prev.messages } : prev);
+      
       if (editingLead?.id === lead.id) setEditingLead(null);
     });
 
@@ -266,6 +269,17 @@ export default function HomePage() {
           ),
         }))
       );
+
+      // Sync active chat messages
+      setSelectedLead(prev => {
+        if (prev?.id !== data.lead.id) return prev;
+        const exists = prev.messages?.some(m => m.id === data.id);
+        if (exists) return prev;
+        return {
+          ...prev,
+          messages: [data as never, ...(prev.messages || [])]
+        };
+      });
     });
 
     syncWhatsAppStatus();

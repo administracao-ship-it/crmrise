@@ -53,11 +53,23 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
     user_terms: false
   });
 
+  // Sync local state when lead changes, but only if ID is different
+  // to avoid overwriting local changes during same-contact updates
   useEffect(() => {
     if (lead) {
-      setEditedLead(lead);
+      if (editedLead.id !== lead.id) {
+        setEditedLead(lead);
+      } else {
+        // If it's the same lead, just merge the fields that might have changed from outside (like tags)
+        // while keeping the rest of the local state
+        setEditedLead(prev => ({ 
+          ...prev, 
+          ...lead,
+          tags: lead.tags // Ensure tags from prop are respected if they changed
+        }));
+      }
     }
-  }, [lead]);
+  }, [lead, lead?.id]);
 
   useEffect(() => {
     fetchTags().then(setAllTags).catch(console.error);
@@ -263,7 +275,7 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
         </div>
 
         <div className="flex flex-wrap gap-1 mb-3 relative">
-            {/* Always use the latest tags from editedLead or lead prop */}
+            {/* Priority: editedLead tags (local) then lead tags (prop) */}
             {(editedLead.tags || lead.tags || []).map(tag => (
                 <span 
                     key={tag.id} 
