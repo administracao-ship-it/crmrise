@@ -7,8 +7,8 @@ import {
   Tags, X, Plus, ChevronLeft, MoreHorizontal, Instagram, MessageSquare, Briefcase, Mail, Info, Check
 } from "lucide-react";
 import { 
-  type Lead, type Stage, type Tag, updateLead, refreshLeadAvatar, 
-  fetchTags, addTagToLead, removeTagFromLead, createTag 
+  type Lead, type Stage, type Tag, type Message, updateLead, refreshLeadAvatar, 
+  fetchTags, addTagToLead, removeTagFromLead, createTag, fetchMessages 
 } from "@/lib/api";
 import toast from "react-hot-toast";
 
@@ -18,7 +18,7 @@ interface ChatDetailsProps {
   onUpdateLead?: (lead: Lead) => void;
 }
 
-type TabType = "Principal" | "Estatísticas" | "Mídia" | "Histórico" | "Products" | "Configurações";
+type TabType = "Principal" | "Mídia" | "Histórico" | "Configurações";
 
 export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsProps) {
   const [editedLead, setEditedLead] = useState<Partial<Lead>>({});
@@ -29,6 +29,8 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#3b82f6");
   const [activeTab, setActiveTab] = useState<TabType>("Principal");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loadingMedia, setLoadingMedia] = useState(false);
   const tagSelectorRef = useRef<HTMLDivElement>(null);
 
   // Virtual fields state for UI completeness
@@ -59,17 +61,26 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
     if (lead) {
       if (editedLead.id !== lead.id) {
         setEditedLead(lead);
+        setMessages([]); // Clear messages when lead changes
       } else {
-        // If it's the same lead, just merge the fields that might have changed from outside (like tags)
-        // while keeping the rest of the local state
         setEditedLead(prev => ({ 
           ...prev, 
           ...lead,
-          tags: lead.tags // Ensure tags from prop are respected if they changed
+          tags: lead.tags
         }));
       }
     }
   }, [lead, lead?.id]);
+
+  useEffect(() => {
+    if (activeTab === "Mídia" && lead && messages.length === 0) {
+      setLoadingMedia(true);
+      fetchMessages(lead.id)
+        .then(setMessages)
+        .catch(console.error)
+        .finally(() => setLoadingMedia(false));
+    }
+  }, [activeTab, lead?.id]);
 
   useEffect(() => {
     fetchTags().then(setAllTags).catch(console.error);
@@ -387,7 +398,7 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
 
       {/* Tabs */}
       <div className="wa-details-tabs">
-        {(["Principal", "Estatísticas", "Mídia", "Histórico", "Products", "Configurações"] as TabType[]).map(tab => (
+        {(["Principal", "Mídia", "Histórico", "Configurações"] as TabType[]).map(tab => (
           <button 
             key={tab} 
             className={`wa-details-tab-btn ${activeTab === tab ? 'active' : ''}`}
@@ -470,8 +481,33 @@ export default function ChatDetails({ lead, stages, onUpdateLead }: ChatDetailsP
         )}
 
         {activeTab === "Mídia" && (
-            <div className="p-4 text-center opacity-50">
-                <p>Nenhuma mídia encontrada</p>
+            <div className="p-4">
+                {loadingMedia ? (
+                  <div className="flex justify-center py-8">
+                    <RefreshCw className="animate-spin opacity-30" size={24} />
+                  </div>
+                ) : messages.filter(m => m.type === 'image' && m.mediaUrl).length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {messages.filter(m => m.type === 'image' && m.mediaUrl).map(m => (
+                      <div 
+                        key={m.id} 
+                        className="aspect-square bg-black/20 rounded-md overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border border-white/5"
+                        onClick={() => m.mediaUrl && window.open(m.mediaUrl, '_blank')}
+                      >
+                        <img 
+                          src={m.mediaUrl} 
+                          alt="Mídia" 
+                          className="w-full h-full object-cover" 
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 opacity-40">
+                    <p className="text-sm">Nenhuma imagem encontrada nesta conversa</p>
+                  </div>
+                )}
             </div>
         )}
 
