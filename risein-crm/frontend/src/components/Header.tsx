@@ -167,7 +167,10 @@ export default function Header({
                 <div className="header-search-container" ref={filterRef}>
                     <div 
                         className={`header-search ${showFilters ? 'active' : ''} ${hasActiveFilters ? 'has-filters' : ''}`}
-                        onClick={() => setShowFilters(!showFilters)}
+                        onClick={(e) => {
+                            console.log("Search container clicked, current showFilters:", showFilters);
+                            setShowFilters(!showFilters);
+                        }}
                     >
                         <Search size={14} />
                         <input
@@ -175,8 +178,10 @@ export default function Header({
                             placeholder="Busca e filtro"
                             value={searchQuery}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            onClick={(e) => e.stopPropagation()}
-                            onFocus={() => setShowFilters(true)}
+                            onFocus={() => {
+                                console.log("Input focused, showing filters");
+                                setShowFilters(true);
+                            }}
                         />
                         <Filter size={14} className="filter-icon" />
                     </div>

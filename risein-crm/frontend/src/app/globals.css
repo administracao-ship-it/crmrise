@@ -314,8 +314,7 @@ body {
   left: var(--sidebar-width);
   z-index: 40;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  overflow-x: auto; /* Allow horizontal scroll if squeezed */
-  scrollbar-width: none; /* Hide scrollbar for header */
+  overflow: visible; /* Permitir que o dropdown de filtros apareça */
 }
 
 .header::-webkit-scrollbar {
@@ -5218,6 +5217,7 @@ body {
     top: calc(100% + 8px);
     left: 0;
     width: 320px;
+    z-index: 10000;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 12px;
