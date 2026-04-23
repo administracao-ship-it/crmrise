@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import * as XLSX from 'xlsx';
 import { 
   Users, TrendingUp, DollarSign, Target, 
   BarChart3, Zap, ArrowUpRight, Activity,
@@ -204,7 +205,42 @@ export default function DashboardPage({ stages }: DashboardPageProps) {
             </div>
           </div>
 
-          <button className="db-report-btn">
+          <button 
+            className="db-report-btn"
+            onClick={() => {
+              const allLeads = stages.flatMap(s => s.leads.map(l => ({
+                  ID: l.id.slice(-8).toUpperCase(),
+                  Nome: l.name,
+                  Telefone: l.phone,
+                  Valor: l.value || 0,
+                  Etapa: s.name,
+                  'Ambiente/Título': l.title || '-',
+                  'Data de Criação': new Date(l.createdAt).toLocaleDateString('pt-BR'),
+                  'Última Atualização': new Date(l.updatedAt).toLocaleDateString('pt-BR'),
+                  Tags: l.tags?.map(t => t.name).join(', ') || '-'
+              })));
+
+              if (allLeads.length === 0) {
+                alert("Não há leads para exportar");
+                return;
+              }
+
+              const worksheet = XLSX.utils.json_to_sheet(allLeads);
+              const workbook = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
+
+              // Auto-width adjustment
+              const maxWidths = Object.keys(allLeads[0] || {}).map(key => {
+                  const headerLen = key.length;
+                  const dataValues = allLeads.map(l => String(l[key as keyof typeof l] || ""));
+                  const dataLen = dataValues.length > 0 ? Math.max(...dataValues.map(v => v.length)) : 0;
+                  return Math.max(headerLen, dataLen) + 2;
+              });
+              worksheet['!cols'] = maxWidths.map(w => ({ wch: w }));
+
+              XLSX.writeFile(workbook, `Relatorio_Leads_RiseIn_${new Date().toISOString().split('T')[0]}.xlsx`);
+            }}
+          >
             Gerar Relatório Completo
           </button>
         </div>

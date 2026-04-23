@@ -121,15 +121,17 @@ export default function Header({
                 )}
             </div>
 
-            <div className="header-search">
-                <Search size={14} />
-                <input
-                    type="text"
-                    placeholder="Busca e filtro"
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                />
-            </div>
+            {activeTab !== "Dashboard" && (
+                <div className="header-search">
+                    <Search size={14} />
+                    <input
+                        type="text"
+                        placeholder="Busca e filtro"
+                        value={searchQuery}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                    />
+                </div>
+            )}
 
             <div className="header-stats">
               <span className="leads-summary">
