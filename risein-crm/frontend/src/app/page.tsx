@@ -549,21 +549,33 @@ export default function HomePage() {
         }
 
         // 2. City Filter
-        if (filters.city && normalize(lead.city || "") !== normalize(filters.city)) return false;
+        if (filters.city) {
+          const leadCity = normalize(lead.city || "");
+          const filterCity = normalize(filters.city);
+          if (!leadCity.includes(filterCity)) return false;
+        }
 
         // 3. Stage Filter
         if (filters.stageId && lead.stageId !== filters.stageId) return false;
 
-        // 4. Tags Filter
+        // 4. Tags Filter (OR logic: match any of the selected tags)
         if (filters.tagIds.length > 0) {
           const leadTagIds = lead.tags?.map(t => t.id) || [];
-          if (!filters.tagIds.every(id => leadTagIds.includes(id))) return false;
+          const hasAnyTag = filters.tagIds.some(id => leadTagIds.includes(id));
+          if (!hasAnyTag) return false;
         }
 
         // 5. Date Filter
         if (filters.startDate || filters.endDate) {
+          // Normalize lead date to midnight for comparison if needed, or just compare
           const leadDate = new Date(lead.createdAt);
-          if (filters.startDate && leadDate < new Date(filters.startDate)) return false;
+          
+          if (filters.startDate) {
+            const start = new Date(filters.startDate);
+            start.setHours(0, 0, 0, 0);
+            if (leadDate < start) return false;
+          }
+
           if (filters.endDate) {
              const end = new Date(filters.endDate);
              end.setHours(23, 59, 59, 999);
