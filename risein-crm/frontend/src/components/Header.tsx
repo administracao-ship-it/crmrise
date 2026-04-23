@@ -208,6 +208,32 @@ export default function Header({
                                         onChange={(e) => onFiltersChange({...filters, endDate: e.target.value})}
                                     />
                                 </div>
+                                <div className="quick-dates">
+                                    <button onClick={() => {
+                                        const end = new Date();
+                                        const start = new Date();
+                                        start.setDate(end.getDate() - 7);
+                                        onFiltersChange({...filters, startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0]});
+                                    }}>7d</button>
+                                    <button onClick={() => {
+                                        const end = new Date();
+                                        const start = new Date();
+                                        start.setDate(end.getDate() - 15);
+                                        onFiltersChange({...filters, startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0]});
+                                    }}>15d</button>
+                                    <button onClick={() => {
+                                        const end = new Date();
+                                        const start = new Date();
+                                        start.setDate(end.getDate() - 30);
+                                        onFiltersChange({...filters, startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0]});
+                                    }}>30d</button>
+                                    <button onClick={() => {
+                                        const end = new Date();
+                                        const start = new Date();
+                                        start.setDate(end.getDate() - 60);
+                                        onFiltersChange({...filters, startDate: start.toISOString().split('T')[0], endDate: end.toISOString().split('T')[0]});
+                                    }}>60d</button>
+                                </div>
                             </div>
 
                             <div className="filter-section">
