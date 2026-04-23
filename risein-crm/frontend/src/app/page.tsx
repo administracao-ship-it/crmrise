@@ -576,6 +576,7 @@ export default function HomePage() {
         onLogout={handleLogout}
         isAiActive={isAiActive}
         onAiToggle={handleAiToggle}
+        activeTab={activeTab}
       />
 
       <main className="main-content">

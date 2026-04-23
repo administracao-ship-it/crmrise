@@ -18,6 +18,7 @@ interface HeaderProps {
     onLogout: () => void;
     isAiActive: boolean;
     onAiToggle: () => void;
+    activeTab: string;
 }
 
 export default function Header({
@@ -35,6 +36,7 @@ export default function Header({
     onLogout,
     isAiActive,
     onAiToggle,
+    activeTab,
 }: HeaderProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(funnelName);
@@ -101,20 +103,22 @@ export default function Header({
                         </button>
                     </div>
                 )}
-                <div className="view-toggle">
-                  <button 
-                    className={viewMode === 'list' ? 'active' : ''} 
-                    onClick={() => onViewChange('list')}
-                  >
-                    Leads ativos
-                  </button>
-                  <button 
-                    className={viewMode === 'kanban' ? 'active' : ''} 
-                    onClick={() => onViewChange('kanban')}
-                  >
-                    Kanban
-                  </button>
-                </div>
+                {activeTab === "Leads" && (
+                    <div className="view-toggle">
+                        <button 
+                            className={viewMode === 'list' ? 'active' : ''} 
+                            onClick={() => onViewChange('list')}
+                        >
+                            Leads ativos
+                        </button>
+                        <button 
+                            className={viewMode === 'kanban' ? 'active' : ''} 
+                            onClick={() => onViewChange('kanban')}
+                        >
+                            Kanban
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="header-search">
