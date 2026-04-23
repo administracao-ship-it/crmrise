@@ -40,7 +40,9 @@ import {
   disconnectWhatsApp as apiDisconnectWhatsApp,
   resetWhatsApp as apiResetWhatsApp,
   fetchConfig,
-  updateConfig 
+  updateConfig,
+  fetchTags,
+  type Tag
 } from "@/lib/api";
 import { getSocket } from "@/lib/socket";
 import type { Stage, Lead, Message } from "@/lib/api";
@@ -69,6 +71,14 @@ export default function HomePage() {
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [defaultStageId, setDefaultStageId] = useState<string | null>(null);
   const [editingStage, setEditingStage] = useState<{ id: string, name: string } | null>(null);
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    tagIds: [] as string[],
+    city: "",
+    stageId: ""
+  });
+  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [editLeadValue, setEditLeadValue] = useState("");
   const [editStageValue, setEditStageValue] = useState("");
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -130,6 +140,7 @@ export default function HomePage() {
   useEffect(() => {
     loadData();
     syncWhatsAppStatus();
+    fetchTags().then(setAllTags).catch(console.error);
   }, [loadData, syncWhatsAppStatus]);
 
   const handleTabChange = (tab: string) => {
@@ -513,8 +524,7 @@ export default function HomePage() {
     }
 
     const query = searchQuery.toLowerCase().trim();
-    if (!query) return baseStages;
-
+    
     // Helper to normalize string for comparison
     const normalize = (str: string) => str?.toLowerCase()
       .normalize("NFD")
@@ -526,19 +536,45 @@ export default function HomePage() {
     return baseStages.map((stage) => ({
       ...stage,
       leads: stage.leads.filter((lead) => {
-        const nameMatch = normalize(lead.name).includes(normalizedQuery);
-        const titleMatch = normalize(lead.title || "").includes(normalizedQuery);
-        const cityMatch = normalize(lead.city || "").includes(normalizedQuery);
-        
-        // Phone match: check original string AND numeric-only comparison
-        const phoneStr = lead.phone || "";
-        const phoneMatch = phoneStr.includes(query) || 
-                          (numericQuery && phoneStr.replace(/\D/g, "").includes(numericQuery));
+        // 1. Text Search
+        if (query) {
+          const nameMatch = normalize(lead.name).includes(normalizedQuery);
+          const titleMatch = normalize(lead.title || "").includes(normalizedQuery);
+          const cityMatch = normalize(lead.city || "").includes(normalizedQuery);
+          const phoneStr = lead.phone || "";
+          const phoneMatch = phoneStr.includes(query) || 
+                            (numericQuery && phoneStr.replace(/\D/g, "").includes(numericQuery));
+          
+          if (!nameMatch && !titleMatch && !cityMatch && !phoneMatch) return false;
+        }
 
-        return nameMatch || titleMatch || cityMatch || phoneMatch;
+        // 2. City Filter
+        if (filters.city && normalize(lead.city || "") !== normalize(filters.city)) return false;
+
+        // 3. Stage Filter
+        if (filters.stageId && lead.stageId !== filters.stageId) return false;
+
+        // 4. Tags Filter
+        if (filters.tagIds.length > 0) {
+          const leadTagIds = lead.tags?.map(t => t.id) || [];
+          if (!filters.tagIds.every(id => leadTagIds.includes(id))) return false;
+        }
+
+        // 5. Date Filter
+        if (filters.startDate || filters.endDate) {
+          const leadDate = new Date(lead.createdAt);
+          if (filters.startDate && leadDate < new Date(filters.startDate)) return false;
+          if (filters.endDate) {
+             const end = new Date(filters.endDate);
+             end.setHours(23, 59, 59, 999);
+             if (leadDate > end) return false;
+          }
+        }
+
+        return true;
       }),
     }));
-  }, [stages, searchQuery, activeTab]);
+  }, [stages, searchQuery, activeTab, filters]);
 
   if (loading) {
     return (
@@ -577,6 +613,10 @@ export default function HomePage() {
         isAiActive={isAiActive}
         onAiToggle={handleAiToggle}
         activeTab={activeTab}
+        filters={filters}
+        onFiltersChange={setFilters}
+        allTags={allTags}
+        stages={stages}
       />
 
       <main className="main-content">

@@ -1,7 +1,16 @@
 "use client";
 
-import { Search, Plus, Wifi, WifiOff, Pencil, Check, X, LogOut, Bot, BotOff } from "lucide-react";
+import { Search, Plus, Wifi, WifiOff, Pencil, Check, X, LogOut, Bot, BotOff, Filter, Calendar, Tag as TagIcon, MapPin, Layers } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import type { Tag, Stage } from "@/lib/api";
+
+interface FilterState {
+    startDate: string;
+    endDate: string;
+    tagIds: string[];
+    city: string;
+    stageId: string;
+}
 
 interface HeaderProps {
     totalLeads: number;
@@ -19,6 +28,10 @@ interface HeaderProps {
     isAiActive: boolean;
     onAiToggle: () => void;
     activeTab: string;
+    filters: FilterState;
+    onFiltersChange: (f: FilterState) => void;
+    allTags: Tag[];
+    stages: Stage[];
 }
 
 export default function Header({
@@ -37,10 +50,16 @@ export default function Header({
     isAiActive,
     onAiToggle,
     activeTab,
+    filters,
+    onFiltersChange,
+    allTags,
+    stages,
 }: HeaderProps) {
     const [isEditing, setIsEditing] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
     const [editValue, setEditValue] = useState(funnelName);
     const inputRef = useRef<HTMLInputElement>(null);
+    const filterRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         setEditValue(funnelName);
@@ -69,6 +88,29 @@ export default function Header({
         if (e.key === "Enter") handleSave();
         if (e.key === "Escape") handleCancel();
     };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+                setShowFilters(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const clearFilters = () => {
+        onFiltersChange({
+            startDate: "",
+            endDate: "",
+            tagIds: [],
+            city: "",
+            stageId: ""
+        });
+        onSearchChange("");
+    };
+
+    const hasActiveFilters = filters.startDate || filters.endDate || filters.tagIds.length > 0 || filters.city || filters.stageId || searchQuery;
 
     return (
         <header className="header">
@@ -122,14 +164,93 @@ export default function Header({
             </div>
 
             {activeTab !== "Dashboard" && (
-                <div className="header-search">
-                    <Search size={14} />
-                    <input
-                        type="text"
-                        placeholder="Busca e filtro"
-                        value={searchQuery}
-                        onChange={(e) => onSearchChange(e.target.value)}
-                    />
+                <div className="header-search-container" ref={filterRef}>
+                    <div 
+                        className={`header-search ${showFilters ? 'active' : ''} ${hasActiveFilters ? 'has-filters' : ''}`}
+                        onClick={() => setShowFilters(!showFilters)}
+                    >
+                        <Search size={14} />
+                        <input
+                            type="text"
+                            placeholder="Busca e filtro"
+                            value={searchQuery}
+                            onChange={(e) => onSearchChange(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onFocus={() => setShowFilters(true)}
+                        />
+                        <Filter size={14} className="filter-icon" />
+                    </div>
+
+                    {showFilters && (
+                        <div className="filter-dropdown">
+                            <div className="filter-header">
+                                <h3>Filtros Avançados</h3>
+                                <button onClick={clearFilters} className="btn-clear-filters">Limpar</button>
+                            </div>
+
+                            <div className="filter-section">
+                                <label><Calendar size={12} /> Período</label>
+                                <div className="filter-row">
+                                    <input 
+                                        type="date" 
+                                        value={filters.startDate} 
+                                        onChange={(e) => onFiltersChange({...filters, startDate: e.target.value})}
+                                    />
+                                    <span>até</span>
+                                    <input 
+                                        type="date" 
+                                        value={filters.endDate} 
+                                        onChange={(e) => onFiltersChange({...filters, endDate: e.target.value})}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="filter-section">
+                                <label><TagIcon size={12} /> Tags</label>
+                                <div className="filter-tags-grid">
+                                    {allTags.map(tag => (
+                                        <button
+                                            key={tag.id}
+                                            className={`filter-tag-pill ${filters.tagIds.includes(tag.id) ? 'active' : ''}`}
+                                            onClick={() => {
+                                                const newTags = filters.tagIds.includes(tag.id)
+                                                    ? filters.tagIds.filter(id => id !== tag.id)
+                                                    : [...filters.tagIds, tag.id];
+                                                onFiltersChange({...filters, tagIds: newTags});
+                                            }}
+                                            style={{ '--tag-color': tag.color } as any}
+                                        >
+                                            {tag.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="filter-row-grid">
+                                <div className="filter-section">
+                                    <label><MapPin size={12} /> Cidade</label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Filtrar por cidade"
+                                        value={filters.city}
+                                        onChange={(e) => onFiltersChange({...filters, city: e.target.value})}
+                                    />
+                                </div>
+                                <div className="filter-section">
+                                    <label><Layers size={12} /> Etapa</label>
+                                    <select 
+                                        value={filters.stageId}
+                                        onChange={(e) => onFiltersChange({...filters, stageId: e.target.value})}
+                                    >
+                                        <option value="">Todas as etapas</option>
+                                        {stages.map(s => (
+                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
