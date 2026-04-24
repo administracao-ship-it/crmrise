@@ -42,19 +42,7 @@
   transition: background 0.3s ease, color 0.3s ease;
 }
 
-:root.light-theme {
-  --bg-primary: #f0f2f5;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f0f2f5;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f5f6f6;
-  --border-color: #e9edef;
-  --text-primary: #111b21;
-  --text-secondary: #3b4a54;
-  --text-muted: #667781;
-  --bg-sent: #dcf8c6;
-  --bg-recv: #ffffff;
-}
+/* Unified Rise Premium Identity */
 
 * {
   box-sizing: border-box;

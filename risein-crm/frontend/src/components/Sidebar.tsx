@@ -46,35 +46,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
-    const [isLight, setIsLight] = useState(false);
     const { user, logout } = useAuth();
-
-    useEffect(() => {
-        const saved = localStorage.getItem("theme");
-        if (saved === "light") {
-            setIsLight(true);
-            document.documentElement.classList.add("light-theme");
-            document.documentElement.classList.remove("dark-theme");
-        } else {
-            setIsLight(false);
-            document.documentElement.classList.remove("light-theme");
-            document.documentElement.classList.add("dark-theme");
-        }
-    }, []);
-
-    const toggleTheme = () => {
-        const newVal = !isLight;
-        setIsLight(newVal);
-        if (newVal) {
-            document.documentElement.classList.add("light-theme");
-            document.documentElement.classList.remove("dark-theme");
-            localStorage.setItem("theme", "light");
-        } else {
-            document.documentElement.classList.remove("light-theme");
-            document.documentElement.classList.add("dark-theme");
-            localStorage.setItem("theme", "dark");
-        }
-    };
 
     const handleLogout = () => {
         logout();
@@ -84,7 +56,7 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         <aside className="sidebar">
             <div className="sidebar-logo">
                 <div className="w-8 h-8 bg-wa-green rounded-full flex items-center justify-center">
-                    <Zap size={18} fill="#00a884" color="#0b141a" />
+                    <Zap size={18} fill="#D4145A" color="#0b141a" />
                 </div>
             </div>
             <nav className="sidebar-nav">
@@ -107,15 +79,6 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                 ))}
             </nav>
             <div className="sidebar-footer">
-                <div
-                    className="sidebar-item"
-                    title={isLight ? "Modo Escuro" : "Modo Claro"}
-                    onClick={toggleTheme}
-                    style={{ color: isLight ? "var(--accent-orange)" : "var(--accent-blue)" }}
-                >
-                    {isLight ? <Moon size={22} /> : <Sun size={22} />}
-                    <span className="sidebar-label">{isLight ? "Modo Escuro" : "Modo Claro"}</span>
-                </div>
                 <div
                     className={`sidebar-item ${activeTab === "Settings" ? "active" : ""}`}
                     title="Configurações"
