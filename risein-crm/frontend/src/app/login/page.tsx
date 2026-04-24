@@ -37,12 +37,12 @@ export default function LoginPage() {
 
                 <form className="login-form" onSubmit={handleLogin}>
                     <div className="input-group-premium">
-                        <label>E-mail</label>
+                        <label>Usuário ou E-mail</label>
                         <div className="input-with-icon">
                             <Mail size={18} />
                             <input 
-                                type="email" 
-                                placeholder="Seu e-mail" 
+                                type="text" 
+                                placeholder="rise ou seu e-mail" 
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required

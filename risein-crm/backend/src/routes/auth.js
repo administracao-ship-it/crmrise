@@ -7,7 +7,12 @@ const { authMiddleware, JWT_SECRET } = require("../middleware/authMiddleware");
 // POST /api/auth/login
 router.post("/login", async (req, res, next) => {
     try {
-        const { email, password } = req.body;
+        let { email, password } = req.body;
+        
+        // Alias for the main admin account
+        if (email === "rise") {
+            email = "admin@rise.com";
+        }
 
         if (!email || !password) {
             return res.status(400).json({ error: "Email and password are required" });
