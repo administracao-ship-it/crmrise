@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { Save, Bot, MessageCircle, Sliders, Tags, Loader2, RefreshCw, Key, Power, Pencil, Trash2, Users, Mail, Shield, UserPlus } from "lucide-react";
 import { fetchTags, createTag, deleteTag, syncAllAvatars, fetchUsers, createUser, updateUser, deleteUser, User } from "@/lib/api";
 import { useAuth } from "./AuthContext";
@@ -227,7 +228,7 @@ export default function SettingsPage({
                                 color: activeSection === "usuarios" ? "var(--text-primary)" : "var(--text-secondary)",
                                 fontWeight: activeSection === "usuarios" ? 600 : 500,
                                 cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.2s",
-                                marginTop: "8px", borderTop: "1px solid var(--border-color)", borderRadius: 0, paddingTop: "16px"
+                                marginTop: "8px", borderTop: "1px solid var(--border-color)", paddingTop: "16px"
                             }}
                         >
                             <Users size={16} /> Usuários e Equipe
