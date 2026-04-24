@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Save, Bot, MessageCircle, Sliders, Tags, Loader2, RefreshCw, Key, Power, Pencil, Trash2, Users, Mail, Shield, UserPlus } from "lucide-react";
-import { fetchTags, createTag, deleteTag, syncAllAvatars, fetchUsers, createUser, updateUser, deleteUser, User } from "@/lib/api";
+import { fetchTags, createTag, deleteTag, updateTag, syncAllAvatars, fetchUsers, createUser, updateUser, deleteUser, User } from "@/lib/api";
 import { useAuth } from "./AuthContext";
 import toast from "react-hot-toast";
 
@@ -38,6 +38,9 @@ export default function SettingsPage({
 
     const [tags, setTags] = useState<any[]>([]);
     const [loadingTags, setLoadingTags] = useState(false);
+    const [newTagName, setNewTagName] = useState("");
+    const [newTagColor, setNewTagColor] = useState("#3b82f6");
+    const [editingTag, setEditingTag] = useState<any>(null);
 
     useEffect(() => {
         setLocalFunnelName(funnelName || "");
@@ -77,6 +80,53 @@ export default function SettingsPage({
             toast.error("Erro ao carregar usuários");
         } finally {
             setLoadingUsers(false);
+        }
+    };
+
+    const loadTags = async () => {
+        try {
+            setLoadingTags(true);
+            const data = await fetchTags();
+            setTags(data);
+        } catch (e) {
+            toast.error("Erro ao carregar etiquetas");
+        } finally {
+            setLoadingTags(false);
+        }
+    };
+
+    const handleCreateTag = async () => {
+        if (!newTagName.trim()) return;
+        try {
+            await createTag({ name: newTagName.trim(), color: newTagColor });
+            setNewTagName("");
+            loadTags();
+            toast.success("Etiqueta criada!");
+        } catch (e) {
+            toast.error("Erro ao criar etiqueta");
+        }
+    };
+
+    const handleDeleteTag = async (id: string) => {
+        if (!confirm("Excluir esta etiqueta?")) return;
+        try {
+            await deleteTag(id);
+            loadTags();
+            toast.success("Etiqueta excluída");
+        } catch (e) {
+            toast.error("Erro ao excluir etiqueta");
+        }
+    };
+
+    const handleUpdateTag = async () => {
+        if (!editingTag || !editingTag.name.trim()) return;
+        try {
+            await updateTag(editingTag.id, { name: editingTag.name.trim(), color: editingTag.color });
+            setEditingTag(null);
+            loadTags();
+            toast.success("Etiqueta atualizada!");
+        } catch (e) {
+            toast.error("Erro ao atualizar etiqueta");
         }
     };
 
@@ -493,7 +543,7 @@ export default function SettingsPage({
                         <div className="fade-in">
                             <h3 style={{ fontSize: "1.5rem", marginBottom: "8px" }}>Kanban & Etiquetas</h3>
                             <p style={{ color: "var(--text-secondary)", marginBottom: "32px", fontSize: "0.9rem" }}>
-                                Visualize os estágios do seu processo de vendas e etiquetas do sistema.
+                                Gerencie os estágios do seu funil e as etiquetas de identificação de leads.
                             </p>
 
                             <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
@@ -507,40 +557,132 @@ export default function SettingsPage({
                                         {stages.map((stg: Record<string, any>) => (
                                             <div key={stg.id} style={{ display: "flex", justifyContent: "space-between", padding: "12px", background: "var(--bg-primary)", borderRadius: "6px", border: "1px solid var(--border-color)" }}>
                                                 <span style={{ fontSize: "0.9rem", fontWeight: 500 }}>{stg.name}</span>
-                                                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)" }}>ID: {stg.id}</span>
+                                                <div style={{ display: "flex", gap: "4px" }}>
+                                                    <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: "var(--accent-blue)" }} />
+                                                    <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: "var(--accent-blue)", opacity: 0.5 }} />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
-                                    <div style={{ marginTop: "16px", fontSize: "0.8rem", color: "var(--text-muted)", textAlign: "center" }}>
-                                        A edição de estágios é feita diretamente no quadro Kanban ao clicar no ícone de lápis.
+                                    <div style={{ marginTop: "16px", fontSize: "0.8rem", color: "var(--text-muted)", textAlign: "center", padding: "10px", background: "var(--bg-hover)", borderRadius: "8px" }}>
+                                        A edição de estágios é feita diretamente no quadro Kanban ao clicar no ícone de lápis ✏️.
                                     </div>
                                 </div>
 
-                                {/* Tabela Etiquetas (se for implementar tags depois) */}
-                                <div style={{ flex: 1, background: "var(--bg-card)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                                {/* Gestão de Etiquetas */}
+                                <div style={{ flex: 1.2, background: "var(--bg-card)", padding: "20px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
                                         <h4 style={{ fontSize: "1.05rem", fontWeight: 600, margin: 0 }}>Etiquetas (Tags)</h4>
-                                        <span style={{ fontSize: "0.8rem", background: "var(--bg-hover)", padding: "4px 8px", borderRadius: "4px" }}>{tags.length} labels</span>
+                                        <span style={{ fontSize: "0.8rem", background: "var(--bg-hover)", padding: "4px 8px", borderRadius: "4px" }}>{tags.length} etiquetas</span>
                                     </div>
+
+                                    {/* Formulário Nova Tag */}
+                                    <div style={{ background: "var(--bg-primary)", padding: "16px", borderRadius: "10px", border: "1px solid var(--border-color)", marginBottom: "20px" }}>
+                                        <p style={{ fontSize: "0.85rem", fontWeight: 600, marginBottom: "12px", color: "var(--text-secondary)" }}>CRIAR NOVA ETIQUETA</p>
+                                        <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
+                                            <div style={{ flex: 1 }}>
+                                                <input 
+                                                    type="text" 
+                                                    value={newTagName}
+                                                    onChange={(e) => setNewTagName(e.target.value)}
+                                                    placeholder="Nome da etiqueta..."
+                                                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", fontSize: "0.9rem" }}
+                                                />
+                                            </div>
+                                            <div style={{ position: "relative" }}>
+                                                <input 
+                                                    type="color" 
+                                                    value={newTagColor}
+                                                    onChange={(e) => setNewTagColor(e.target.value)}
+                                                    style={{ width: "40px", height: "40px", padding: "0", border: "none", borderRadius: "8px", cursor: "pointer", background: "none" }}
+                                                />
+                                            </div>
+                                            <button 
+                                                onClick={handleCreateTag}
+                                                className="btn-primary"
+                                                style={{ height: "40px", padding: "0 16px", borderRadius: "8px" }}
+                                            >
+                                                <Plus size={18} />
+                                            </button>
+                                        </div>
+                                        <div style={{ display: "flex", gap: "6px", marginTop: "12px" }}>
+                                            {["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#6366f1"].map(c => (
+                                                <button 
+                                                    key={c}
+                                                    onClick={() => setNewTagColor(c)}
+                                                    style={{ width: "20px", height: "20px", borderRadius: "50%", background: c, border: newTagColor === c ? "2px solid white" : "none", cursor: "pointer", padding: 0 }}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Lista de Tags */}
                                     {loadingTags ? (
-                                        <div style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)" }}>
-                                            <Loader2 size={20} className="animate-spin" />
+                                        <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                                            <Loader2 size={24} className="animate-spin" />
                                         </div>
                                     ) : (
-                                        tags.length > 0 ? (
-                                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                                                {tags.map((tag: any) => (
-                                                    <div key={tag.id} style={{ display: "flex", alignItems: "center", padding: "8px 12px", background: "var(--bg-primary)", borderRadius: "6px", border: "1px solid var(--border-color)" }}>
-                                                        <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: tag.color || "var(--accent-blue)", marginRight: "12px" }} />
-                                                        <span style={{ fontSize: "0.9rem", fontWeight: 500 }}>{tag.name}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                                                Nenhuma etiqueta configurada. As etiquetas ajudam a categorizar seus leads.
-                                            </div>
-                                        )
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "400px", overflowY: "auto", paddingRight: "4px" }}>
+                                            {tags.length > 0 ? tags.map((tag: any) => (
+                                                <div key={tag.id} style={{ 
+                                                    display: "flex", 
+                                                    alignItems: "center", 
+                                                    justifyContent: "space-between",
+                                                    padding: "10px 14px", 
+                                                    background: "var(--bg-primary)", 
+                                                    borderRadius: "8px", 
+                                                    border: "1px solid var(--border-color)",
+                                                    transition: "all 0.2s"
+                                                }}>
+                                                    {editingTag?.id === tag.id ? (
+                                                        <div style={{ display: "flex", gap: "10px", width: "100%", alignItems: "center" }}>
+                                                            <input 
+                                                                type="color" 
+                                                                value={editingTag.color}
+                                                                onChange={(e) => setEditingTag({...editingTag, color: e.target.value})}
+                                                                style={{ width: "24px", height: "24px", padding: "0", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                                            />
+                                                            <input 
+                                                                type="text" 
+                                                                value={editingTag.name}
+                                                                onChange={(e) => setEditingTag({...editingTag, name: e.target.value})}
+                                                                style={{ flex: 1, padding: "4px 8px", borderRadius: "4px", border: "1px solid var(--accent-blue)", background: "var(--bg-input)", color: "var(--text-primary)", fontSize: "0.85rem" }}
+                                                                autoFocus
+                                                            />
+                                                            <button onClick={handleUpdateTag} style={{ background: "transparent", border: "none", color: "#10b981", cursor: "pointer" }}><CheckCircle size={18} /></button>
+                                                            <button onClick={() => setEditingTag(null)} style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer" }}><XCircle size={18} /></button>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div style={{ display: "flex", alignItems: "center" }}>
+                                                                <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: tag.color || "#3b82f6", marginRight: "12px" }} />
+                                                                <span style={{ fontSize: "0.9rem", fontWeight: 500 }}>{tag.name}</span>
+                                                            </div>
+                                                            <div style={{ display: "flex", gap: "8px" }}>
+                                                                <button 
+                                                                    onClick={() => setEditingTag(tag)}
+                                                                    style={{ background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer", padding: "4px" }}
+                                                                    title="Editar"
+                                                                >
+                                                                    <Pencil size={14} />
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleDeleteTag(tag.id)}
+                                                                    style={{ background: "transparent", border: "none", color: "#ef4444", opacity: 0.7, cursor: "pointer", padding: "4px" }}
+                                                                    title="Excluir"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )) : (
+                                                <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--text-muted)", fontSize: "0.9rem", border: "2px dashed var(--border-color)", borderRadius: "10px" }}>
+                                                    Nenhuma etiqueta configurada.
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </div>

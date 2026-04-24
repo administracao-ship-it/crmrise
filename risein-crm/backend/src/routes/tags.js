@@ -38,4 +38,18 @@ router.delete("/:id", async (req, res, next) => {
     }
 });
 
+// UPDATE tag
+router.patch("/:id", async (req, res, next) => {
+    try {
+        const { name, color } = req.body;
+        const tag = await req.prisma.tag.update({
+            where: { id: req.params.id },
+            data: { name, color }
+        });
+        res.json(tag);
+    } catch (err) {
+        next(err);
+    }
+});
+
 module.exports = router;

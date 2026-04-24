@@ -301,6 +301,16 @@ export async function deleteTag(id: string): Promise<void> {
     if (!res.ok) throw new Error("Failed to delete tag");
 }
 
+export async function updateTag(id: string, data: { name?: string; color?: string }): Promise<Tag> {
+    const res = await authenticatedFetch(`${API_URL}/api/tags/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update tag");
+    return res.json();
+}
+
 export async function addTagToLead(leadId: string, tagId: string): Promise<Lead> {
     const res = await authenticatedFetch(`${API_URL}/api/leads/${leadId}`, {
         method: "PATCH",
