@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { isAdmin } = require("../middlewares/authMiddleware");
+const { isAdmin } = require("../middleware/authMiddleware");
 
 // GET /api/config
 router.get("/", async (req, res, next) => {
