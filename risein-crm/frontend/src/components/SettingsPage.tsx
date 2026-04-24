@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Save, Bot, MessageCircle, Sliders, Tags, Loader2, RefreshCw, Key, Power, Pencil, Trash2, Users, Mail, Shield, UserPlus } from "lucide-react";
+import { Save, Bot, MessageCircle, Sliders, Tags, Loader2, RefreshCw, Key, Power, Pencil, Trash2, Users, Mail, Shield, UserPlus, Plus, Check, X, CheckCircle, XCircle } from "lucide-react";
 import { fetchTags, createTag, deleteTag, updateTag, syncAllAvatars, fetchUsers, createUser, updateUser, deleteUser, User } from "@/lib/api";
 import { useAuth } from "./AuthContext";
 import toast from "react-hot-toast";
@@ -160,17 +160,6 @@ export default function SettingsPage({
         }
     };
 
-    const loadTags = async () => {
-        try {
-            setLoadingTags(true);
-            const data = await fetchTags();
-            setTags(data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoadingTags(false);
-        }
-    };
 
     const handleSaveGeneral = () => {
         onUpdateFunnelName(localFunnelName);
