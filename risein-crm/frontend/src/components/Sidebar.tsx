@@ -47,6 +47,27 @@ interface SidebarProps {
 
 export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     const { user, logout } = useAuth();
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    useEffect(() => {
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+            setIsDarkMode(true);
+            document.documentElement.classList.add("dark-theme");
+        }
+    }, []);
+
+    const toggleTheme = () => {
+        const newTheme = !isDarkMode;
+        setIsDarkMode(newTheme);
+        if (newTheme) {
+            document.documentElement.classList.add("dark-theme");
+            localStorage.setItem("theme", "dark");
+        } else {
+            document.documentElement.classList.remove("dark-theme");
+            localStorage.setItem("theme", "light");
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -79,6 +100,14 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                 ))}
             </nav>
             <div className="sidebar-footer">
+                <div
+                    className="sidebar-item"
+                    title={isDarkMode ? "Modo Claro" : "Modo Escuro"}
+                    onClick={toggleTheme}
+                >
+                    {isDarkMode ? <Sun size={22} /> : <Moon size={22} />}
+                    <span className="sidebar-label">{isDarkMode ? "Modo Claro" : "Modo Escuro"}</span>
+                </div>
                 <div
                     className={`sidebar-item ${activeTab === "Settings" ? "active" : ""}`}
                     title="Configurações"
