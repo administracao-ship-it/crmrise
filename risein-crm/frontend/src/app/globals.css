@@ -1,44 +1,50 @@
 @import "tailwindcss";
 
 :root {
-  /* Rise Premium Identity */
-  --bg-primary: #0a082b; /* Fundo ultra profundo */
-  --bg-secondary: #1B1464; /* Azul Rise - Sidebar e Base */
-  --bg-tertiary: #231d75; /* Azul mais claro para Header */
-  --bg-card: #1B1464;
-  --bg-card-hover: #292185;
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-active: #D4145A; /* Rosa Rise */
-  
-  --text-primary: #F1F1F1; /* Branco Rise */
-  --text-secondary: #a9a6cf;
-  --text-muted: #6e6b9c;
-  
-  --accent-rise: #D4145A; /* Rosa Rise */
+  /* ===== RISE CLEAN THEME ===== */
+  /* Backgrounds - Clean & Light */
+  --bg-primary: #F1F1F1;         /* Fundo principal clean */
+  --bg-secondary: #1B1464;       /* Sidebar - Azul Rise */
+  --bg-tertiary: #ffffff;        /* Header - Branco puro */
+  --bg-card: #ffffff;            /* Cards - Branco puro */
+  --bg-card-hover: #f5f4ff;      /* Card hover - Azul suave */
+  --bg-hover: #f0efff;
+  --border-color: rgba(27, 20, 100, 0.1);   /* Borda suave azulada */
+  --border-active: #D4145A;      /* Borda ativa - Rosa Rise */
+
+  /* Text */
+  --text-primary: #1a1a2e;       /* Texto principal - escuro */
+  --text-secondary: #4a4a7a;     /* Texto secundário - azul escuro suave */
+  --text-muted: #8888aa;         /* Texto suave */
+
+  /* Rise Brand Colors */
+  --accent-rise: #D4145A;        /* Rosa Rise - CTA principal */
+  --accent-navy: #1B1464;        /* Azul Rise - Sidebar/Destaques */
   --accent-blue: #34b7f1;
   --accent-green: #10b981;
   --accent-orange: #f59e0b;
-  --accent-red: #ea0038;
-  
-  /* WhatsApp Theme (Reserved for Chat) */
+  --accent-red: #ef4444;
+
+  /* WhatsApp Theme (Reserved for Chat ONLY) */
   --wa-bg: #0b141a;
   --wa-bg-secondary: #111b21;
   --bg-sent: #005c4b;
   --bg-recv: #202c33;
   --accent-wa: #00a884;
-  
-  /* Premiumwa Tokens */
-  --glass-bg: rgba(212, 20, 90, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --premium-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  
+
+  /* Shadows & Effects */
+  --glass-bg: rgba(212, 20, 90, 0.04);
+  --glass-border: rgba(27, 20, 100, 0.08);
+  --premium-shadow: 0 4px 20px rgba(27, 20, 100, 0.12);
+  --card-shadow: 0 2px 8px rgba(27, 20, 100, 0.08);
+
   --sidebar-width: 68px;
   --header-height: 59px;
   --radius-wa: 12px;
-  
+
   --btn-gradient-rise: linear-gradient(135deg, #D4145A 0%, #a30e44 100%);
   --btn-shine: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
-  
+
   transition: background 0.3s ease, color 0.3s ease;
 }
 
@@ -81,8 +87,8 @@ body {
 /* Sidebar WhatsApp Style */
 .sidebar {
   width: var(--sidebar-width);
-  background: var(--bg-secondary);
-  border-right: 1px solid var(--border-color);
+  background: var(--bg-secondary); /* Azul Rise #1B1464 */
+  border-right: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -92,7 +98,7 @@ body {
   position: fixed;
   left: 0;
   top: 0;
-  box-shadow: 4px 0 24px rgba(0,0,0,0.25);
+  box-shadow: 4px 0 20px rgba(27, 20, 100, 0.2);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -240,7 +246,7 @@ body {
   width: 100%;
   height: 44px;
   border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.65); /* Branco levemente opaco sobre azul */
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -249,8 +255,8 @@ body {
 }
 
 .sidebar-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .sidebar-item.active {
@@ -291,11 +297,11 @@ body {
   margin-left: 12px;
 }
 
-/* Header WhatsApp Style */
+/* Header Rise Clean */
 .header {
   height: var(--header-height);
-  background: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border-color);
+  background: #ffffff;
+  border-bottom: 1px solid rgba(27, 20, 100, 0.08);
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -305,8 +311,8 @@ body {
   right: 0;
   left: var(--sidebar-width);
   z-index: 40;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  overflow: visible; /* Permitir que o dropdown de filtros apareça */
+  box-shadow: 0 1px 6px rgba(27, 20, 100, 0.08);
+  overflow: visible;
 }
 
 .header::-webkit-scrollbar {
@@ -390,19 +396,18 @@ body {
   white-space: nowrap;
 }
 
-/* Lead Card WhatsApp Style */
-/* Lead Card Component - Compact & Optimized */
+/* Lead Card - Rise Clean Style */
 .lead-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  background: #ffffff;
+  border: 1px solid rgba(27, 20, 100, 0.08);
+  border-radius: 10px;
   padding: 6px 10px 10px 10px;
   cursor: grab;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 4px rgba(27, 20, 100, 0.07);
 }
 
 .lead-card:hover {
@@ -417,9 +422,9 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  width: 2px;
+  width: 3px;
   height: 100%;
-  background: var(--accent-blue);
+  background: var(--accent-rise); /* Rosa Rise */
   opacity: 0;
   transition: opacity 0.2s;
 }
