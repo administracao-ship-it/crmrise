@@ -26,6 +26,7 @@ import {
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
 
 const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/" },
@@ -46,6 +47,7 @@ interface SidebarProps {
 
 export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     const [isLight, setIsLight] = useState(false);
+    const { user, logout } = useAuth();
 
     useEffect(() => {
         const saved = localStorage.getItem("theme");
@@ -75,8 +77,7 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     };
 
     const handleLogout = () => {
-        document.cookie = "auth-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-        window.location.href = "/login";
+        logout();
     };
 
     return (
@@ -127,11 +128,49 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                     className="sidebar-item"
                     title="Sair"
                     onClick={handleLogout}
-                    style={{ color: "#ea0038" }}
+                    style={{ color: "#ef4444" }}
                 >
                     <LogOut size={22} />
                     <span className="sidebar-label">Sair</span>
                 </div>
+
+                {user && (
+                    <div style={{ 
+                        marginTop: "12px", 
+                        padding: "12px 0", 
+                        borderTop: "1px solid var(--border-color)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "4px"
+                    }}>
+                        <div style={{ 
+                            width: "32px", 
+                            height: "32px", 
+                            borderRadius: "50%", 
+                            background: "var(--accent-blue)", 
+                            display: "flex", 
+                            alignItems: "center", 
+                            justifyContent: "center",
+                            fontSize: "0.8rem",
+                            fontWeight: 700,
+                            color: "white"
+                        }}>
+                            {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span style={{ 
+                            fontSize: "0.65rem", 
+                            color: "var(--text-secondary)", 
+                            fontWeight: 600,
+                            maxWidth: "100%",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap"
+                        }}>
+                            {user.role}
+                        </span>
+                    </div>
+                )}
             </div>
         </aside>
     );

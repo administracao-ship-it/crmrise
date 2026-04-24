@@ -1,27 +1,27 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, User, ArrowRight, ShieldCheck } from "lucide-react";
+import { Lock, Mail, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
+import { login as apiLogin } from "@/lib/api";
+import { useAuth } from "@/components/AuthContext";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
-    const [login, setLogin] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const { login } = useAuth();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
         setLoading(true);
 
-        // Simulação de login (rise / leadqualificado)
-        if (login === "rise" && password === "leadqualificado") {
-            // Em um app real, aqui faríamos uma chamada para uma API Route que seta o cookie
-            // Para simplicidade e eficácia imediata neste ambiente:
-            document.cookie = "auth-session=active; path=/; max-age=86400; SameSite=Strict";
-            window.location.href = "/";
-        } else {
-            setError("Credenciais inválidas. Tente novamente.");
+        try {
+            const { token, user } = await apiLogin(email, password);
+            login(token, user);
+            toast.success(`Bem-vindo, ${user.name}!`);
+        } catch (err: any) {
+            toast.error(err.message || "Erro ao fazer login. Verifique suas credenciais.");
             setLoading(false);
         }
     };
@@ -37,14 +37,14 @@ export default function LoginPage() {
 
                 <form className="login-form" onSubmit={handleLogin}>
                     <div className="input-group-premium">
-                        <label>Login</label>
+                        <label>E-mail</label>
                         <div className="input-with-icon">
-                            <User size={18} />
+                            <Mail size={18} />
                             <input 
-                                type="text" 
-                                placeholder="Seu usuário" 
-                                value={login}
-                                onChange={(e) => setLogin(e.target.value)}
+                                type="email" 
+                                placeholder="Seu e-mail" 
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
                         </div>
@@ -64,11 +64,9 @@ export default function LoginPage() {
                         </div>
                     </div>
 
-                    {error && <div className="login-error">{error}</div>}
-
                     <button type="submit" className="btn-primary login-submit" disabled={loading}>
-                        {loading ? "AUTHENTICATING..." : "ACESSAR CRM"}
-                        <ArrowRight size={16} />
+                        {loading ? <Loader2 size={18} className="animate-spin" /> : "ACESSAR CRM"}
+                        {!loading && <ArrowRight size={16} />}
                     </button>
                 </form>
 

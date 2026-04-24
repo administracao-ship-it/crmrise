@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Save, Bot, MessageCircle, Sliders, Tags, Loader2, RefreshCw, Key, Power, Pencil, Trash2 } from "lucide-react";
-import { fetchTags, createTag, deleteTag, syncAllAvatars } from "@/lib/api";
+import { Save, Bot, MessageCircle, Sliders, Tags, Loader2, RefreshCw, Key, Power, Pencil, Trash2, Users, Mail, Shield, UserPlus } from "lucide-react";
+import { fetchTags, createTag, deleteTag, syncAllAvatars, fetchUsers, createUser, updateUser, deleteUser, User } from "@/lib/api";
+import { useAuth } from "./AuthContext";
 import toast from "react-hot-toast";
 
 export default function SettingsPage({
@@ -17,6 +17,14 @@ export default function SettingsPage({
     ...props
 }: any) {
     const [activeSection, setActiveSection] = useState("integrações");
+    const { user: currentUser, isAdmin } = useAuth();
+    
+    // User management states
+    const [users, setUsers] = useState<User[]>([]);
+    const [loadingUsers, setLoadingUsers] = useState(false);
+    const [showUserModal, setShowUserModal] = useState(false);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
+    const [userForm, setUserForm] = useState({ name: "", email: "", password: "", role: "USER" as "USER" | "ADMIN" });
     
     // Form States
     const [localFunnelName, setLocalFunnelName] = useState(funnelName || "");
@@ -54,8 +62,52 @@ export default function SettingsPage({
     useEffect(() => {
         if (activeSection === "etiquetas") {
             loadTags();
+        } else if (activeSection === "usuarios" && isAdmin) {
+            loadUsers();
         }
-    }, [activeSection]);
+    }, [activeSection, isAdmin]);
+
+    const loadUsers = async () => {
+        try {
+            setLoadingUsers(true);
+            const data = await fetchUsers();
+            setUsers(data);
+        } catch (e) {
+            toast.error("Erro ao carregar usuários");
+        } finally {
+            setLoadingUsers(false);
+        }
+    };
+
+    const handleSaveUser = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (editingUser) {
+                await updateUser(editingUser.id, userForm);
+                toast.success("Usuário atualizado!");
+            } else {
+                await createUser(userForm);
+                toast.success("Usuário criado!");
+            }
+            setShowUserModal(false);
+            setEditingUser(null);
+            setUserForm({ name: "", email: "", password: "", role: "USER" });
+            loadUsers();
+        } catch (e: any) {
+            toast.error(e.message || "Erro ao salvar usuário");
+        }
+    };
+
+    const handleDeleteUser = async (id: string) => {
+        if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
+        try {
+            await deleteUser(id);
+            toast.success("Usuário removido");
+            loadUsers();
+        } catch (e: any) {
+            toast.error(e.message || "Erro ao excluir usuário");
+        }
+    };
 
     const loadTags = async () => {
         try {
@@ -73,9 +125,6 @@ export default function SettingsPage({
         onUpdateFunnelName(localFunnelName);
     };
 
-    const handleSaveAI = () => {
-        onUpdateOpenAi(localApiKey, localPrompt);
-    };
 
     const handleSyncAllAvatars = async () => {
         setSyncing(true);
@@ -167,6 +216,23 @@ export default function SettingsPage({
                     >
                         <RefreshCw size={16} /> Manutenção
                     </button>
+
+                    {isAdmin && (
+                        <button 
+                            onClick={() => setActiveSection("usuarios")}
+                            style={{
+                                display: "flex", alignItems: "center", gap: "10px",
+                                padding: "12px", borderRadius: "8px", border: "none",
+                                background: activeSection === "usuarios" ? "var(--bg-hover)" : "transparent",
+                                color: activeSection === "usuarios" ? "var(--text-primary)" : "var(--text-secondary)",
+                                fontWeight: activeSection === "usuarios" ? 600 : 500,
+                                cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.2s",
+                                marginTop: "8px", borderTop: "1px solid var(--border-color)", borderRadius: 0, paddingTop: "16px"
+                            }}
+                        >
+                            <Users size={16} /> Usuários e Equipe
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -265,72 +331,71 @@ export default function SettingsPage({
                                     </div>
                                 </div>
                                 
-                                <div className="form-group">
-                                    <label style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px", fontWeight: 600, fontSize: "0.9rem" }}>
-                                        <Key size={14} /> Chave de API (OpenAI)
-                                    </label>
-                                    <input 
-                                        type="password" 
-                                        value={localApiKey} 
-                                        onChange={(e) => setLocalApiKey(e.target.value)}
-                                        placeholder="sk-..."
-                                        style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)" }}
+                                 {isAdmin && (
+                                     <div className="form-group">
+                                         <label style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "8px", fontWeight: 600, fontSize: "0.9rem" }}>
+                                             <Key size={14} /> Chave de API (OpenAI)
+                                         </label>
+                                         <input 
+                                             type="password" 
+                                             value={localApiKey} 
+                                             onChange={(e) => setLocalApiKey(e.target.value)}
+                                             placeholder="sk-..."
+                                             style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)" }}
+                                         />
+                                         <button 
+                                             className="btn-primary" 
+                                             onClick={() => onUpdateOpenAi({ openAiApiKey: localApiKey })}
+                                             style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", marginTop: "16px" }}
+                                         >
+                                             <Save size={16} /> Salvar Chave
+                                         </button>
+                                     </div>
+                                 )}
+                            </div>
+ 
+                            {/* --- PROMPT DA IA (ADMIN ONLY) --- */}
+                            {isAdmin ? (
+                                <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "24px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+                                        <div style={{ background: "rgba(139, 92, 246, 0.1)", padding: "8px", borderRadius: "8px", color: "#8b5cf6" }}>
+                                            <Bot size={20} />
+                                        </div>
+                                        <h4 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>Prompt da IA</h4>
+                                    </div>
+
+                                    <textarea 
+                                        value={localPrompt} 
+                                        onChange={(e) => setLocalPrompt(e.target.value)}
+                                        rows={8}
+                                        placeholder="Ex: Você é um vendedor atencioso..."
+                                        style={{ width: "100%", padding: "15px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", resize: "vertical", fontSize: "0.9rem", lineHeight: "1.5" }}
                                     />
+
                                     <button 
                                         className="btn-primary" 
-                                        onClick={() => onUpdateOpenAi({ openAiApiKey: localApiKey })}
+                                        onClick={() => onUpdateOpenAi({ systemPrompt: localPrompt })}
                                         style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", marginTop: "16px" }}
                                     >
-                                        <Save size={16} /> Salvar Chave
+                                        <Save size={16} /> Atualizar Prompt
                                     </button>
                                 </div>
-                            </div>
-
-                            {/* --- PROMPT DA IA --- */}
-                            <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "24px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
-                                    <div style={{ background: "rgba(139, 92, 246, 0.1)", padding: "8px", borderRadius: "8px", color: "#8b5cf6" }}>
-                                        <Bot size={20} />
-                                    </div>
-                                    <h4 style={{ fontSize: "1.1rem", fontWeight: 600, margin: 0 }}>Prompt da IA</h4>
-                                </div>
-
+                            ) : (
                                 <div style={{ 
-                                    background: "rgba(239, 68, 68, 0.05)", 
-                                    border: "1px dashed rgba(239, 68, 68, 0.3)", 
-                                    padding: "16px", 
-                                    borderRadius: "8px",
-                                    marginBottom: "16px",
-                                    color: "#ef4444",
+                                    background: "var(--bg-card)", 
+                                    padding: "24px", 
+                                    borderRadius: "12px", 
+                                    border: "1px solid var(--border-color)", 
+                                    marginBottom: "24px",
                                     display: "flex",
+                                    alignItems: "center",
                                     gap: "12px",
-                                    alignItems: "flex-start"
+                                    color: "var(--text-muted)"
                                 }}>
-                                    <div style={{ marginTop: "2px" }}><Save size={16} /></div>
-                                    <div style={{ fontSize: "0.85rem", fontWeight: 600 }}>
-                                        REGRAS PRIORITÁRIAS:<br/>
-                                        <span style={{ fontWeight: 400, color: "var(--text-secondary)" }}>
-                                            Estas instruções moldam a personalidade e limites do robô.
-                                        </span>
-                                    </div>
+                                    <Shield size={20} />
+                                    <span>Configurações de Prompt restritas a administradores.</span>
                                 </div>
-
-                                <textarea 
-                                    value={localPrompt} 
-                                    onChange={(e) => setLocalPrompt(e.target.value)}
-                                    rows={8}
-                                    placeholder="Ex: Você é um vendedor atencioso. Use emojis moderadamente. Nunca fale de preços sem perguntar o nome..."
-                                    style={{ width: "100%", padding: "15px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)", resize: "vertical", fontSize: "0.9rem", lineHeight: "1.5" }}
-                                />
-
-                                <button 
-                                    className="btn-primary" 
-                                    onClick={() => onUpdateOpenAi({ systemPrompt: localPrompt })}
-                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", marginTop: "16px" }}
-                                >
-                                    <Save size={16} /> Atualizar Prompt
-                                </button>
-                            </div>
+                            )}
 
                             {/* --- HUMAN TAKEOVER --- */}
                             <div style={{ background: "var(--bg-card)", padding: "24px", borderRadius: "12px", border: "1px solid var(--border-color)", marginBottom: "24px" }}>
@@ -513,6 +578,183 @@ export default function SettingsPage({
                                         {syncing ? "Sincronizando..." : "Iniciar Sincronização"}
                                     </button>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeSection === "usuarios" && isAdmin && (
+                        <div className="fade-in">
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
+                                <div>
+                                    <h3 style={{ fontSize: "1.5rem", marginBottom: "8px" }}>Usuários e Equipe</h3>
+                                    <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", margin: 0 }}>
+                                        Gerencie quem tem acesso ao CRM Rise e defina permissões.
+                                    </p>
+                                </div>
+                                <button 
+                                    className="btn-primary" 
+                                    onClick={() => {
+                                        setEditingUser(null);
+                                        setUserForm({ name: "", email: "", password: "", role: "USER" });
+                                        setShowUserModal(true);
+                                    }}
+                                    style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                                >
+                                    <UserPlus size={18} /> Adicionar Usuário
+                                </button>
+                            </div>
+
+                            {loadingUsers ? (
+                                <div style={{ textAlign: "center", padding: "40px" }}>
+                                    <Loader2 className="animate-spin" />
+                                </div>
+                            ) : (
+                                <div style={{ background: "var(--bg-card)", borderRadius: "12px", border: "1px solid var(--border-color)", overflow: "hidden" }}>
+                                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                                        <thead>
+                                            <tr style={{ borderBottom: "1px solid var(--border-color)", background: "var(--bg-primary)" }}>
+                                                <th style={{ textAlign: "left", padding: "16px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>NOME</th>
+                                                <th style={{ textAlign: "left", padding: "16px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>E-MAIL</th>
+                                                <th style={{ textAlign: "left", padding: "16px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>PERFIL</th>
+                                                <th style={{ textAlign: "left", padding: "16px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>STATUS</th>
+                                                <th style={{ textAlign: "right", padding: "16px", fontSize: "0.85rem", color: "var(--text-secondary)" }}>AÇÕES</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {users.map(u => (
+                                                <tr key={u.id} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                                                    <td style={{ padding: "16px", fontWeight: 600 }}>{u.name}</td>
+                                                    <td style={{ padding: "16px", color: "var(--text-secondary)" }}>{u.email}</td>
+                                                    <td style={{ padding: "16px" }}>
+                                                        <span style={{ 
+                                                            padding: "4px 8px", 
+                                                            borderRadius: "4px", 
+                                                            fontSize: "0.75rem", 
+                                                            fontWeight: 700,
+                                                            background: u.role === "ADMIN" ? "rgba(59, 130, 246, 0.1)" : "rgba(107, 114, 128, 0.1)",
+                                                            color: u.role === "ADMIN" ? "var(--accent-blue)" : "var(--text-secondary)"
+                                                        }}>
+                                                            {u.role}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ padding: "16px" }}>
+                                                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                                            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: u.active ? "#10b981" : "#ef4444" }} />
+                                                            <span style={{ fontSize: "0.85rem" }}>{u.active ? "Ativo" : "Inativo"}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: "16px", textAlign: "right" }}>
+                                                        <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                                                            <button 
+                                                                onClick={() => {
+                                                                    setEditingUser(u);
+                                                                    setUserForm({ name: u.name, email: u.email, password: "", role: u.role });
+                                                                    setShowUserModal(true);
+                                                                }}
+                                                                style={{ background: "transparent", border: "none", color: "var(--text-secondary)", cursor: "pointer" }}
+                                                            >
+                                                                <Pencil size={16} />
+                                                            </button>
+                                                            {u.id !== currentUser?.id && (
+                                                                <button 
+                                                                    onClick={() => handleDeleteUser(u.id)}
+                                                                    style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer" }}
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Modal de Usuário */}
+                    {showUserModal && (
+                        <div style={{ 
+                            position: "fixed", top: 0, left: 0, right: 0, bottom: 0, 
+                            background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", 
+                            justifyContent: "center", zIndex: 1000, backdropFilter: "blur(4px)" 
+                        }}>
+                            <div style={{ 
+                                background: "var(--bg-card)", padding: "32px", borderRadius: "16px", 
+                                width: "450px", border: "1px solid var(--border-color)", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.3)" 
+                            }}>
+                                <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "24px" }}>
+                                    {editingUser ? "Editar Usuário" : "Novo Usuário"}
+                                </h3>
+                                
+                                <form onSubmit={handleSaveUser} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                                    <div className="form-group">
+                                        <label style={{ display: "block", marginBottom: "8px", fontWeight: 600, fontSize: "0.9rem" }}>Nome Completo</label>
+                                        <input 
+                                            type="text" 
+                                            required
+                                            value={userForm.name}
+                                            onChange={e => setUserForm({...userForm, name: e.target.value})}
+                                            style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)" }}
+                                        />
+                                    </div>
+                                    
+                                    <div className="form-group">
+                                        <label style={{ display: "block", marginBottom: "8px", fontWeight: 600, fontSize: "0.9rem" }}>E-mail (Login)</label>
+                                        <input 
+                                            type="email" 
+                                            required
+                                            value={userForm.email}
+                                            onChange={e => setUserForm({...userForm, email: e.target.value})}
+                                            style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)" }}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label style={{ display: "block", marginBottom: "8px", fontWeight: 600, fontSize: "0.9rem" }}>
+                                            Senha {editingUser && "(deixe em branco para manter)"}
+                                        </label>
+                                        <input 
+                                            type="password" 
+                                            required={!editingUser}
+                                            value={userForm.password}
+                                            onChange={e => setUserForm({...userForm, password: e.target.value})}
+                                            style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)" }}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label style={{ display: "block", marginBottom: "8px", fontWeight: 600, fontSize: "0.9rem" }}>Perfil de Acesso</label>
+                                        <select 
+                                            value={userForm.role}
+                                            onChange={e => setUserForm({...userForm, role: e.target.value as any})}
+                                            style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid var(--border-color)", background: "var(--bg-input)", color: "var(--text-primary)" }}
+                                        >
+                                            <option value="USER">Colaborador (Usuário)</option>
+                                            <option value="ADMIN">Administrador</option>
+                                        </select>
+                                    </div>
+
+                                    <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setShowUserModal(false)}
+                                            className="btn-secondary" 
+                                            style={{ flex: 1 }}
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button 
+                                            type="submit" 
+                                            className="btn-primary" 
+                                            style={{ flex: 1 }}
+                                        >
+                                            {editingUser ? "Salvar Alterações" : "Criar Usuário"}
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     )}

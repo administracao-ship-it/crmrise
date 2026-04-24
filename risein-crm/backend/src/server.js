@@ -16,6 +16,10 @@ const automationRoutes = require("./routes/automation");
 const tagRoutes = require("./routes/tags");
 const metricsRoutes = require("./routes/metrics");
 const improvementsRoutes = require("./routes/improvements");
+const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/users");
+const { authMiddleware, isAdmin } = require("./middleware/authMiddleware");
+const bcrypt = require("bcryptjs");
 
 const prisma = new PrismaClient({
     datasourceUrl: process.env.DATABASE_URL
@@ -50,10 +54,12 @@ app.get("/health", (_req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/stages", stageRoutes);
 app.use("/api/messages", messageRoutes);
-app.use("/api/config", configRoutes);
+app.use("/api/config", authMiddleware, configRoutes); // Auth required, roles handled inside
 app.use("/api/automation", automationRoutes);
 app.use("/api/tags", tagRoutes);
 app.use("/api/metrics", metricsRoutes);
@@ -97,6 +103,21 @@ server.listen(PORT, async () => {
                 data: { id: "singleton", funnelName: "CRM RISE" }
             });
             console.log("✅ Config seeding complete.");
+        }
+
+        const userCount = await prisma.user.count();
+        if (userCount === 0) {
+            console.log("🌱 No users found. Creating initial admin...");
+            const hashedPassword = await bcrypt.hash("leadqualificado", 10);
+            await prisma.user.create({
+                data: {
+                    name: "Admin Rise",
+                    email: "admin@rise.com",
+                    password: hashedPassword,
+                    role: "ADMIN"
+                }
+            });
+            console.log("✅ Initial admin created: admin@rise.com / leadqualificado");
         }
     } catch (err) {
         console.error("⚠️ Failed to seed on startup:", err.message);

@@ -3,6 +3,34 @@ export const API_URL = isServer
   ? (process.env.INTERNAL_BACKEND_URL || "http://backend:3001") 
   : ""; // Use relative paths in the browser
 
+// Helper to get auth token
+const getAuthToken = () => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem("auth-token");
+};
+
+// Custom fetch wrapper to include auth header
+async function authenticatedFetch(url: string, options: RequestInit = {}) {
+    const token = getAuthToken();
+    const headers = {
+        ...options.headers,
+        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+    };
+    
+    const res = await fetch(url, { ...options, headers });
+    
+    if (res.status === 401) {
+        // Token expired or invalid
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+            localStorage.removeItem("auth-token");
+            document.cookie = "auth-session=; path=/; max-age=0";
+            window.location.href = "/login";
+        }
+    }
+    
+    return res;
+}
+
 export interface Stage {
     id: string;
     name: string;
@@ -62,7 +90,7 @@ export interface Message {
 }
 
 export async function fetchStages(): Promise<Stage[]> {
-    const res = await fetch(`${API_URL}/api/stages`);
+    const res = await authenticatedFetch(`${API_URL}/api/stages`);
     if (!res.ok) throw new Error("Failed to fetch stages");
     return res.json();
 }
@@ -76,7 +104,7 @@ export async function createLead(data: {
     phase?: string;
     city?: string;
 }): Promise<Lead> {
-    const res = await fetch(`${API_URL}/api/leads`, {
+    const res = await authenticatedFetch(`${API_URL}/api/leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -89,7 +117,7 @@ export async function updateLead(
     id: string,
     data: Partial<Lead>
 ): Promise<Lead> {
-    const res = await fetch(`${API_URL}/api/leads/${id}`, {
+    const res = await authenticatedFetch(`${API_URL}/api/leads/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -99,12 +127,12 @@ export async function updateLead(
 }
 
 export async function deleteLead(id: string): Promise<void> {
-    const res = await fetch(`${API_URL}/api/leads/${id}`, { method: "DELETE" });
+    const res = await authenticatedFetch(`${API_URL}/api/leads/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to delete lead");
 }
 
 export async function refreshLeadAvatar(id: string): Promise<Lead> {
-    const res = await fetch(`${API_URL}/api/leads/${id}/avatar`, {
+    const res = await authenticatedFetch(`${API_URL}/api/leads/${id}/avatar`, {
         method: "POST",
     });
     if (!res.ok) throw new Error("Failed to refresh lead avatar");
@@ -112,7 +140,7 @@ export async function refreshLeadAvatar(id: string): Promise<Lead> {
 }
 
 export async function syncAllAvatars(): Promise<{ message: string, count: number }> {
-    const res = await fetch(`${API_URL}/api/leads/sync-avatars`, {
+    const res = await authenticatedFetch(`${API_URL}/api/leads/sync-avatars`, {
         method: "POST",
     });
     if (!res.ok) throw new Error("Failed to start bulk avatar sync");
@@ -120,7 +148,7 @@ export async function syncAllAvatars(): Promise<{ message: string, count: number
 }
 
 export async function fetchMessages(leadId: string): Promise<Message[]> {
-    const res = await fetch(`${API_URL}/api/messages/${leadId}`);
+    const res = await authenticatedFetch(`${API_URL}/api/messages/${leadId}`);
     if (!res.ok) throw new Error("Failed to fetch messages");
     return res.json();
 }
@@ -133,7 +161,7 @@ export async function sendMessage(
     const headers: Record<string, string> = isFormData ? {} : { "Content-Type": "application/json" };
     const body = isFormData ? content : JSON.stringify({ content });
 
-    const res = await fetch(`${API_URL}/api/messages/${leadId}`, {
+    const res = await authenticatedFetch(`${API_URL}/api/messages/${leadId}`, {
         method: "POST",
         headers: headers,
         body: body,
@@ -146,7 +174,7 @@ export async function sendMessage(
 }
 
 export async function syncMessageMedia(messageId: string): Promise<Message> {
-    const res = await fetch(`${API_URL}/api/messages/${messageId}/sync-media`, {
+    const res = await authenticatedFetch(`${API_URL}/api/messages/${messageId}/sync-media`, {
         method: "POST",
     });
     if (!res.ok) throw new Error("Failed to sync message media");
@@ -157,12 +185,12 @@ export async function getWhatsAppStatus(): Promise<{
     status: string;
     qr: string | null;
 }> {
-    const res = await fetch(`${API_URL}/api/messages/whatsapp/status`);
+    const res = await authenticatedFetch(`${API_URL}/api/messages/whatsapp/status`);
     if (!res.ok) throw new Error("Failed to get WhatsApp status");
     return res.json();
 }
 export async function connectWhatsApp(): Promise<{ message: string }> {
-    const res = await fetch(`${API_URL}/api/messages/whatsapp/connect`, {
+    const res = await authenticatedFetch(`${API_URL}/api/messages/whatsapp/connect`, {
         method: "POST",
     });
     if (!res.ok) throw new Error("Failed to connect WhatsApp");
@@ -170,7 +198,7 @@ export async function connectWhatsApp(): Promise<{ message: string }> {
 }
 
 export async function disconnectWhatsApp(): Promise<{ message: string }> {
-    const res = await fetch(`${API_URL}/api/messages/whatsapp/disconnect`, {
+    const res = await authenticatedFetch(`${API_URL}/api/messages/whatsapp/disconnect`, {
         method: "POST",
     });
     if (!res.ok) throw new Error("Failed to disconnect WhatsApp");
@@ -178,7 +206,7 @@ export async function disconnectWhatsApp(): Promise<{ message: string }> {
 }
 
 export async function resetWhatsApp(): Promise<{ message: string }> {
-    const res = await fetch(`${API_URL}/api/messages/whatsapp/reset`, {
+    const res = await authenticatedFetch(`${API_URL}/api/messages/whatsapp/reset`, {
         method: "POST",
     });
     if (!res.ok) throw new Error("Failed to reset WhatsApp session");
@@ -189,7 +217,7 @@ export async function updateStage(
     id: string,
     data: { name?: string; order?: number }
 ): Promise<Stage> {
-    const res = await fetch(`${API_URL}/api/stages/${id}`, {
+    const res = await authenticatedFetch(`${API_URL}/api/stages/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -199,7 +227,7 @@ export async function updateStage(
 }
 
 export async function createStage(data: { name: string; order: number }): Promise<Stage> {
-    const res = await fetch(`${API_URL}/api/stages`, {
+    const res = await authenticatedFetch(`${API_URL}/api/stages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -216,7 +244,7 @@ export async function fetchConfig(): Promise<{
     aiTriggerMessages?: string;
     isAiActive?: boolean;
 }> {
-    const res = await fetch(`${API_URL}/api/config`);
+    const res = await authenticatedFetch(`${API_URL}/api/config`);
     if (!res.ok) throw new Error("Failed to fetch config");
     return res.json();
 }
@@ -236,7 +264,7 @@ export async function updateConfig(data: {
     aiTriggerMessages?: string;
     isAiActive?: boolean;
 }> {
-    const res = await fetch(`${API_URL}/api/config`, {
+    const res = await authenticatedFetch(`${API_URL}/api/config`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -253,13 +281,13 @@ export interface Tag {
 }
 
 export async function fetchTags(): Promise<Tag[]> {
-    const res = await fetch(`${API_URL}/api/tags`);
+    const res = await authenticatedFetch(`${API_URL}/api/tags`);
     if (!res.ok) throw new Error("Failed to fetch tags");
     return res.json();
 }
 
 export async function createTag(data: { name: string; color?: string }): Promise<Tag> {
-    const res = await fetch(`${API_URL}/api/tags`, {
+    const res = await authenticatedFetch(`${API_URL}/api/tags`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -269,12 +297,12 @@ export async function createTag(data: { name: string; color?: string }): Promise
 }
 
 export async function deleteTag(id: string): Promise<void> {
-    const res = await fetch(`${API_URL}/api/tags/${id}`, { method: "DELETE" });
+    const res = await authenticatedFetch(`${API_URL}/api/tags/${id}`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to delete tag");
 }
 
 export async function addTagToLead(leadId: string, tagId: string): Promise<Lead> {
-    const res = await fetch(`${API_URL}/api/leads/${leadId}`, {
+    const res = await authenticatedFetch(`${API_URL}/api/leads/${leadId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -286,7 +314,7 @@ export async function addTagToLead(leadId: string, tagId: string): Promise<Lead>
 }
 
 export async function removeTagFromLead(leadId: string, tagId: string): Promise<Lead> {
-    const res = await fetch(`${API_URL}/api/leads/${leadId}`, {
+    const res = await authenticatedFetch(`${API_URL}/api/leads/${leadId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -309,13 +337,13 @@ export interface ImprovementPoint {
 }
 
 export async function fetchImprovements(): Promise<ImprovementPoint[]> {
-    const res = await fetch(`${API_URL}/api/improvements`);
+    const res = await authenticatedFetch(`${API_URL}/api/improvements`);
     if (!res.ok) throw new Error("Failed to fetch improvements");
     return res.json();
 }
 
 export async function createImprovement(formData: FormData): Promise<ImprovementPoint> {
-    const res = await fetch(`${API_URL}/api/improvements`, {
+    const res = await authenticatedFetch(`${API_URL}/api/improvements`, {
         method: "POST",
         body: formData, // multipart for image upload
     });
@@ -327,7 +355,7 @@ export async function updateImprovementStatus(
     id: string,
     status: string
 ): Promise<ImprovementPoint> {
-    const res = await fetch(`${API_URL}/api/improvements/${id}`, {
+    const res = await authenticatedFetch(`${API_URL}/api/improvements/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -337,7 +365,7 @@ export async function updateImprovementStatus(
 }
 
 export async function deleteImprovement(id: string): Promise<void> {
-    const res = await fetch(`${API_URL}/api/improvements/${id}`, {
+    const res = await authenticatedFetch(`${API_URL}/api/improvements/${id}`, {
         method: "DELETE",
     });
     if (!res.ok) throw new Error("Failed to delete improvement");
@@ -367,7 +395,7 @@ export async function sendBulkMessages(data: {
     delayMin?: number;
     delayMax?: number;
 }): Promise<{ success: boolean; jobId: string }> {
-    const res = await fetch(`${API_URL}/api/messages/whatsapp/bulk`, {
+    const res = await authenticatedFetch(`${API_URL}/api/messages/whatsapp/bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -380,7 +408,7 @@ export async function sendBulkMessages(data: {
 }
 
 export async function fetchBulkHistory(): Promise<BulkJob[]> {
-    const res = await fetch(`${API_URL}/api/messages/whatsapp/bulk/history`);
+    const res = await authenticatedFetch(`${API_URL}/api/messages/whatsapp/bulk/history`);
     if (!res.ok) throw new Error("Failed to fetch bulk history");
     return res.json();
 }
@@ -388,7 +416,7 @@ export async function fetchBulkHistory(): Promise<BulkJob[]> {
 export async function uploadCampaignMedia(file: File): Promise<{ mediaUrl: string; mimeType: string }> {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch(`${API_URL}/api/messages/whatsapp/media-upload`, {
+    const res = await authenticatedFetch(`${API_URL}/api/messages/whatsapp/media-upload`, {
         method: "POST",
         body: formData,
     });
@@ -412,7 +440,73 @@ export async function fetchAiMetrics(startDate?: string, endDate?: string): Prom
     if (startDate) params.append("startDate", startDate);
     if (endDate) params.append("endDate", endDate);
     
-    const res = await fetch(`${API_URL}/api/metrics/ai?${params.toString()}`);
+    const res = await authenticatedFetch(`${API_URL}/api/metrics/ai?${params.toString()}`);
     if (!res.ok) throw new Error("Failed to fetch AI metrics");
     return res.json();
+}
+
+// --- Authentication ---
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    role: "ADMIN" | "USER";
+    active?: boolean;
+    createdAt?: string;
+}
+
+export async function login(email: string, password: string): Promise<{ token: string; user: User }> {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Login failed" }));
+        throw new Error(err.error || "Login failed");
+    }
+    return res.json();
+}
+
+export async function fetchCurrentUser(): Promise<User> {
+    const res = await authenticatedFetch(`${API_URL}/api/auth/me`);
+    if (!res.ok) throw new Error("Failed to fetch user profile");
+    return res.json();
+}
+
+// --- User Management (Admin Only) ---
+export async function fetchUsers(): Promise<User[]> {
+    const res = await authenticatedFetch(`${API_URL}/api/users`);
+    if (!res.ok) throw new Error("Failed to fetch users");
+    return res.json();
+}
+
+export async function createUser(data: Partial<User> & { password?: string }): Promise<User> {
+    const res = await authenticatedFetch(`${API_URL}/api/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Failed to create user" }));
+        throw new Error(err.error || "Failed to create user");
+    }
+    return res.json();
+}
+
+export async function updateUser(id: string, data: Partial<User> & { password?: string }): Promise<User> {
+    const res = await authenticatedFetch(`${API_URL}/api/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error("Failed to update user");
+    return res.json();
+}
+
+export async function deleteUser(id: string): Promise<void> {
+    const res = await authenticatedFetch(`${API_URL}/api/users/${id}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete user");
 }

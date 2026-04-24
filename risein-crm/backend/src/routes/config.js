@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { isAdmin } = require("../middlewares/authMiddleware");
 
 // GET /api/config
 router.get("/", async (req, res, next) => {
@@ -26,6 +27,13 @@ router.patch("/", async (req, res, next) => {
     try {
         const { funnelName, openAiApiKey, systemPrompt, humanTakeoverMessage, aiTriggerMessages, isAiActive } = req.body;
         
+        // Finer-grained protection: Only Admins can change AI keys and Prompts
+        if (req.user.role !== "ADMIN") {
+            if (openAiApiKey || systemPrompt || aiTriggerMessages || isAiActive !== undefined) {
+                return res.status(403).json({ error: "Apenas administradores podem alterar configurações de IA" });
+            }
+        }
+
         const updateData = {};
         if (funnelName !== undefined) updateData.funnelName = funnelName;
         if (openAiApiKey !== undefined) updateData.openAiApiKey = openAiApiKey;

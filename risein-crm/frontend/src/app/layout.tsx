@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
-import ToastProvider from "@/components/ToastProvider";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/components/AuthContext";
+import { Toaster } from "react-hot-toast";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Rise In CRM - Gestão de Leads e WhatsApp",
@@ -21,9 +25,11 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body suppressHydrationWarning>
-        <ToastProvider />
-        {children}
+      <body className={inter.className} suppressHydrationWarning>
+        <AuthProvider>
+          {children}
+          <Toaster position="top-right" />
+        </AuthProvider>
       </body>
     </html>
   );
