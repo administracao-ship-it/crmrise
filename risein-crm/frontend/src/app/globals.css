@@ -1,39 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  /* WhatsApp Dark Theme */
-  --bg-primary: #0b141a;
-  --bg-secondary: #111b21;
-  --bg-tertiary: #202c33;
-  --bg-card: #111b21;
-  --bg-card-hover: #2a3942;
-  --border-color: #222d34;
-  --border-active: #00a884;
+  /* Rise Premium Identity */
+  --bg-primary: #0a082b; /* Fundo ultra profundo */
+  --bg-secondary: #1B1464; /* Azul Rise - Sidebar e Base */
+  --bg-tertiary: #231d75; /* Azul mais claro para Header */
+  --bg-card: #1B1464;
+  --bg-card-hover: #292185;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-active: #D4145A; /* Rosa Rise */
   
-  --text-primary: #e9edef;
-  --text-secondary: #8696a0;
-  --text-muted: #667781;
+  --text-primary: #F1F1F1; /* Branco Rise */
+  --text-secondary: #a9a6cf;
+  --text-muted: #6e6b9c;
   
-  --accent-wa: #00a884;
+  --accent-rise: #D4145A; /* Rosa Rise */
   --accent-blue: #34b7f1;
-  --accent-green: #25d366;
+  --accent-green: #10b981;
   --accent-orange: #f59e0b;
   --accent-red: #ea0038;
   
-  /* Message Bubbles */
+  /* WhatsApp Theme (Reserved for Chat) */
+  --wa-bg: #0b141a;
+  --wa-bg-secondary: #111b21;
   --bg-sent: #005c4b;
   --bg-recv: #202c33;
+  --accent-wa: #00a884;
   
   /* Premiumwa Tokens */
-  --glass-bg: rgba(255, 255, 255, 0.02);
-  --glass-border: rgba(255, 255, 255, 0.05);
-  --premium-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  --glass-bg: rgba(212, 20, 90, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --premium-shadow: 0 10px 30px rgba(0,0,0,0.5);
   
   --sidebar-width: 68px;
   --header-height: 59px;
-  --radius-wa: 8px;
+  --radius-wa: 12px;
   
-  --btn-gradient-blue: linear-gradient(135deg, #0066ff 0%, #0044cc 100%);
+  --btn-gradient-rise: linear-gradient(135deg, #D4145A 0%, #a30e44 100%);
   --btn-shine: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
   
   transition: background 0.3s ease, color 0.3s ease;
@@ -110,7 +113,7 @@ body {
 }
 
 .chat-panel {
-  background: #0b141a; /* WhatsApp default chat bg */
+  background: var(--wa-bg); /* WhatsApp default chat bg */
   position: relative;
   overflow: hidden;
 }
@@ -212,7 +215,7 @@ body {
   width: 44px;
   height: 44px;
   border-radius: var(--radius-sm);
-  background: var(--accent-blue);
+  background: var(--btn-gradient-rise);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -222,6 +225,7 @@ body {
   margin-bottom: 32px;
   letter-spacing: -1px;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(212, 20, 90, 0.3);
 }
 
 .sidebar-nav {
@@ -262,8 +266,8 @@ body {
 }
 
 .sidebar-item.active {
-  background: rgba(0, 102, 255, 0.1);
-  color: var(--accent-blue);
+  background: rgba(212, 20, 90, 0.1);
+  color: var(--accent-rise);
 }
 
 .sidebar-item.active::before {
@@ -274,7 +278,7 @@ body {
   transform: translateY(-50%);
   width: 3px;
   height: 22px;
-  background: var(--accent-blue);
+  background: var(--accent-rise);
   border-radius: 0 3px 3px 0;
 }
 
@@ -415,7 +419,7 @@ body {
 
 .lead-card:hover {
   background: var(--bg-card-hover);
-  border-color: var(--accent-blue);
+  border-color: var(--accent-rise);
   transform: translateY(-2px);
   box-shadow: var(--premium-shadow);
 }
@@ -805,7 +809,7 @@ body {
 }
 
 .btn-primary {
-  background: var(--btn-gradient-blue);
+  background: var(--btn-gradient-rise);
   color: white;
   padding: 10px 24px;
   border-radius: var(--radius-sm);
@@ -821,13 +825,13 @@ body {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3),
+  box-shadow: 0 4px 15px rgba(212, 20, 90, 0.3),
               inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 25px rgba(0, 102, 255, 0.45),
+  box-shadow: 0 12px 25px rgba(212, 20, 90, 0.45),
               inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
