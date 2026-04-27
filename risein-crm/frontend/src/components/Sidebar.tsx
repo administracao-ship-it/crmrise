@@ -84,11 +84,9 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
     return (
         <aside className="sidebar">
-            <div className="sidebar-logo">
-                <div className="w-8 h-8 bg-wa-green rounded-full flex items-center justify-center">
-                    <Zap size={18} fill="#D4145A" color="#0b141a" />
+                <div className="sidebar-logo">
+                    <Zap size={18} fill="white" color="white" />
                 </div>
-            </div>
             <nav className="sidebar-nav">
                 {navItems.map((item) => (
                     <Link
@@ -149,7 +147,7 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                             width: "32px", 
                             height: "32px", 
                             borderRadius: "50%", 
-                            background: "var(--accent-blue)", 
+                            background: "var(--accent-navy)", 
                             display: "flex", 
                             alignItems: "center", 
                             justifyContent: "center",

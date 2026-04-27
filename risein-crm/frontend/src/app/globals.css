@@ -2,18 +2,18 @@
 
 :root {
   /* ===== RISE LIGHT THEME (DEFAULT) ===== */
-  --bg-primary: #f4f5f7;
-  --bg-secondary: #1B1464;       /* Sidebar - Azul Rise */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;       /* Sidebar agora é branca (Clean) */
   --bg-tertiary: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f0efff;
-  --bg-hover: #f0efff;
-  --border-color: #e2e2ee;
+  --bg-card-hover: #f1f5f9;
+  --bg-hover: #f1f5f9;
+  --border-color: #e2e8f0;
   --border-active: #D4145A;
 
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
+  --text-primary: #0f172a;       /* Mais escuro para melhor contraste */
+  --text-secondary: #475569;     /* Mais escuro */
+  --text-muted: #64748b;         /* Corrigido: era muito claro e ficava invisível */
 
   /* Rise Brand */
   --accent-rise: #D4145A;
@@ -113,7 +113,7 @@ body {
 .sidebar {
   width: var(--sidebar-width);
   background: var(--bg-secondary); /* Azul Rise #1B1464 */
-  border-right: none;
+  border-right: 1px solid var(--border-color); /* Borda adicionada para sidebar clara */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -123,7 +123,7 @@ body {
   position: fixed;
   left: 0;
   top: 0;
-  box-shadow: 4px 0 20px rgba(27, 20, 100, 0.2);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.02);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -271,7 +271,7 @@ body {
   width: 100%;
   height: 44px;
   border-radius: var(--radius-sm);
-  color: var(--text-secondary); /* Agora usando variáveis */
+  color: var(--text-muted); /* Itens inativos ficam discretos mas visíveis */
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -280,8 +280,8 @@ body {
 }
 
 .sidebar-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.95);
+  background: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .sidebar-item.active {
@@ -1049,7 +1049,7 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--text-muted);
+  color: var(--text-secondary); /* Escurecido para visibilidade total */
   border-bottom: 1px solid var(--border-color);
   position: sticky;
   top: 0;
