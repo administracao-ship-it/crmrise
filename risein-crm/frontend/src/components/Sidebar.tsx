@@ -50,23 +50,32 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     useEffect(() => {
+        // Sincroniza o estado inicial com a classe já presente no HTML (evita flicker e inconsistência)
+        const hasDarkClass = document.documentElement.classList.contains("dark-theme");
+        setIsDarkMode(hasDarkClass);
+        
+        // Também verifica o localStorage caso a classe não tenha sido aplicada ainda
         const savedTheme = localStorage.getItem("theme");
-        if (savedTheme === "dark") {
+        if (savedTheme === "dark" && !hasDarkClass) {
             setIsDarkMode(true);
             document.documentElement.classList.add("dark-theme");
         }
     }, []);
 
     const toggleTheme = () => {
-        const newTheme = !isDarkMode;
-        setIsDarkMode(newTheme);
-        if (newTheme) {
+        const nextMode = !isDarkMode;
+        setIsDarkMode(nextMode);
+        
+        if (nextMode) {
             document.documentElement.classList.add("dark-theme");
             localStorage.setItem("theme", "dark");
         } else {
             document.documentElement.classList.remove("dark-theme");
             localStorage.setItem("theme", "light");
         }
+        
+        // Dispara um evento customizado para outros componentes que possam estar ouvindo (opcional)
+        window.dispatchEvent(new Event('themechange'));
     };
 
     const handleLogout = () => {

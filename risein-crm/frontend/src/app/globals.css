@@ -1,46 +1,44 @@
 @import "tailwindcss";
 
 :root {
-  /* ===== RISE CLEAN THEME ===== */
-  /* Backgrounds - Clean & Light */
-  --bg-primary: #F1F1F1;         /* Fundo principal clean */
+  /* ===== RISE LIGHT THEME (DEFAULT) ===== */
+  --bg-primary: #f4f5f7;
   --bg-secondary: #1B1464;       /* Sidebar - Azul Rise */
-  --bg-tertiary: #ffffff;        /* Header - Branco puro */
-  --bg-card: #ffffff;            /* Cards - Branco puro */
-  --bg-card-hover: #f5f4ff;      /* Card hover - Azul suave */
+  --bg-tertiary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0efff;
   --bg-hover: #f0efff;
-  --border-color: rgba(27, 20, 100, 0.1);   /* Borda suave azulada */
-  --border-active: #D4145A;      /* Borda ativa - Rosa Rise */
+  --border-color: #e2e2ee;
+  --border-active: #D4145A;
 
-  /* Text */
-  --text-primary: #1a1a2e;       /* Texto principal - escuro */
-  --text-secondary: #4a4a7a;     /* Texto secundário - azul escuro suave */
-  --text-muted: #8888aa;         /* Texto suave */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
 
-  /* Rise Brand Colors */
-  --accent-rise: #D4145A;        /* Rosa Rise - CTA principal */
-  --accent-navy: #1B1464;        /* Azul Rise - Sidebar/Destaques */
-  --accent-blue: #34b7f1;
+  /* Rise Brand */
+  --accent-rise: #D4145A;
+  --accent-navy: #1B1464;
+  --accent-blue: #3b82f6;
   --accent-green: #10b981;
   --accent-orange: #f59e0b;
   --accent-red: #ef4444;
 
-  /* WhatsApp Theme (Reserved for Chat ONLY) */
+  /* WhatsApp (Chat only) */
   --wa-bg: #0b141a;
   --wa-bg-secondary: #111b21;
   --bg-sent: #005c4b;
   --bg-recv: #202c33;
   --accent-wa: #00a884;
 
-  /* Shadows & Effects */
+  /* Effects */
   --glass-bg: rgba(212, 20, 90, 0.04);
   --glass-border: rgba(27, 20, 100, 0.08);
   --premium-shadow: 0 4px 20px rgba(27, 20, 100, 0.12);
-  --card-shadow: 0 2px 8px rgba(27, 20, 100, 0.08);
+  --card-shadow: 0 1px 4px rgba(27, 20, 100, 0.07);
 
   --sidebar-width: 68px;
   --header-height: 59px;
-  --radius-wa: 12px;
+  --radius-wa: 10px;
 
   --btn-gradient-rise: linear-gradient(135deg, #D4145A 0%, #a30e44 100%);
   --btn-shine: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
@@ -48,7 +46,34 @@
   transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* Unified Rise Premium Identity */
+/* ===== DARK THEME ===== */
+.dark-theme {
+  --bg-primary: #0f0e1a;
+  --bg-secondary: #1B1464;
+  --bg-tertiary: #16143a;
+  --bg-card: #1e1c40;
+  --bg-card-hover: #25235a;
+  --bg-hover: #25235a;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-active: #D4145A;
+
+  --text-primary: #f9fafb;
+  --text-secondary: #c4c3e0;
+  --text-muted: #7877a0;
+
+  --accent-rise: #D4145A;
+  --accent-navy: #1B1464;
+  --accent-blue: #60a5fa;
+  --accent-green: #34d399;
+  --accent-orange: #fbbf24;
+  --accent-red: #f87171;
+
+  --premium-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --card-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  --glass-bg: rgba(212, 20, 90, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.06);
+}
+
 
 * {
   box-sizing: border-box;
@@ -246,7 +271,7 @@ body {
   width: 100%;
   height: 44px;
   border-radius: var(--radius-sm);
-  color: rgba(255, 255, 255, 0.65); /* Branco levemente opaco sobre azul */
+  color: var(--text-secondary); /* Agora usando variáveis */
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -300,8 +325,8 @@ body {
 /* Header Rise Clean */
 .header {
   height: var(--header-height);
-  background: #ffffff;
-  border-bottom: 1px solid rgba(27, 20, 100, 0.08);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -398,8 +423,8 @@ body {
 
 /* Lead Card - Rise Clean Style */
 .lead-card {
-  background: #ffffff;
-  border: 1px solid rgba(27, 20, 100, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 6px 10px 10px 10px;
   cursor: grab;
